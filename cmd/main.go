@@ -2,21 +2,27 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"strings"
+
+	//"strings"
 	"sync"
-	"time"
 
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
+	"github.com/KhoalaS/godel/pkg/utils/transformer"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	jobs := make(chan *types.DownloadJob, 4)
 
-	client := http.Client{
-		Timeout: 15 * time.Second,
-	}
+	client := http.Client{}
 
 	var wg sync.WaitGroup
 
@@ -26,24 +32,18 @@ func main() {
 		go downloadWorker(i, jobs, &wg, &client)
 	}
 
-	urls := []string{
-		"http://localhost:8080/files/test.txt",
-		"http://localhost:8080/files/test.txt",
-		"http://localhost:8080/files/test.txt",
-		"http://localhost:8080/files/test.txt",
-		"http://localhost:8080/files/video.mp4",
-		"http://localhost:8080/files/random.txt",
+	rdJob, err := transformer.RealDebridTransformer(types.DownloadJob{
+		Url:      "https://rapidgator.net/file/0347f6bddc27aa6dcf7c64df751ae783",
+		Id:       100,
+		Filename: "",
+		Password: "",
+	})
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	for idx, url := range urls {
-		spl := strings.Split(url, "/")
-		filename := spl[len(spl)-1]
-		jobs <- &types.DownloadJob{
-			Url:      url,
-			Id:       idx,
-			Filename: fmt.Sprintf("./testfiles/%d_%s", idx, filename),
-		}
-	}
+	jobs <- &rdJob
 
 	close(jobs)
 
