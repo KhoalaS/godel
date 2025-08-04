@@ -14,6 +14,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var transformerRegistry = map[string]types.DownloadJobTransformer{
+	"real-debrid": transformer.RealDebridTransformer,
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -32,18 +36,14 @@ func main() {
 		go downloadWorker(i, jobs, &wg, &client)
 	}
 
-	rdJob, err := transformer.RealDebridTransformer(types.DownloadJob{
-		Url:      "https://rapidgator.net/file/0347f6bddc27aa6dcf7c64df751ae783",
-		Id:       100,
+	job := types.DownloadJob{
+		Url:      "http://localhost:8080/files/random.txt",
+		Id:       "100",
 		Filename: "",
 		Password: "",
-	})
-
-	if err != nil {
-		log.Fatal(err)
 	}
 
-	jobs <- &rdJob
+	jobs <- &job
 
 	close(jobs)
 

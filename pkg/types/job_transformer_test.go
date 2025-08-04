@@ -6,7 +6,7 @@ func TestJobTransformer(t *testing.T) {
 	job := DownloadJob{
 		Url:      "a",
 		Filename: "b",
-		Id:       0,
+		Id:       "0",
 	}
 
 	var tr DownloadJobTransformer = func(j DownloadJob) (DownloadJob, error) {

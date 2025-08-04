@@ -20,7 +20,7 @@ func TestRealDebridTransformer(t *testing.T) {
 	job := types.DownloadJob{
 		Url:      link,
 		Filename: "",
-		Id:       100,
+		Id:       "100",
 		Password: "",
 	}
 	newJob, err := RealDebridTransformer(job)
