@@ -2,21 +2,20 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 
+	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/KhoalaS/godel/pkg/utils/transformer"
 	"github.com/joho/godotenv"
 )
-
-var transformerRegistry = map[string]types.DownloadJobTransformer{
-	"real-debrid": transformer.RealDebridTransformer,
-}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -28,6 +27,23 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	var configs []types.DownloadConfig
+	configFile, err := os.Open("./configs.json")
+
+	if err == nil {
+		configData, err := io.ReadAll(configFile)
+		if err != nil {
+			log.Fatal("Error loading configs.json file")
+		}
+
+		json.Unmarshal(configData, &configs)
+		configFile.Close()
+	} else {
+		configs = []types.DownloadConfig{}
+	}
+
+	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
+
 	jobs := make(chan *types.DownloadJob, 4)
 
 	client := http.Client{}
@@ -38,9 +54,9 @@ func main() {
 	}
 
 	job := types.DownloadJob{
-		Url:      "http://localhost:8080/files/random.txt",
+		Url:      "http://localhost:8080/files/stuff.zip",
 		Id:       "100",
-		Filename: "./testfiles/random_cpy.txt",
+		Filename: "./testfiles/stuff_cpy.zip",
 		Limit:    1000 * 1024,
 	}
 
