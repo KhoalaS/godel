@@ -1,12 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
-
-	//"strings"
-	"sync"
+	"os"
+	"os/signal"
 
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
@@ -19,6 +19,10 @@ var transformerRegistry = map[string]types.DownloadJobTransformer{
 }
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+
+	defer stop()
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -28,12 +32,9 @@ func main() {
 
 	client := http.Client{}
 
-	var wg sync.WaitGroup
-
 	numWorkers := 4
 	for i := range numWorkers {
-		wg.Add(1)
-		go downloadWorker(i, jobs, &wg, &client)
+		go downloadWorker(ctx, i, jobs, &client)
 	}
 
 	job := types.DownloadJob{
@@ -44,20 +45,24 @@ func main() {
 	}
 
 	jobs <- &job
-
 	close(jobs)
 
-	wg.Wait()
+	<-ctx.Done()
 }
 
-func downloadWorker(id int, jobs <-chan *types.DownloadJob, wg *sync.WaitGroup, client *http.Client) {
-	for job := range jobs {
-		fmt.Printf("Downloading using worker %d\n", id)
-		err := utils.Download(client, job, nil)
-		if err != nil {
-			fmt.Println(err)
+func downloadWorker(ctx context.Context, id int, jobs <-chan *types.DownloadJob, client *http.Client) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			for job := range jobs {
+				fmt.Printf("Downloading using worker %d\n", id)
+				err := utils.Download(client, job, nil)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		}
 	}
-
-	defer wg.Done()
 }
