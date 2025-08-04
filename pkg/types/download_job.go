@@ -5,4 +5,5 @@ type DownloadJob struct {
 	Filename string `json:"filename"`
 	Id       string `json:"id"`
 	Password string `json:"password"`
+	Limit    int    `json:"limit"`
 }

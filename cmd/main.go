@@ -39,8 +39,8 @@ func main() {
 	job := types.DownloadJob{
 		Url:      "http://localhost:8080/files/random.txt",
 		Id:       "100",
-		Filename: "",
-		Password: "",
+		Filename: "./testfiles/random_cpy.txt",
+		Limit:    1000 * 1024,
 	}
 
 	jobs <- &job
@@ -53,7 +53,7 @@ func main() {
 func downloadWorker(id int, jobs <-chan *types.DownloadJob, wg *sync.WaitGroup, client *http.Client) {
 	for job := range jobs {
 		fmt.Printf("Downloading using worker %d\n", id)
-		err := utils.Download(client, job.Url, job.Filename, nil)
+		err := utils.Download(client, job, nil)
 		if err != nil {
 			fmt.Println(err)
 		}

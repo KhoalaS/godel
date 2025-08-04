@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,10 +11,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/KhoalaS/godel/pkg/types"
+	"golang.org/x/time/rate"
 )
 
-func Download(client *http.Client, _url, path string, headers map[string]string) error {
-	parsedUrl, err := url.Parse(_url)
+func Download(client *http.Client, job *types.DownloadJob, headers map[string]string) error {
+	parsedUrl, err := url.Parse(job.Url)
 	if err != nil {
 		return err
 	}
@@ -39,7 +43,7 @@ func Download(client *http.Client, _url, path string, headers map[string]string)
 		return fmt.Errorf("failed request with status code %d and body: %s", response.StatusCode, errorMsg)
 	}
 
-	filename := path
+	filename := job.Filename
 
 	if strings.TrimSpace(filename) == "" {
 		segments := strings.Split(parsedUrl.Path, "/")
@@ -94,7 +98,7 @@ func Download(client *http.Client, _url, path string, headers map[string]string)
 				remaining := contentLengthInt - bytesRead
 				eta := float64(remaining) / float64(deltaBytes) * float64(elapsed)
 
-				fmt.Printf("%s Speed: %.2f MB/s (eta: %.2f seconds)\n", path, speed, eta)
+				fmt.Printf("%s Speed: %.2f MB/s (eta: %.2f seconds)\n", job.Filename, speed, eta)
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()
@@ -102,8 +106,21 @@ func Download(client *http.Client, _url, path string, headers map[string]string)
 		}
 	}()
 
+	var reader io.Reader
+
+	if job.Limit > 0 {
+		limit := rate.NewLimiter(rate.Limit(job.Limit), job.Limit)
+		reader = &RateLimitReader{
+			limiter: limit,
+			reader:  response.Body,
+			ctx:     context.Background(),
+		}
+	} else {
+		reader = response.Body
+	}
+
 	for {
-		n, err := response.Body.Read(buf)
+		n, err := reader.Read(buf)
 		if n > 0 {
 			_, writeErr := outfile.Write(buf[:n])
 			if writeErr != nil {
@@ -115,7 +132,7 @@ func Download(client *http.Client, _url, path string, headers map[string]string)
 
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				fmt.Printf("\n%s Done\n", path)
+				fmt.Printf("\n%s Done\n", job.Filename)
 				ticker.Stop()
 				done <- true
 				break
@@ -124,7 +141,7 @@ func Download(client *http.Client, _url, path string, headers map[string]string)
 			}
 		}
 
-		fmt.Printf("%s: progress: %.2f\r", path, float32(bytesRead)/float32(contentLengthInt))
+		fmt.Printf("%s: progress: %.2f\r", job.Filename, float32(bytesRead)/float32(contentLengthInt))
 	}
 
 	return nil
