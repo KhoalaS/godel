@@ -27,7 +27,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	var configs []types.DownloadConfig
+	var configs map[string]types.DownloadConfig
 	configFile, err := os.Open("./configs.json")
 
 	if err == nil {
@@ -39,7 +39,7 @@ func main() {
 		json.Unmarshal(configData, &configs)
 		configFile.Close()
 	} else {
-		configs = []types.DownloadConfig{}
+		configs = map[string]types.DownloadConfig{}
 	}
 
 	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
