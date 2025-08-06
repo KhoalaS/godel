@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/KhoalaS/godel"
@@ -27,6 +28,9 @@ var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
 var configs map[string]types.DownloadConfig
 
 func main() {
+
+	var wg sync.WaitGroup
+
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	numWorkers := flag.Int("worker", 4, "number of workers")
@@ -65,7 +69,8 @@ func main() {
 	defer stop()
 
 	for i := range *numWorkers {
-		go godel.DownloadWorker(ctx, i, jobs, &client)
+		wg.Add(1)
+		go godel.DownloadWorker(ctx, &wg, i, jobs, &client)
 	}
 
 	mux := http.NewServeMux()
@@ -76,6 +81,8 @@ func main() {
 		Addr:    ":9095",
 		Handler: mux,
 	}
+
+	log.Info().Msg("Starting http server")
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -93,6 +100,9 @@ func main() {
 		log.Fatal().Err(err).Msg("Server forced to shutdown")
 	}
 
+	log.Info().Msg("Waiting for workers to exit")
+	wg.Wait()
+
 	log.Info().Msg("Server shut down gracefully")
 }
 
@@ -104,6 +114,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(data, &job)
 	job.Id = uuid.New().String()
 	job.CancelCh = make(chan struct{})
+	job.Status = types.IDLE
 
 	if job.ConfigId != "" {
 		if config, exist := configs[job.ConfigId]; exist {

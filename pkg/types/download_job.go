@@ -1,12 +1,25 @@
 package types
 
 type DownloadJob struct {
-	Url         string   `json:"url"`
-	Filename    string   `json:"filename"`
-	Id          string   `json:"id"`
-	Password    string   `json:"password"`
-	Limit       int      `json:"limit"`
-	ConfigId    string   `json:"configId"`
-	Transformer []string `json:"transformer"`
+	Url         string        `json:"url"`
+	Filename    string        `json:"filename"`
+	Id          string        `json:"id"`
+	Password    string        `json:"password"`
+	Limit       int           `json:"limit"`
+	ConfigId    string        `json:"configId"`
+	Transformer []string      `json:"transformer"`
+	Status      DownloadState `json:"status"`
 	CancelCh    chan struct{}
+	PauseCh     chan struct{}
 }
+
+type DownloadState string
+
+const (
+	IDLE        DownloadState = "idle"
+	PAUSED      DownloadState = "paused"
+	CANCELED    DownloadState = "canceled"
+	DOWNLOADING DownloadState = "downloading"
+	DONE        DownloadState = "done"
+	ERROR       DownloadState = "error"
+)

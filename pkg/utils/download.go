@@ -117,20 +117,25 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		reader = response.Body
 	}
 
+	job.Status = types.DOWNLOADING
+
 	for {
 		select {
 		case <-ctx.Done():
 			log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("download canceled")
 			close(done)
+			job.Status = types.PAUSED
 			return ctx.Err()
 		case <-job.CancelCh:
 			close(done)
+			job.Status = types.CANCELED
 			return errors.New("download canceled")
 		default:
 			n, err := reader.Read(buf)
 			if n > 0 {
 				_, writeErr := outfile.Write(buf[:n])
 				if writeErr != nil {
+					job.Status = types.ERROR
 					return writeErr
 				}
 				bytesRead += n
@@ -138,12 +143,14 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 			}
 
 			if err != nil {
-				close(done)
+				defer close(done)
 
 				if errors.Is(err, io.EOF) {
 					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Done")
+					job.Status = types.DONE
 					return nil
 				} else {
+					job.Status = types.ERROR
 					return err
 				}
 			}

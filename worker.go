@@ -3,13 +3,18 @@ package godel
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 
-func DownloadWorker(ctx context.Context, id int, jobs <-chan *types.DownloadJob, client *http.Client) {
+func DownloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan *types.DownloadJob, client *http.Client) {
+	log.Info().Int("id", id).Msg("Worker online")
+
+	defer wg.Done()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -17,15 +22,15 @@ func DownloadWorker(ctx context.Context, id int, jobs <-chan *types.DownloadJob,
 			return
 		case job, ok := <-jobs:
 			if !ok {
-				return
+				log.Warn().Int("id", id).Msg("Unexpected jobs channel closure")
+				continue
 			}
 
 			log.Info().Int("id", id).Msg("Downloading using worker")
 			err := utils.Download(ctx, client, job, nil)
 			if err != nil {
-				log.Err(err).Msg("error during download")
+				log.Err(err).Str("status", string(job.Status)).Str("filename", job.Filename).Str("id", job.Id).Msg("error during download")
 			}
-
 		}
 	}
 }
