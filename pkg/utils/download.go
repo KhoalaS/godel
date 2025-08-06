@@ -174,16 +174,16 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 			job.Status.Store(types.PAUSED)
 			return ctx.Err()
 		case <-job.CancelCh:
-			job.Status.Store(types.CANCELED)
 			if job.DeleteOnCancel {
 				outfile.Close()
 				log.Info().Str("filename", job.Filename).Msg("Removing file")
 				os.Remove(job.Filename)
 			}
+			job.Status.Store(types.CANCELED)
 			return errors.New("download canceled")
 		case <-job.PauseCh:
-			job.Status.Store(types.PAUSED)
 			job.BytesDownloaded = bytesRead
+			job.Status.Store(types.PAUSED)
 			return errors.New("download paused")
 		default:
 			n, err := reader.Read(buf)

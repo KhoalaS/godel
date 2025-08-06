@@ -36,13 +36,17 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 	numWorkers := flag.Int("worker", 4, "number of workers")
 	deleteOnCancel = flag.Bool("del-cancel", true, "wether to delete files of canceled downloads")
 	debugMode = flag.Bool("debug", false, "runs the server in debug mode, starts a fileserver on port 8080 and serves the ./testfiles directory")
 
 	flag.Parse()
+
+	logLevel := zerolog.InfoLevel
+	if *debugMode {
+		logLevel = zerolog.DebugLevel
+	}
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(logLevel)
 
 	log.Info().Msgf("Using %d workers", *numWorkers)
 
@@ -125,8 +129,8 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	json.Unmarshal(data, &job)
 	job.Id = uuid.New().String()
-	job.CancelCh = make(chan struct{})
-	job.PauseCh = make(chan struct{})
+	job.CancelCh = make(chan struct{}, 1)
+	job.PauseCh = make(chan struct{}, 1)
 	job.DeleteOnCancel = *deleteOnCancel
 	job.Status.Store(types.IDLE)
 
@@ -164,7 +168,7 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 
 	job, ok := jobRegistry.Load(jobId)
 	if !ok {
-		log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Tried canceling unknown job")
+		log.Info().Str("id", jobId).Msg("Tried canceling unknown job")
 		w.WriteHeader(404)
 	} else {
 		currentState := job.Status.Load()
@@ -178,7 +182,11 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 				}()
 			}
 		case types.DOWNLOADING:
-			job.CancelCh <- struct{}{}
+			select {
+			case job.CancelCh <- struct{}{}:
+			default:
+				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("Cancel signal already sent")
+			}
 			log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Canceled job")
 		default:
 			log.Warn().Str("id", jobId).Str("status", string(currentState.(types.DownloadState))).Msg("Job could not be canceled in current state")
@@ -200,11 +208,19 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 		currentState := job.Status.Load()
 		switch currentState {
 		case types.PAUSED:
-			job.PauseCh = make(chan struct{})
+			// discard old pause signal
+			select {
+			case <-job.PauseCh:
+			default:
+			}
 			jobs <- job
 			log.Info().Str("id", jobId).Msg("Resumed job")
 		case types.DOWNLOADING:
-			job.PauseCh <- struct{}{}
+			select {
+			case job.PauseCh <- struct{}{}:
+			default:
+				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("Pause signal already sent")
+			}
 			log.Info().Str("id", jobId).Msg("Paused job")
 		default:
 			log.Warn().Str("id", jobId).Str("status", string(currentState.(types.DownloadState))).Msg("Job could not be paused/resumed in current state")
