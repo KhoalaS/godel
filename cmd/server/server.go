@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,37 +14,46 @@ import (
 	"github.com/KhoalaS/godel"
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/KhoalaS/godel/pkg/utils/transformer"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var jobs = make(chan *types.DownloadJob, 12)
 var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
+var configs map[string]types.DownloadConfig
 
 func main() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	numWorkers := flag.Int("worker", 4, "number of workers")
 	flag.Parse()
 
-	fmt.Printf("using %d workers\n", *numWorkers)
+	log.Info().Msgf("Using %d workers", *numWorkers)
 
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("Error loading .env file")
+		log.Info().Msg("Error loading .env file")
 	}
 
 	client := http.Client{}
 
-	var configs map[string]types.DownloadConfig
 	configFile, err := os.Open("./configs.json")
 
 	if err == nil {
 		configData, err := io.ReadAll(configFile)
 		if err != nil {
-			log.Fatal("could not load configs.json file")
+			log.Fatal().Msg("Could not load configs.json file")
 		}
 
-		json.Unmarshal(configData, &configs)
+		err = json.Unmarshal(configData, &configs)
+		if err != nil {
+			log.Warn().Msg("Could not unmarshal configs.json")
+			configs = map[string]types.DownloadConfig{}
+		}
 		configFile.Close()
 	} else {
 		configs = map[string]types.DownloadConfig{}
@@ -71,7 +79,7 @@ func main() {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen error: %v\n", err)
+			log.Fatal().Err(err).Msg("Listen error")
 		}
 	}()
 
@@ -82,10 +90,10 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("server forced to shutdown: %v", err)
+		log.Fatal().Err(err).Msg("Server forced to shutdown")
 	}
 
-	log.Println("Server shut down gracefully")
+	log.Info().Msg("Server shut down gracefully")
 }
 
 func handleAdd(w http.ResponseWriter, r *http.Request) {
@@ -96,6 +104,26 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(data, &job)
 	job.Id = uuid.New().String()
 	job.CancelCh = make(chan struct{})
+
+	if job.ConfigId != "" {
+		if config, exist := configs[job.ConfigId]; exist {
+			utils.ApplyConfig(&job, config)
+		}
+	}
+
+	if len(job.Transformer) > 0 {
+		for _, id := range job.Transformer {
+			if tr, ok := registries.TransformerRegistry.Load(id); ok {
+				err := tr(&job)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write(fmt.Appendf(nil, "bad transformer %s", id))
+				}
+			} else {
+
+			}
+		}
+	}
 
 	jobRegistry.Store(job.Id, &job)
 
@@ -108,12 +136,13 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 	data, _ := io.ReadAll(r.Body)
 
 	jobId := string(data)
-	fmt.Println(jobId)
 
 	job, ok := jobRegistry.Load(jobId)
 	if !ok {
+		log.Info().Msgf("Tried canceling unkown job %s", jobId)
 		w.WriteHeader(404)
 	} else {
+		log.Info().Msgf("Canceled job %s", jobId)
 		job.CancelCh <- struct{}{}
 	}
 

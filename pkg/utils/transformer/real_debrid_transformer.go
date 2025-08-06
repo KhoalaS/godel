@@ -23,8 +23,8 @@ const (
 )
 
 var endpoints = map[Endpoint]types.Tuple[string, int]{
-	UnrestrictLink: types.Tuple[string, int]{A: http.MethodPost, B: http.StatusOK},
-	AddMagnet:      types.Tuple[string, int]{A: http.MethodPost, B: http.StatusCreated},
+	UnrestrictLink: {A: http.MethodPost, B: http.StatusOK},
+	AddMagnet:      {A: http.MethodPost, B: http.StatusCreated},
 }
 
 func RealDebridTransformer(job *types.DownloadJob) error {

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
 )
 
@@ -43,14 +44,12 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		return fmt.Errorf("failed request with status code %d and body: %s", response.StatusCode, errorMsg)
 	}
 
-	filename := job.Filename
-
-	if strings.TrimSpace(filename) == "" {
+	if strings.TrimSpace(job.Filename) == "" {
 		segments := strings.Split(parsedUrl.Path, "/")
-		filename = segments[len(segments)-1]
+		job.Filename = segments[len(segments)-1]
 	}
 
-	outfile, err := os.Create(filename)
+	outfile, err := os.Create(job.Filename)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	contentLength := response.Header.Get("content-length")
 
 	if contentLength == "" {
-		fmt.Println("no content length do io.Copy")
+		log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("No content length do io.Copy")
 		_, err = io.Copy(outfile, response.Body)
 		if err != nil {
 			return err
@@ -73,8 +72,6 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("content-length:", contentLengthInt)
 
 	bytesRead := 0
 	buf := make([]byte, CHUNK_SIZE)
@@ -99,7 +96,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				remaining := contentLengthInt - bytesRead
 				eta := float64(remaining) / float64(deltaBytes) * float64(elapsed)
 
-				fmt.Printf("%s Speed: %.2f MB/s (eta: %.2f seconds)\n", job.Filename, speed, eta)
+				log.Info().Str("filename", job.Filename).Str("id", job.Id).Msgf("Speed: %.2f MB/s (eta: %.2f seconds)", speed, eta)
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()
@@ -123,7 +120,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Printf("%s download canceled", job.Filename)
+			log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("download canceled")
 			close(done)
 			return ctx.Err()
 		case <-job.CancelCh:
@@ -144,14 +141,12 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				close(done)
 
 				if errors.Is(err, io.EOF) {
-					fmt.Printf("\n%s Done\n", job.Filename)
+					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Done")
 					return nil
 				} else {
 					return err
 				}
 			}
-
-			fmt.Printf("%s: progress: %.2f\r", job.Filename, float32(bytesRead)/float32(contentLengthInt))
 		}
 	}
 }

@@ -2,28 +2,28 @@ package godel
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
+	"github.com/rs/zerolog/log"
 )
 
 func DownloadWorker(ctx context.Context, id int, jobs <-chan *types.DownloadJob, client *http.Client) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Printf("Done signal send for worker %d\n", id)
+			log.Info().Int("id", id).Msg("Done signal send to worker")
 			return
 		case job, ok := <-jobs:
 			if !ok {
 				return
 			}
 
-			fmt.Printf("Downloading using worker %d\n", id)
+			log.Info().Int("id", id).Msg("Downloading using worker")
 			err := utils.Download(ctx, client, job, nil)
 			if err != nil {
-				fmt.Println("error during download", err)
+				log.Err(err).Msg("error during download")
 			}
 
 		}
