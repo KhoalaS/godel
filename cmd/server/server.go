@@ -31,6 +31,8 @@ var deleteOnCancel *bool
 var debugMode *bool
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
 	var wg sync.WaitGroup
 
@@ -62,6 +64,8 @@ func main() {
 				log.Fatal().Err(err).Msg("Listen error on test server")
 			}
 		}()
+
+		defer testServer.Shutdown(ctx)
 	}
 
 	err := godotenv.Load()
@@ -74,9 +78,6 @@ func main() {
 	loadConfig()
 
 	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
 
 	for i := range *numWorkers {
 		wg.Add(1)
@@ -166,8 +167,10 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 		log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Tried canceling unknown job")
 		w.WriteHeader(404)
 	} else {
-		switch job.Status.Load() {
+		currentState := job.Status.Load()
+		switch currentState {
 		case types.PAUSED:
+			log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Canceling paused job")
 			job.Status.Store(types.CANCELED)
 			if job.DeleteOnCancel {
 				go func() {
@@ -175,13 +178,12 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 				}()
 			}
 		case types.DOWNLOADING:
-			select {
-			case job.CancelCh <- struct{}{}:
-			default:
-				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("No receiver for canceling")
-			}
+			job.CancelCh <- struct{}{}
+			log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Canceled job")
+		default:
+			log.Warn().Str("id", jobId).Str("status", string(currentState.(types.DownloadState))).Msg("Job could not be canceled in current state")
 		}
-		log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Canceled job")
+
 	}
 }
 
@@ -195,13 +197,17 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 		log.Info().Str("id", jobId).Msg("Tried pausing unkown job")
 		w.WriteHeader(404)
 	} else {
-		if job.Status.Load() == types.PAUSED {
+		currentState := job.Status.Load()
+		switch currentState {
+		case types.PAUSED:
 			job.PauseCh = make(chan struct{})
 			jobs <- job
 			log.Info().Str("id", jobId).Msg("Resumed job")
-		} else {
+		case types.DOWNLOADING:
 			job.PauseCh <- struct{}{}
 			log.Info().Str("id", jobId).Msg("Paused job")
+		default:
+			log.Warn().Str("id", jobId).Str("status", string(currentState.(types.DownloadState))).Msg("Job could not be paused/resumed in current state")
 		}
 	}
 }
