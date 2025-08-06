@@ -9,9 +9,7 @@ import (
 	"github.com/KhoalaS/godel/pkg/types"
 )
 
-func ApplyConfig(job types.DownloadJob, config types.DownloadConfig) (types.DownloadJob, error) {
-	newJob := job
-
+func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
 	// apply the transformers
 	for _, transformerId := range config.Transformer {
 		val, ok := registries.TransformerRegistry.Load(transformerId)
@@ -20,31 +18,31 @@ func ApplyConfig(job types.DownloadJob, config types.DownloadConfig) (types.Down
 		}
 
 		var err error
-		newJob, err = val(newJob)
+		err = val(job)
 		if err != nil {
-			return job, err
+			return err
 		}
 	}
 
 	// apply the config values
 	if config.Limit > 0 {
-		newJob.Limit = config.Limit
+		job.Limit = config.Limit
 	}
 
-	if newJob.Filename == "" {
-		inferredName, err := InferFilename(newJob.Url)
+	if job.Filename == "" {
+		inferredName, err := InferFilename(job.Url)
 		if err != nil {
-			return job, err
+			return err
 		}
 
-		newJob.Filename = inferredName
+		job.Filename = inferredName
 	}
 
 	if config.DestPath != "" {
-		newJob.Filename = filepath.Join(config.DestPath, newJob.Filename)
+		job.Filename = filepath.Join(config.DestPath, job.Filename)
 	}
 
-	return newJob, nil
+	return nil
 }
 
 func InferFilename(_url string) (string, error) {

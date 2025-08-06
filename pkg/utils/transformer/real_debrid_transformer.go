@@ -14,10 +14,10 @@ import (
 
 const baseUrl string = "https://api.real-debrid.com/rest/1.0/"
 
-func RealDebridTransformer(job types.DownloadJob) (types.DownloadJob, error) {
+func RealDebridTransformer(job *types.DownloadJob) error {
 	apiKey := os.Getenv("RD_KEY")
 	if apiKey == "" {
-		return job, fmt.Errorf("no api key")
+		return fmt.Errorf("no api key")
 	}
 
 	_url := baseUrl + "unrestrict/link"
@@ -30,7 +30,7 @@ func RealDebridTransformer(job types.DownloadJob) (types.DownloadJob, error) {
 
 	req, err := http.NewRequest(http.MethodPost, _url, strings.NewReader(form.Encode()))
 	if err != nil {
-		return job, err
+		return err
 	}
 
 	req.Header.Add("Authorization", "Bearer "+apiKey)
@@ -38,25 +38,25 @@ func RealDebridTransformer(job types.DownloadJob) (types.DownloadJob, error) {
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return job, err
+		return err
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return job, fmt.Errorf("error in response, code: %d", response.StatusCode)
+		return fmt.Errorf("error in response, code: %d", response.StatusCode)
 	}
 
 	defer response.Body.Close()
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return job, err
+		return err
 	}
 
 	var unrestrictData UnrestrictResponse
 
 	err = json.Unmarshal(data, &unrestrictData)
 	if err != nil {
-		return job, err
+		return err
 	}
 
 	if job.Filename == "" && unrestrictData.Filename != "" {
@@ -64,7 +64,7 @@ func RealDebridTransformer(job types.DownloadJob) (types.DownloadJob, error) {
 	}
 	job.Url = unrestrictData.Download
 
-	return job, nil
+	return nil
 }
 
 type UnrestrictResponse struct {

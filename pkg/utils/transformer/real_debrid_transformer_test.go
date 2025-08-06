@@ -23,12 +23,14 @@ func TestRealDebridTransformer(t *testing.T) {
 		Id:       "100",
 		Password: "",
 	}
-	newJob, err := RealDebridTransformer(job)
+
+	err = RealDebridTransformer(&job)
+
 	if err != nil {
 		t.Error(err)
 	}
 
-	if newJob.Filename != filename {
+	if job.Filename != filename {
 		t.Fail()
 	}
 }

@@ -9,14 +9,14 @@ func TestJobTransformer(t *testing.T) {
 		Id:       "0",
 	}
 
-	var tr DownloadJobTransformer = func(j DownloadJob) (DownloadJob, error) {
+	var tr DownloadJobTransformer = func(j *DownloadJob) error {
 		j.Filename = "c"
-		return j, nil
+		return nil
 	}
 
-	tr(job)
+	tr(&job)
 
-	if job.Filename != "b" {
-		t.Error("mutated filename of old job")
+	if job.Filename != "c" {
+		t.Error("old filename not mutated")
 	}
 }

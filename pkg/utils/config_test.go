@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/KhoalaS/godel/pkg/registries"
@@ -9,9 +10,9 @@ import (
 
 func TestConfig(t *testing.T) {
 
-	var limitTransformer types.DownloadJobTransformer = func(job types.DownloadJob) (types.DownloadJob, error) {
+	var limitTransformer types.DownloadJobTransformer = func(job *types.DownloadJob) error {
 		job.Limit = 1000
-		return job, nil
+		return nil
 	}
 
 	registries.TransformerRegistry.Store("limit-transformer-T", limitTransformer)
@@ -28,16 +29,18 @@ func TestConfig(t *testing.T) {
 		Url: "http://localhost:8080/files/stuff.zip",
 	}
 
-	newJob, err := ApplyConfig(job, config)
+	err := ApplyConfig(&job, config)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if newJob.Filename != "testfiles\\stuff.zip" && newJob.Filename != "testfiles/stuff.zip" {
-		t.Error(newJob.Filename)
+	dest := filepath.Clean(job.Filename)
+
+	if dest != "testfiles/stuff.zip" && dest != "testfiles\\stuff.zip" {
+		t.Error(job.Filename)
 	}
 
-	if newJob.Limit != 100 {
-		t.Error(newJob.Limit)
+	if job.Limit != 100 {
+		t.Error(job.Limit)
 	}
 }
