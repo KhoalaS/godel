@@ -28,6 +28,7 @@ var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
 var configs map[string]types.DownloadConfig
 
 var deleteOnCancel *bool
+var debugMode *bool
 
 func main() {
 
@@ -37,6 +38,7 @@ func main() {
 
 	numWorkers := flag.Int("worker", 4, "number of workers")
 	deleteOnCancel = flag.Bool("del-cancel", true, "wether to delete files of canceled downloads")
+	debugMode = flag.Bool("debug", false, "runs the server in debug mode, starts a fileserver on port 8080 and serves the ./testfiles directory")
 
 	flag.Parse()
 
@@ -44,6 +46,22 @@ func main() {
 
 	if *deleteOnCancel {
 		log.Info().Msg("Deleting files on cancel")
+	}
+
+	if *debugMode {
+		log.Info().Msg("Starting debug http file server")
+
+		testMux := http.NewServeMux()
+		testMux.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("./testfiles"))))
+		testServer := http.Server{
+			Addr:    ":8080",
+			Handler: testMux,
+		}
+		go func() {
+			if err := testServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatal().Err(err).Msg("Listen error on test server")
+			}
+		}()
 	}
 
 	err := godotenv.Load()
