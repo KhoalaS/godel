@@ -34,3 +34,30 @@ func TestRealDebridTransformer(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestRealDebridMagnetTransformer(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		t.Error(err)
+	}
+
+	link := os.Getenv("RD_TEST_MAGNET")
+	filename := os.Getenv("RD_TEST_FILENAME")
+
+	job := types.DownloadJob{
+		Url:      link,
+		Filename: filename,
+		Id:       "100",
+		Password: "",
+	}
+
+	err = RealDebridMagnetTransformer(&job)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if job.Filename != filename {
+		t.Fail()
+	}
+}

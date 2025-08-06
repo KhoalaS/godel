@@ -19,11 +19,12 @@ type Endpoint string
 const (
 	UnrestrictLink Endpoint = "unrestrict/link"
 	AddMagnet      Endpoint = "torrents/addMagnet"
+	SelectFiles    Endpoint = "torrents/selectFiles/{id}"
 )
 
-var endpoints = map[Endpoint]string{
-	UnrestrictLink: http.MethodPost,
-	AddMagnet:      http.MethodPost,
+var endpoints = map[Endpoint]types.Tuple[string, int]{
+	UnrestrictLink: types.Tuple[string, int]{A: http.MethodPost, B: http.StatusOK},
+	AddMagnet:      types.Tuple[string, int]{A: http.MethodPost, B: http.StatusCreated},
 }
 
 func RealDebridTransformer(job *types.DownloadJob) error {
@@ -59,7 +60,9 @@ func RealDebridMagnetTransformer(job *types.DownloadJob) error {
 
 	job.Url = data.Uri
 
-	return RealDebridTransformer(job)
+	// TODO file selection, wait for completion
+
+	return nil
 }
 
 func makeRealDebridRequest[T any](endpoint Endpoint, params map[string]string) (T, error) {
@@ -78,9 +81,9 @@ func makeRealDebridRequest[T any](endpoint Endpoint, params map[string]string) (
 		form.Add(k, v)
 	}
 
-	method := endpoints[endpoint]
+	ep := endpoints[endpoint]
 
-	req, err := http.NewRequest(method, _url, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(ep.A, _url, strings.NewReader(form.Encode()))
 	if err != nil {
 		return returnValue, err
 	}
@@ -93,7 +96,7 @@ func makeRealDebridRequest[T any](endpoint Endpoint, params map[string]string) (
 		return returnValue, err
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != ep.B {
 		return returnValue, fmt.Errorf("error in response, code: %d", response.StatusCode)
 	}
 

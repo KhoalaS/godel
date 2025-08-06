@@ -1,6 +1,6 @@
 package types
 
-type Tuple[T any] struct {
+type Tuple[T any, U any] struct {
 	A T
-	B T
+	B U
 }
