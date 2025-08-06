@@ -145,11 +145,25 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 
 	job, ok := jobRegistry.Load(jobId)
 	if !ok {
-		log.Info().Str("id", jobId).Msg("Tried canceling unkown job")
+		log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Tried canceling unknown job")
 		w.WriteHeader(404)
 	} else {
-		job.CancelCh <- struct{}{}
-		log.Info().Str("id", jobId).Msg("Canceled job")
+		switch job.Status.Load() {
+		case types.PAUSED:
+			job.Status.Store(types.CANCELED)
+			if job.DeleteOnCancel {
+				go func() {
+					os.Remove(job.Filename)
+				}()
+			}
+		case types.DOWNLOADING:
+			select {
+			case job.CancelCh <- struct{}{}:
+			default:
+				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("No receiver for canceling")
+			}
+		}
+		log.Info().Str("filename", job.Filename).Str("id", jobId).Msg("Canceled job")
 	}
 }
 
