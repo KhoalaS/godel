@@ -42,6 +42,8 @@ func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
 		job.Filename = filepath.Join(config.DestPath, job.Filename)
 	}
 
+	job.DeleteOnCancel = config.DeleteOnCancel
+
 	return nil
 }
 

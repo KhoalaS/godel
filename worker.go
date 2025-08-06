@@ -18,7 +18,7 @@ func DownloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info().Int("id", id).Msg("Done signal send to worker")
+			log.Info().Int("id", id).Msg("Done signal sent to worker")
 			return
 		case job, ok := <-jobs:
 			if !ok {

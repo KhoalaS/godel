@@ -11,6 +11,7 @@ type DownloadJob struct {
 	ConfigId        string       `json:"configId"`
 	Transformer     []string     `json:"transformer"`
 	BytesDownloaded int          `json:"bytesDownloaded"`
+	DeleteOnCancel  bool         `json:"deleteOnCancel"`
 	Status          atomic.Value `json:"status"`
 	CancelCh        chan struct{}
 	PauseCh         chan struct{}

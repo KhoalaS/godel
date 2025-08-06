@@ -27,6 +27,8 @@ var jobs = make(chan *types.DownloadJob, 12)
 var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
 var configs map[string]types.DownloadConfig
 
+var deleteOnCancel *bool
+
 func main() {
 
 	var wg sync.WaitGroup
@@ -34,9 +36,15 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	numWorkers := flag.Int("worker", 4, "number of workers")
+	deleteOnCancel = flag.Bool("del-cancel", true, "wether to delete files of canceled downloads")
+
 	flag.Parse()
 
 	log.Info().Msgf("Using %d workers", *numWorkers)
+
+	if *deleteOnCancel {
+		log.Info().Msg("Deleting files on cancel")
+	}
 
 	err := godotenv.Load()
 	if err != nil {
@@ -100,6 +108,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	job.Id = uuid.New().String()
 	job.CancelCh = make(chan struct{})
 	job.PauseCh = make(chan struct{})
+	job.DeleteOnCancel = *deleteOnCancel
 	job.Status.Store(types.IDLE)
 
 	if job.ConfigId != "" {

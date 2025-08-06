@@ -175,6 +175,11 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 			return ctx.Err()
 		case <-job.CancelCh:
 			job.Status.Store(types.CANCELED)
+			if job.DeleteOnCancel {
+				outfile.Close()
+				log.Info().Str("filename", job.Filename).Msg("Removing file")
+				os.Remove(job.Filename)
+			}
 			return errors.New("download canceled")
 		case <-job.PauseCh:
 			job.Status.Store(types.PAUSED)
