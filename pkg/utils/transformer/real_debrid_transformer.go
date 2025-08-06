@@ -14,23 +14,75 @@ import (
 
 const baseUrl string = "https://api.real-debrid.com/rest/1.0/"
 
+type Endpoint string
+
+const (
+	UnrestrictLink Endpoint = "unrestrict/link"
+	AddMagnet      Endpoint = "torrents/addMagnet"
+)
+
+var endpoints = map[Endpoint]string{
+	UnrestrictLink: http.MethodPost,
+	AddMagnet:      http.MethodPost,
+}
+
 func RealDebridTransformer(job *types.DownloadJob) error {
-	apiKey := os.Getenv("RD_KEY")
-	if apiKey == "" {
-		return fmt.Errorf("no api key")
+	params := map[string]string{
+		"link": job.Url,
 	}
-
-	_url := baseUrl + "unrestrict/link"
-
-	form := url.Values{}
-	form.Add("link", job.Url)
 	if job.Password != "" {
-		form.Add("password", job.Password)
+		params["password"] = job.Password
 	}
 
-	req, err := http.NewRequest(http.MethodPost, _url, strings.NewReader(form.Encode()))
+	data, err := makeRealDebridRequest[UnrestrictResponse](UnrestrictLink, params)
+
 	if err != nil {
 		return err
+	}
+
+	if job.Filename == "" && data.Filename != "" {
+		job.Filename = data.Filename
+	}
+	job.Url = data.Download
+
+	return nil
+}
+
+func RealDebridMagnetTransformer(job *types.DownloadJob) error {
+	params := map[string]string{
+		"magnet": job.Url,
+	}
+	data, err := makeRealDebridRequest[AddMagnetResponse](AddMagnet, params)
+	if err != nil {
+		return err
+	}
+
+	job.Url = data.Uri
+
+	return RealDebridTransformer(job)
+}
+
+func makeRealDebridRequest[T any](endpoint Endpoint, params map[string]string) (T, error) {
+	var returnValue T
+
+	apiKey := os.Getenv("RD_KEY")
+	if apiKey == "" {
+		return returnValue, fmt.Errorf("no api key")
+	}
+
+	_url := baseUrl + string(endpoint)
+
+	form := url.Values{}
+
+	for k, v := range params {
+		form.Add(k, v)
+	}
+
+	method := endpoints[endpoint]
+
+	req, err := http.NewRequest(method, _url, strings.NewReader(form.Encode()))
+	if err != nil {
+		return returnValue, err
 	}
 
 	req.Header.Add("Authorization", "Bearer "+apiKey)
@@ -38,33 +90,26 @@ func RealDebridTransformer(job *types.DownloadJob) error {
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return returnValue, err
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("error in response, code: %d", response.StatusCode)
+		return returnValue, fmt.Errorf("error in response, code: %d", response.StatusCode)
 	}
 
 	defer response.Body.Close()
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return returnValue, err
 	}
 
-	var unrestrictData UnrestrictResponse
-
-	err = json.Unmarshal(data, &unrestrictData)
+	err = json.Unmarshal(data, &returnValue)
 	if err != nil {
-		return err
+		return returnValue, err
 	}
 
-	if job.Filename == "" && unrestrictData.Filename != "" {
-		job.Filename = unrestrictData.Filename
-	}
-	job.Url = unrestrictData.Download
-
-	return nil
+	return returnValue, nil
 }
 
 type UnrestrictResponse struct {
@@ -79,4 +124,9 @@ type UnrestrictResponse struct {
 	Crc        int    `json:"crc"`
 	Download   string `json:"download"`
 	Streamable int    `json:"streamable"`
+}
+
+type AddMagnetResponse struct {
+	Id  string `json:"id"`
+	Uri string `json:"uri"`
 }
