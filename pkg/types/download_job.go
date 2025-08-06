@@ -6,4 +6,5 @@ type DownloadJob struct {
 	Id       string `json:"id"`
 	Password string `json:"password"`
 	Limit    int    `json:"limit"`
+	CancelCh chan struct{}
 }

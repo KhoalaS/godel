@@ -1,4 +1,4 @@
-package main
+package godel
 
 import (
 	"net/http"

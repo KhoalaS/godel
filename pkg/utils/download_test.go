@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -13,11 +14,13 @@ func TestDownload(t *testing.T) {
 		Timeout: time.Second * 15,
 	}
 
+	ctx := context.TODO()
+
 	job := types.DownloadJob{
 		Url: "http://localhost:8080/files/test.txt",
 	}
 
-	err := Download(client, &job, nil)
+	err := Download(ctx, client, &job, nil)
 
 	if err != nil {
 		t.Error(err)

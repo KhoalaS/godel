@@ -1,0 +1,120 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/KhoalaS/godel"
+	"github.com/KhoalaS/godel/pkg/registries"
+	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/KhoalaS/godel/pkg/utils/transformer"
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
+)
+
+var jobs = make(chan *types.DownloadJob, 12)
+var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
+
+func main() {
+	numWorkers := flag.Int("worker", 4, "number of workers")
+	flag.Parse()
+
+	fmt.Printf("using %d workers\n", *numWorkers)
+
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
+	}
+
+	client := http.Client{}
+
+	var configs map[string]types.DownloadConfig
+	configFile, err := os.Open("./configs.json")
+
+	if err == nil {
+		configData, err := io.ReadAll(configFile)
+		if err != nil {
+			log.Fatal("could not load configs.json file")
+		}
+
+		json.Unmarshal(configData, &configs)
+		configFile.Close()
+	} else {
+		configs = map[string]types.DownloadConfig{}
+	}
+
+	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	for i := range *numWorkers {
+		go godel.DownloadWorker(ctx, i, jobs, &client)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /add", handleAdd)
+	mux.HandleFunc("POST /cancel", handleCancel)
+
+	server := &http.Server{
+		Addr:    ":9095",
+		Handler: mux,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen error: %v\n", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	// give server 5 seconds to wrap up
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server shut down gracefully")
+}
+
+func handleAdd(w http.ResponseWriter, r *http.Request) {
+	data, _ := io.ReadAll(r.Body)
+
+	var job types.DownloadJob
+
+	json.Unmarshal(data, &job)
+	job.Id = uuid.New().String()
+	job.CancelCh = make(chan struct{})
+
+	jobRegistry.Store(job.Id, &job)
+
+	jobs <- &job
+
+	w.Write([]byte(job.Id))
+}
+
+func handleCancel(w http.ResponseWriter, r *http.Request) {
+	data, _ := io.ReadAll(r.Body)
+
+	jobId := string(data)
+	fmt.Println(jobId)
+
+	job, ok := jobRegistry.Load(jobId)
+	if !ok {
+		w.WriteHeader(404)
+	} else {
+		job.CancelCh <- struct{}{}
+	}
+
+}

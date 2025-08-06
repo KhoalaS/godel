@@ -16,13 +16,13 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func Download(client *http.Client, job *types.DownloadJob, headers map[string]string) error {
+func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, headers map[string]string) error {
 	parsedUrl, err := url.Parse(job.Url)
 	if err != nil {
 		return err
 	}
 
-	request, err := http.NewRequest(http.MethodGet, parsedUrl.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -85,6 +85,7 @@ func Download(client *http.Client, job *types.DownloadJob, headers map[string]st
 	lastTs := time.Now()
 
 	go func() {
+		defer ticker.Stop()
 		for {
 			select {
 			case <-done:
@@ -113,36 +114,44 @@ func Download(client *http.Client, job *types.DownloadJob, headers map[string]st
 		reader = &RateLimitReader{
 			limiter: limit,
 			reader:  response.Body,
-			ctx:     context.Background(),
+			ctx:     ctx,
 		}
 	} else {
 		reader = response.Body
 	}
 
 	for {
-		n, err := reader.Read(buf)
-		if n > 0 {
-			_, writeErr := outfile.Write(buf[:n])
-			if writeErr != nil {
-				return writeErr
+		select {
+		case <-ctx.Done():
+			fmt.Printf("%s download canceled", job.Filename)
+			close(done)
+			return ctx.Err()
+		case <-job.CancelCh:
+			close(done)
+			return errors.New("download canceled")
+		default:
+			n, err := reader.Read(buf)
+			if n > 0 {
+				_, writeErr := outfile.Write(buf[:n])
+				if writeErr != nil {
+					return writeErr
+				}
+				bytesRead += n
+
 			}
-			bytesRead += n
 
-		}
+			if err != nil {
+				close(done)
 
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				fmt.Printf("\n%s Done\n", job.Filename)
-				ticker.Stop()
-				done <- true
-				break
-			} else {
-				return err
+				if errors.Is(err, io.EOF) {
+					fmt.Printf("\n%s Done\n", job.Filename)
+					return nil
+				} else {
+					return err
+				}
 			}
-		}
 
-		fmt.Printf("%s: progress: %.2f\r", job.Filename, float32(bytesRead)/float32(contentLengthInt))
+			fmt.Printf("%s: progress: %.2f\r", job.Filename, float32(bytesRead)/float32(contentLengthInt))
+		}
 	}
-
-	return nil
 }
