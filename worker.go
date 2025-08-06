@@ -29,7 +29,7 @@ func DownloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan
 			log.Info().Int("id", id).Msg("Downloading using worker")
 			err := utils.Download(ctx, client, job, nil)
 			if err != nil {
-				log.Err(err).Str("status", string(job.Status)).Str("filename", job.Filename).Str("id", job.Id).Msg("error during download")
+				log.Err(err).Str("status", string(job.Status.Load().(types.DownloadState))).Str("filename", job.Filename).Str("id", job.Id).Msg("error during download")
 			}
 		}
 	}

@@ -45,23 +45,7 @@ func main() {
 
 	client := http.Client{}
 
-	configFile, err := os.Open("./configs.json")
-
-	if err == nil {
-		configData, err := io.ReadAll(configFile)
-		if err != nil {
-			log.Fatal().Msg("Could not load configs.json file")
-		}
-
-		err = json.Unmarshal(configData, &configs)
-		if err != nil {
-			log.Warn().Msg("Could not unmarshal configs.json")
-			configs = map[string]types.DownloadConfig{}
-		}
-		configFile.Close()
-	} else {
-		configs = map[string]types.DownloadConfig{}
-	}
+	loadConfig()
 
 	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
 
@@ -76,6 +60,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /add", handleAdd)
 	mux.HandleFunc("POST /cancel", handleCancel)
+	mux.HandleFunc("POST /pause", handlePause)
 
 	server := &http.Server{
 		Addr:    ":9095",
@@ -114,7 +99,8 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(data, &job)
 	job.Id = uuid.New().String()
 	job.CancelCh = make(chan struct{})
-	job.Status = types.IDLE
+	job.PauseCh = make(chan struct{})
+	job.Status.Store(types.IDLE)
 
 	if job.ConfigId != "" {
 		if config, exist := configs[job.ConfigId]; exist {
@@ -150,11 +136,51 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 
 	job, ok := jobRegistry.Load(jobId)
 	if !ok {
-		log.Info().Msgf("Tried canceling unkown job %s", jobId)
+		log.Info().Str("id", jobId).Msg("Tried canceling unkown job")
 		w.WriteHeader(404)
 	} else {
-		log.Info().Msgf("Canceled job %s", jobId)
 		job.CancelCh <- struct{}{}
+		log.Info().Str("id", jobId).Msg("Canceled job")
 	}
+}
 
+func handlePause(w http.ResponseWriter, r *http.Request) {
+	data, _ := io.ReadAll(r.Body)
+
+	jobId := string(data)
+
+	job, ok := jobRegistry.Load(jobId)
+	if !ok {
+		log.Info().Str("id", jobId).Msg("Tried pausing unkown job")
+		w.WriteHeader(404)
+	} else {
+		if job.Status.Load() == types.PAUSED {
+			job.PauseCh = make(chan struct{})
+			jobs <- job
+			log.Info().Str("id", jobId).Msg("Resumed job")
+		} else {
+			job.PauseCh <- struct{}{}
+			log.Info().Str("id", jobId).Msg("Paused job")
+		}
+	}
+}
+
+func loadConfig() {
+	configFile, err := os.Open("./configs.json")
+
+	if err == nil {
+		configData, err := io.ReadAll(configFile)
+		if err != nil {
+			log.Fatal().Msg("Could not load configs.json file")
+		}
+
+		err = json.Unmarshal(configData, &configs)
+		if err != nil {
+			log.Warn().Msg("Could not unmarshal configs.json")
+			configs = map[string]types.DownloadConfig{}
+		}
+		configFile.Close()
+	} else {
+		configs = map[string]types.DownloadConfig{}
+	}
 }

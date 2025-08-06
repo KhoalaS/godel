@@ -4,7 +4,7 @@ import "testing"
 
 func TestJobTransformer(t *testing.T) {
 	job := DownloadJob{
-		Url:      "a",
+		Url:      "http://localhost:8080/files/stuff.zip",
 		Filename: "b",
 		Id:       "0",
 	}

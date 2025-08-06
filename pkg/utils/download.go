@@ -5,14 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
 )
@@ -28,30 +31,67 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		return err
 	}
 
+	if job.Status.Load() == types.PAUSED {
+		log.Info().Int("bytes", job.BytesDownloaded).Msg("Partial file size")
+
+		info, err := os.Stat(job.Filename)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				job.Status.Store(types.IDLE)
+				job.BytesDownloaded = 0
+				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("File is missing on disk, restarting download")
+			} else {
+				return err
+			}
+		} else {
+			if job.BytesDownloaded != int(info.Size()) {
+				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("Missmatch between size on disk and stored size")
+				job.BytesDownloaded = int(info.Size())
+			}
+			request.Header.Add("Range", fmt.Sprintf("bytes=%d-", job.BytesDownloaded))
+		}
+	}
+
+	currentState := job.Status.Load()
+
 	response, err := client.Do(request)
 	if err != nil {
 		return err
 	}
 
-	if response.StatusCode != http.StatusOK {
-		defer response.Body.Close()
-		errorBody, err := io.ReadAll(response.Body)
+	if currentState != types.PAUSED && response.StatusCode != http.StatusOK {
+		response.Body.Close()
+		return fmt.Errorf("unexpected status code %d", response.StatusCode)
+	}
+
+	if currentState == types.PAUSED && response.StatusCode != http.StatusPartialContent {
+		response.Body.Close()
+		return fmt.Errorf("expected 206 Partial Content, got %d", response.StatusCode)
+	}
+
+	log.Info().Str("id", job.Id).Msg("Request successful")
+
+	if strings.TrimSpace(job.Filename) == "" {
+		job.Filename = FallbackFilename(parsedUrl)
+		if job.Filename == "" {
+			job.Filename = uuid.NewString()
+		}
+	}
+
+	var outfile *os.File
+
+	if currentState == types.PAUSED {
+		outfile, err = os.OpenFile(job.Filename, os.O_APPEND|os.O_WRONLY, 0)
 		if err != nil {
 			return err
 		}
-
-		errorMsg := string(errorBody)
-		return fmt.Errorf("failed request with status code %d and body: %s", response.StatusCode, errorMsg)
-	}
-
-	if strings.TrimSpace(job.Filename) == "" {
-		segments := strings.Split(parsedUrl.Path, "/")
-		job.Filename = segments[len(segments)-1]
-	}
-
-	outfile, err := os.Create(job.Filename)
-	if err != nil {
-		return err
+		log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Opened file for appending")
+	} else {
+		outfile, err = os.Create(job.Filename)
+		if err != nil {
+			return err
+		}
+		log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Created new file")
 	}
 
 	defer outfile.Close()
@@ -73,9 +113,13 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		return err
 	}
 
-	bytesRead := 0
+	if currentState == types.PAUSED {
+		contentLengthInt += job.BytesDownloaded
+	}
+
+	bytesRead := job.BytesDownloaded
 	buf := make([]byte, CHUNK_SIZE)
-	lastBytesRead := 0
+	lastBytesRead := job.BytesDownloaded
 
 	ticker := time.NewTicker(time.Second)
 	done := make(chan bool)
@@ -117,43 +161,51 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		reader = response.Body
 	}
 
-	job.Status = types.DOWNLOADING
+	job.Status.Store(types.DOWNLOADING)
+
+	log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Start downloading")
+
+	defer close(done)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("download canceled")
-			close(done)
-			job.Status = types.PAUSED
+			job.Status.Store(types.PAUSED)
 			return ctx.Err()
 		case <-job.CancelCh:
-			close(done)
-			job.Status = types.CANCELED
+			job.Status.Store(types.CANCELED)
 			return errors.New("download canceled")
+		case <-job.PauseCh:
+			job.Status.Store(types.PAUSED)
+			job.BytesDownloaded = bytesRead
+			return errors.New("download paused")
 		default:
 			n, err := reader.Read(buf)
 			if n > 0 {
 				_, writeErr := outfile.Write(buf[:n])
 				if writeErr != nil {
-					job.Status = types.ERROR
+					job.Status.Store(types.ERROR)
 					return writeErr
 				}
 				bytesRead += n
-
+				job.BytesDownloaded = bytesRead
 			}
 
 			if err != nil {
-				defer close(done)
-
 				if errors.Is(err, io.EOF) {
 					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Done")
-					job.Status = types.DONE
+					job.Status.Store(types.DONE)
 					return nil
 				} else {
-					job.Status = types.ERROR
+					job.Status.Store(types.ERROR)
 					return err
 				}
 			}
 		}
 	}
+}
+
+func FallbackFilename(_url *url.URL) string {
+	return path.Base(_url.Path)
 }
