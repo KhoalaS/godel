@@ -6,6 +6,15 @@ type TypedSyncMap[K comparable, V any] struct {
 	m sync.Map
 }
 
+func (tm *TypedSyncMap[K, V]) All() []V {
+	values := []V{}
+	tm.m.Range(func(k any, v any) bool {
+		values = append(values, v.(V))
+		return true
+	})
+	return values
+}
+
 func (tm *TypedSyncMap[K, V]) Store(key K, value V) {
 	tm.m.Store(key, value)
 }

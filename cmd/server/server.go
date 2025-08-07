@@ -95,6 +95,8 @@ func main() {
 	mux.HandleFunc("POST /add", handleAdd)
 	mux.HandleFunc("POST /cancel", handleCancel)
 	mux.HandleFunc("POST /pause", handlePause)
+	mux.HandleFunc("GET /configs", handleConfigs)
+	mux.HandleFunc("GET /jobs", handleJobs)
 
 	server := &http.Server{
 		Addr:    ":9095",
@@ -242,6 +244,38 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleConfigs(w http.ResponseWriter, r *http.Request) {
+	data, err := json.Marshal(configs)
+	if err != nil {
+		responseData, _ := json.Marshal(types.ErrorResponse{
+			Error: utils.INTERNAL_ERROR_MESSAGE,
+		})
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(responseData)
+		return
+	}
+
+	w.Write(data)
+}
+
+func handleJobs(w http.ResponseWriter, r *http.Request) {
+	jobs := jobRegistry.All()
+
+	data, err := json.Marshal(jobs)
+	if err != nil {
+		responseData, _ := json.Marshal(types.ErrorResponse{
+			Error: utils.INTERNAL_ERROR_MESSAGE,
+		})
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(responseData)
+		return
+	}
+
+	w.Write(data)
+}
+
 func loadConfig() {
 	configFile, err := os.Open("./configs.json")
 
@@ -292,9 +326,9 @@ func handleJobinfo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 	for {
-		_, message, err := c.ReadMessage()
+		mt, message, err := c.ReadMessage()
 		if err != nil {
-			log.Err(err).Msg("WS read")
+			log.Err(err).Int("type", mt).Msg("WS read")
 			break
 		}
 		log.Info().Msgf("recv: %s", message)
@@ -309,7 +343,7 @@ func handleJobinfo(w http.ResponseWriter, r *http.Request) {
 
 		err = c.WriteJSON(job)
 		if err != nil {
-			log.Err(err).Msg("WS write")
+			log.Err(err).Str("id", job.Id).Msg("WS write")
 			break
 		}
 	}
