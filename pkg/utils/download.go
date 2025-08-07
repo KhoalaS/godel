@@ -117,6 +117,10 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		contentLengthInt += job.BytesDownloaded
 	}
 
+	if job.Size == 0 {
+		job.Size = contentLengthInt
+	}
+
 	bytesRead := job.BytesDownloaded
 	buf := make([]byte, CHUNK_SIZE)
 	lastBytesRead := job.BytesDownloaded
