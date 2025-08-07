@@ -18,10 +18,13 @@ import (
 	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/KhoalaS/godel/pkg/utils/transformer"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+var upgrader = websocket.Upgrader{} // use default options
 
 var jobs = make(chan *types.DownloadJob, 12)
 var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
@@ -98,11 +101,18 @@ func main() {
 		Handler: mux,
 	}
 
-	log.Info().Msg("Starting http server")
-
 	go func() {
+		log.Info().Msg("Starting http server")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Err(err).Msg("Listen error")
+		}
+	}()
+
+	wsServer := NewWsServer()
+	go func() {
+		log.Info().Msg("Starting websocket server")
+		if err := wsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("WS Listen error")
 		}
 	}()
 
@@ -114,6 +124,10 @@ func main() {
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatal().Err(err).Msg("Server forced to shutdown")
+	}
+
+	if err := wsServer.Shutdown(shutdownCtx); err != nil {
+		log.Fatal().Err(err).Msg("WS Server forced to shutdown")
 	}
 
 	log.Info().Msg("Waiting for workers to exit")
@@ -246,4 +260,71 @@ func loadConfig() {
 	} else {
 		configs = map[string]types.DownloadConfig{}
 	}
+}
+
+func echo(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Err(err).Msg("WS upgrade")
+		return
+	}
+	defer c.Close()
+	for {
+		mt, message, err := c.ReadMessage()
+		if err != nil {
+			log.Err(err).Msg("WS read")
+			break
+		}
+		log.Info().Msgf("recv: %s", message)
+		err = c.WriteMessage(mt, message)
+		if err != nil {
+			log.Err(err).Msg("WSS write")
+			break
+		}
+	}
+}
+
+func handleJobinfo(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Err(err).Msg("WS upgrade")
+		return
+	}
+	defer c.Close()
+	for {
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			log.Err(err).Msg("WS read")
+			break
+		}
+		log.Info().Msgf("recv: %s", message)
+
+		job, ok := jobRegistry.Load(string(message))
+		if !ok {
+			c.WriteJSON(types.ErrorResponse{
+				Error: "could not load job",
+			})
+			continue
+		}
+
+		err = c.WriteJSON(job)
+		if err != nil {
+			log.Err(err).Msg("WS write")
+			break
+		}
+	}
+}
+
+func NewWsServer() *http.Server {
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/echo", echo)
+	mux.HandleFunc("/jobinfo", handleJobinfo)
+
+	wsServer := http.Server{
+		Addr:    ":8081",
+		Handler: mux,
+	}
+
+	return &wsServer
 }

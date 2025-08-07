@@ -1,20 +1,40 @@
 package types
 
-import "sync/atomic"
+import (
+	"encoding/json"
+	"sync/atomic"
+)
 
 type DownloadJob struct {
-	Url             string       `json:"url"`
-	Filename        string       `json:"filename"`
-	Id              string       `json:"id"`
-	Password        string       `json:"password"`
-	Limit           int          `json:"limit"`
-	ConfigId        string       `json:"configId"`
-	Transformer     []string     `json:"transformer"`
-	BytesDownloaded int          `json:"bytesDownloaded"`
-	DeleteOnCancel  bool         `json:"deleteOnCancel"`
-	Status          atomic.Value `json:"status"`
-	CancelCh        chan struct{}
-	PauseCh         chan struct{}
+	Url             string        `json:"url"`
+	Filename        string        `json:"filename"`
+	Id              string        `json:"id"`
+	Password        string        `json:"password"`
+	Limit           int           `json:"limit"`
+	ConfigId        string        `json:"configId"`
+	Transformer     []string      `json:"transformer"`
+	BytesDownloaded int           `json:"bytesDownloaded"`
+	DeleteOnCancel  bool          `json:"deleteOnCancel"`
+	Status          atomic.Value  `json:"-"`
+	CancelCh        chan struct{} `json:"-"`
+	PauseCh         chan struct{} `json:"-"`
+}
+
+func (j *DownloadJob) MarshalJSON() ([]byte, error) {
+	type Alias DownloadJob // prevent recursion
+	return json.Marshal(&struct {
+		Status string `json:"status"`
+		*Alias
+	}{
+		Status: func() string {
+			val := j.Status.Load()
+			if val == nil {
+				return ""
+			}
+			return string(val.(DownloadState))
+		}(),
+		Alias: (*Alias)(j),
+	})
 }
 
 func NewDownloadJob() *DownloadJob {
