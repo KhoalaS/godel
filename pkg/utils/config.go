@@ -2,11 +2,12 @@ package utils
 
 import (
 	"net/url"
+	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/google/uuid"
 )
 
 func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
@@ -50,9 +51,11 @@ func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
 func InferFilename(_url string) (string, error) {
 	parsedUrl, err := url.Parse(_url)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
-
-	spl := strings.Split(parsedUrl.Path, "/")
-	return spl[len(spl)-1], nil
+	name := path.Base(parsedUrl.Path)
+	if name == "" {
+		name = uuid.NewString()
+	}
+	return name, nil
 }
