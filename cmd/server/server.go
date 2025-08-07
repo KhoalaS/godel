@@ -74,7 +74,7 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Info().Msg("Error loading .env file")
+		log.Warn().Msg("Error loading .env file")
 	}
 
 	client := http.Client{}
