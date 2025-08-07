@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
@@ -91,7 +93,14 @@ func main() {
 		go godel.DownloadWorker(ctx, &wg, i, jobs, &client)
 	}
 
+	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", handleRoot)
+	mux.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServerFS(assetsFS)))
 	mux.HandleFunc("POST /add", handleAdd)
 	mux.HandleFunc("POST /cancel", handleCancel)
 	mux.HandleFunc("POST /pause", handlePause)
@@ -136,6 +145,18 @@ func main() {
 	wg.Wait()
 
 	log.Info().Msg("Server shut down gracefully")
+}
+
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	data, err := godel.EmbeddedFiles.ReadFile("ui/dist/index.html")
+	if err != nil {
+		log.Err(err).Send()
+		http.Error(w, "could not read index.html", http.StatusInternalServerError)
+		return
+	}
+
+	reader := bytes.NewReader(data)
+	http.ServeContent(w, r, "index.html", time.Now(), reader)
 }
 
 func handleAdd(w http.ResponseWriter, r *http.Request) {
