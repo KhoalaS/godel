@@ -7,15 +7,15 @@ import (
 
 type DownloadJob struct {
 	Url             string        `json:"url"`
-	Filename        string        `json:"filename"`
+	Filename        string        `json:"filename,omitempty"`
 	Id              string        `json:"id"`
-	Password        string        `json:"password"`
-	Limit           int           `json:"limit"`
-	ConfigId        string        `json:"configId"`
-	Transformer     []string      `json:"transformer"`
-	BytesDownloaded int           `json:"bytesDownloaded"`
-	Size            int           `json:"size"`
-	DeleteOnCancel  bool          `json:"deleteOnCancel"`
+	Password        string        `json:"password,omitempty"`
+	Limit           int           `json:"limit,omitempty"`
+	ConfigId        string        `json:"configId,omitempty"`
+	Transformer     []string      `json:"transformer,omitempty"`
+	BytesDownloaded int           `json:"bytesDownloaded,omitempty"`
+	Size            int           `json:"size,omitempty"`
+	DeleteOnCancel  bool          `json:"deleteOnCancel,omitempty"`
 	Status          atomic.Value  `json:"-"`
 	CancelCh        chan struct{} `json:"-"`
 	PauseCh         chan struct{} `json:"-"`

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -148,6 +149,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()
+				BroadCastUpdate(job)
 			}
 		}
 	}()
@@ -212,6 +214,14 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				}
 			}
 		}
+	}
+}
+
+func BroadCastUpdate(job *types.DownloadJob) {
+	clients := registries.ClientRegistry.All()
+	for _, client := range clients {
+		log.Info().Msg("broadcasting to client")
+		client.Send <- job
 	}
 }
 

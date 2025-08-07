@@ -1,11 +1,15 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import JobsTable from './components/JobsTable.vue'
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <Suspense>
+    <!-- component with nested async dependencies -->
+    <JobsTable />
+
+    <!-- loading state via #fallback slot -->
+    <template #fallback> Loading... </template>
+  </Suspense>
 </template>
 
 <style scoped></style>

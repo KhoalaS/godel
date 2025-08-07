@@ -345,22 +345,15 @@ func handleJobinfo(w http.ResponseWriter, r *http.Request) {
 		log.Err(err).Msg("WS upgrade")
 		return
 	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Err(err).Int("type", mt).Msg("WS read")
-			break
-		}
-		log.Info().Msgf("recv: %s", message)
 
-		job, ok := jobRegistry.Load(string(message))
-		if !ok {
-			c.WriteJSON(types.ErrorResponse{
-				Error: "could not load job",
-			})
-			continue
-		}
+	client := &types.Client{Conn: c, Send: make(chan *types.DownloadJob, 4)}
+	clientId := uuid.NewString()
+	registries.ClientRegistry.Store(clientId, client)
+
+	defer c.Close()
+	defer registries.ClientRegistry.Delete(clientId)
+	for {
+		job := <-client.Send
 
 		err = c.WriteJSON(job)
 		if err != nil {
@@ -374,7 +367,7 @@ func NewWsServer() *http.Server {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/echo", echo)
-	mux.HandleFunc("/jobinfo", handleJobinfo)
+	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
 
 	wsServer := http.Server{
 		Addr:    ":8081",
