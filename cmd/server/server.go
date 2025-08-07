@@ -24,7 +24,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var upgrader = websocket.Upgrader{} // use default options
+var upgrader = websocket.Upgrader{}
 
 var jobs = make(chan *types.DownloadJob, 12)
 var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
