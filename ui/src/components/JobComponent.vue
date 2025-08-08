@@ -9,6 +9,10 @@ const props = defineProps<{
 
 const jobStore = useJobStore()
 
+const pauseButtonState = computed(() => {
+  return props.job.status != 'downloading' && props.job.status != 'paused'
+})
+
 const pauseLabel = computed(() => {
   switch (props.job.status) {
     case 'paused':
@@ -17,6 +21,28 @@ const pauseLabel = computed(() => {
       return 'Pause'
     default:
       return ''
+  }
+})
+
+const speed = computed(() => {
+  switch (props.job.status) {
+    case 'downloading':
+      if (!props.job.speed) {
+        return '-'
+      } else {
+        return `${(props.job.speed / 1024 / 1024).toFixed(2)} MB/s`
+      }
+    default:
+      return ''
+  }
+})
+
+const eta = computed(() => {
+  switch (props.job.status) {
+    case 'downloading':
+      return props.job.eta?.toFixed(2) ?? '-'
+    default:
+      return '-'
   }
 })
 
@@ -34,5 +60,7 @@ function handlePause() {
 <template>
   <div>{{ job.url }}</div>
   <progress :value="job.bytesDownloaded" :max="job.size"></progress>
-  <button @click="handlePause">{{ pauseLabel }}</button>
+  <button :disabled="pauseButtonState" @click="handlePause">{{ pauseLabel }}</button>
+  <span>Speed: {{ speed }}</span>
+  <span>ETA: {{ eta }} Seconds</span>
 </template>

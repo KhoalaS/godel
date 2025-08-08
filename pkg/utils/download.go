@@ -140,12 +140,14 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				elapsed := time.Since(lastTs).Seconds()
 
 				deltaBytes := bytesRead - lastBytesRead
-				speed := float64(deltaBytes) / 1024 / 1024 / elapsed
+				speed := float64(deltaBytes) / elapsed
+				job.Speed = speed
 
 				remaining := contentLengthInt - bytesRead
 				eta := float64(remaining) / float64(deltaBytes) * float64(elapsed)
+				job.Eta = eta
 
-				log.Info().Str("filename", job.Filename).Str("id", job.Id).Msgf("Speed: %.2f MB/s (eta: %.2f seconds)", speed, eta)
+				log.Info().Str("filename", job.Filename).Str("id", job.Id).Msgf("Speed: %.2f MB/s (eta: %.2f seconds)", speed/1024/1024, eta)
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()

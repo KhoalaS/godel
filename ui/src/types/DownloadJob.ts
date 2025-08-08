@@ -12,6 +12,8 @@ export const DownloadJob = z.object({
   size: z.number().nonnegative().optional(),
   deleteOnCancel: z.boolean().optional(),
   status: z.literal(['idle', 'paused', 'canceled', 'downloading', 'done', 'error']).optional(),
+  speed: z.float64().optional(),
+  eta: z.float64().optional(),
 })
 
 export type DownloadJob = z.infer<typeof DownloadJob>

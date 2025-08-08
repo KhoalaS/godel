@@ -16,6 +16,8 @@ type DownloadJob struct {
 	BytesDownloaded int           `json:"bytesDownloaded,omitempty"`
 	Size            int           `json:"size,omitempty"`
 	DeleteOnCancel  bool          `json:"deleteOnCancel,omitempty"`
+	Speed           float64       `json:"speed,omitempty"`
+	Eta             float64       `json:"eta,omitempty"`
 	Status          atomic.Value  `json:"-"`
 	CancelCh        chan struct{} `json:"-"`
 	PauseCh         chan struct{} `json:"-"`
