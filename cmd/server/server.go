@@ -99,7 +99,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", handleRoot)
+	mux.HandleFunc("GET /{$}", handleRoot)
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServerFS(assetsFS)))
 	mux.HandleFunc("POST /add", handleAdd)
 	mux.HandleFunc("POST /cancel", handleCancel)
@@ -107,23 +107,17 @@ func main() {
 	mux.HandleFunc("GET /configs", handleConfigs)
 	mux.HandleFunc("GET /jobs", handleJobs)
 
+	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
+
 	server := &http.Server{
 		Addr:    ":9095",
-		Handler: mux,
+		Handler: corsMiddleWare(mux),
 	}
 
 	go func() {
 		log.Info().Msg("Starting http server")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Err(err).Msg("Listen error")
-		}
-	}()
-
-	wsServer := NewWsServer()
-	go func() {
-		log.Info().Msg("Starting websocket server")
-		if err := wsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Err(err).Msg("WS Listen error")
 		}
 	}()
 
@@ -135,10 +129,6 @@ func main() {
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatal().Err(err).Msg("Server forced to shutdown")
-	}
-
-	if err := wsServer.Shutdown(shutdownCtx); err != nil {
-		log.Fatal().Err(err).Msg("WS Server forced to shutdown")
 	}
 
 	log.Info().Msg("Waiting for workers to exit")
@@ -297,6 +287,13 @@ func handleJobs(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func corsMiddleWare(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func loadConfig() {
 	configFile, err := os.Open("./configs.json")
 
@@ -314,28 +311,6 @@ func loadConfig() {
 		configFile.Close()
 	} else {
 		configs = map[string]types.DownloadConfig{}
-	}
-}
-
-func echo(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Err(err).Msg("WS upgrade")
-		return
-	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Err(err).Msg("WS read")
-			break
-		}
-		log.Info().Msgf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Err(err).Msg("WSS write")
-			break
-		}
 	}
 }
 
@@ -361,18 +336,4 @@ func handleJobinfo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-}
-
-func NewWsServer() *http.Server {
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/echo", echo)
-	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
-
-	wsServer := http.Server{
-		Addr:    ":8081",
-		Handler: mux,
-	}
-
-	return &wsServer
 }

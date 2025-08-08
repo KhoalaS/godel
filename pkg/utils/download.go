@@ -172,6 +172,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Start downloading")
 
 	defer close(done)
+	defer BroadCastUpdate(job)
 
 	for {
 		select {

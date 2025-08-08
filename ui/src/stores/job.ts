@@ -5,11 +5,11 @@ import z from 'zod'
 
 export const useJobStore = defineStore('job', () => {
   const jobs = ref<DownloadJob[]>([])
-  const baseUrl = 'http://localhost:9095'
+  const baseUrl = 'localhost:9095'
 
   async function init() {
     try {
-      const response = await fetch(`${baseUrl}/jobs`)
+      const response = await fetch(`http://${baseUrl}/jobs`)
       if (response.status != 200) {
         console.warn('could not get jobs, got status code', response.status)
         return
@@ -22,7 +22,72 @@ export const useJobStore = defineStore('job', () => {
     } catch (e: unknown) {
       console.warn(e)
     }
+
+    initWs()
   }
 
-  return { init, jobs: readonly(jobs) }
+  async function initWs() {
+    const socket = new WebSocket(`ws://${baseUrl}/updates/jobinfo`)
+    // Connection opened
+    socket.addEventListener('open', () => {
+      console.log('Connection opened')
+    })
+
+    // Listen for messages
+    socket.addEventListener('message', (event) => {
+      try {
+        const jobData = JSON.parse(event.data)
+        const job = DownloadJob.parse(jobData)
+
+        const targetIdx = jobs.value.findIndex((j) => j.id == job.id)
+        if (targetIdx != -1) {
+          jobs.value[targetIdx] = job
+        } else {
+          jobs.value.push(job)
+        }
+      } catch (e: unknown) {
+        console.warn(e)
+      }
+    })
+  }
+
+  async function addJob(url: string, configId?: string) {
+    const job: DownloadJob = {
+      url: url,
+      id: '-1',
+      configId: configId,
+    }
+
+    try {
+      const response = await fetch(`http://${baseUrl}/add`, {
+        method: 'POST',
+        body: JSON.stringify(job),
+      })
+
+      if (response.status != 200) {
+        console.warn('could not get jobs, got status code', response.status)
+        return
+      }
+    } catch (e: unknown) {
+      console.warn(e)
+    }
+  }
+
+  async function pauseJob(id: string) {
+    try {
+      const response = await fetch(`http://${baseUrl}/pause`, {
+        method: 'POST',
+        body: id,
+      })
+
+      if (response.status != 200) {
+        console.warn('could not pause job, got status code', response.status)
+        return
+      }
+    } catch (e: unknown) {
+      console.warn(e)
+    }
+  }
+
+  return { init, addJob, pauseJob, jobs: readonly(jobs) }
 })
