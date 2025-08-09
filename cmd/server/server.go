@@ -87,6 +87,7 @@ func main() {
 	loadConfig()
 
 	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
+	registries.TransformerRegistry.Store("reddit", transformer.RedditTransformer)
 
 	for i := range *numWorkers {
 		wg.Add(1)

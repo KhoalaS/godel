@@ -66,12 +66,20 @@ func RedditTransformer(job *types.DownloadJob) error {
 		}
 	}
 
-	_, err = getPostById(id, &creds)
+	post, err := getPostById(id, &creds)
 	if err != nil {
 		return err
 	}
 
-	// TODO modify job
+	if post.Data.PostsInfoByIds[0].Media.TypeHint == IMAGE {
+		imageUrl := post.Data.PostsInfoByIds[0].Media.StillMedia.Source.Url
+		if imageUrl != "" {
+			job.Url = imageUrl
+		} else {
+			return errors.New("source media has no url")
+		}
+	}
+
 	return nil
 }
 
@@ -174,7 +182,7 @@ func getId(_url *url.URL) (string, error) {
 	return match[2], nil
 }
 
-func getPostById(id string, creds *types.Credentials) ([]byte, error) {
+func getPostById(id string, creds *types.Credentials) (*PostsByIdsResponse, error) {
 
 	requestBody := PostByIdRequest{
 		OperationName: "PostsByIds",
@@ -211,12 +219,12 @@ func getPostById(id string, creds *types.Credentials) ([]byte, error) {
 
 	reuqestBytes, err := json.Marshal(requestBody)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	request, err := http.NewRequest(http.MethodPost, "https://gql-fed.reddit.com/", bytes.NewBuffer(reuqestBytes))
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	for k, v := range creds.Headers {
@@ -242,18 +250,23 @@ func getPostById(id string, creds *types.Credentials) ([]byte, error) {
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	response.Body.Close()
 
-	// TODO use type for post
-	return data, nil
+	var obj PostsByIdsResponse
+	err = json.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return &obj, nil
 }
 
 type AuthResponseBody struct {
