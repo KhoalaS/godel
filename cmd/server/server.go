@@ -26,7 +26,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		switch r.Header.Get("Origin") {
+		case "http://localhost:9095":
+			return true
+		case "http://localhost:5173":
+			if *debugMode {
+				return true
+			}
+		}
+
+		return false
+	},
+}
 
 var jobs = make(chan *types.DownloadJob, 12)
 var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
@@ -60,7 +73,7 @@ func main() {
 	}
 
 	if *debugMode {
-		log.Info().Msg("Starting debug http file server")
+		log.Info().Msg("Starting debug http file server at http://localhost:8080/files/")
 
 		testMux := http.NewServeMux()
 		testMux.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("./testfiles"))))
@@ -257,7 +270,12 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleConfigs(w http.ResponseWriter, r *http.Request) {
-	data, err := json.Marshal(configs)
+	configArray := []*types.DownloadConfig{}
+	for _, config := range configs {
+		configArray = append(configArray, &config)
+	}
+
+	data, err := json.Marshal(configArray)
 	if err != nil {
 		responseData, _ := json.Marshal(types.ErrorResponse{
 			Error: utils.INTERNAL_ERROR_MESSAGE,
@@ -304,10 +322,16 @@ func loadConfig() {
 			log.Fatal().Msg("Could not load configs.json file")
 		}
 
-		err = json.Unmarshal(configData, &configs)
+		var configArray []types.DownloadConfig
+		err = json.Unmarshal(configData, &configArray)
 		if err != nil {
 			log.Warn().Msg("Could not unmarshal configs.json")
 			configs = map[string]types.DownloadConfig{}
+		} else {
+			configs = map[string]types.DownloadConfig{}
+			for _, config := range configArray {
+				configs[config.Id] = config
+			}
 		}
 		configFile.Close()
 	} else {

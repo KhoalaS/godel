@@ -5,6 +5,6 @@ type DownloadConfig struct {
 	Name           string   `json:"name"`
 	DestPath       string   `json:"destPath"`
 	Transformer    []string `json:"transformer"`
-	Limit          int      `json:"limit"`
+	Limit          int      `json:"limit,omitempty"`
 	DeleteOnCancel bool     `json:"deleteOnCancel"`
 }

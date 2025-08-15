@@ -1,5 +1,5 @@
-{
-    "config_id": {
+[
+    {
         "id": "config_id",
         "name": "My Config",
         "destPath": "./path/to/files",
@@ -7,4 +7,4 @@
             "my-transformer"
         ]
     }
-}
+]
