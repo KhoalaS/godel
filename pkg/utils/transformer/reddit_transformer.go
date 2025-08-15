@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -71,13 +72,44 @@ func RedditTransformer(job *types.DownloadJob) error {
 		return err
 	}
 
-	if post.Data.PostsInfoByIds[0].Media.TypeHint == IMAGE {
-		imageUrl := post.Data.PostsInfoByIds[0].Media.StillMedia.Source.Url
+	postInfo := post.Data.PostsInfoByIds[0]
+
+	if postInfo.Media == nil {
+		log.Warn().Msg("Post has no media")
+		return errors.New("Unimplemented")
+	}
+
+	switch postInfo.Media.TypeHint {
+	case IMAGE:
+		imageUrl := postInfo.Media.StillMedia.Source.Url
 		if imageUrl != "" {
 			job.Url = imageUrl
 		} else {
 			return errors.New("source media has no url")
 		}
+	case EMBED:
+		// check if muxed download is available
+		if postInfo.Media.Download.Url != "" {
+			job.Url = postInfo.Media.Download.Url
+			parsedUrl, err := url.Parse(job.Url)
+			if err != nil {
+				return err
+			}
+			ext := filepath.Ext(parsedUrl.Path)
+			job.Filename = fmt.Sprintf("%s%s", postInfo.PostTitle, ext)
+		}
+	case GIFVIDEO:
+		if postInfo.Media.Animated.Mp4_Source != nil && postInfo.Media.Animated.Mp4_Source.Url != "" {
+			job.Url = postInfo.Media.Animated.Mp4_Source.Url
+			_, err := url.Parse(job.Url)
+			if err != nil {
+				return err
+			}
+			job.Filename = fmt.Sprintf("%s%s", postInfo.PostTitle, ".mp4")
+		}
+	default:
+		log.Warn().Msgf("Post type not implemented yet: %s", postInfo.Media.TypeHint)
+		return errors.New("Unimplemented")
 	}
 
 	return nil
