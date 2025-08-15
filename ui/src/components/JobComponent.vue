@@ -2,6 +2,7 @@
 import { useJobStore } from '@/stores/job'
 import type { DownloadJob } from '@/types/DownloadJob'
 import { computed, type DeepReadonly } from 'vue'
+import WButton from 'vue-98'
 
 const props = defineProps<{
   job: DeepReadonly<DownloadJob>
@@ -60,7 +61,7 @@ function handlePause() {
 <template>
   <div>{{ job.url }}</div>
   <progress :value="job.bytesDownloaded" :max="job.size"></progress>
-  <button :disabled="pauseButtonState" @click="handlePause">{{ pauseLabel }}</button>
+  <WButton :disabled="pauseButtonState" @click="handlePause">{{ pauseLabel }}</WButton>
   <span>Speed: {{ speed }}</span>
   <span>ETA: {{ eta }} Seconds</span>
 </template>
