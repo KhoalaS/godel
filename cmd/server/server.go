@@ -124,7 +124,7 @@ func main() {
 	}
 
 	go func() {
-		log.Info().Msg("Starting http server")
+		log.Info().Msg("Starting http server at http://localhost:9095/")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Err(err).Msg("Listen error")
 		}

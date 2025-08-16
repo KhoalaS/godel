@@ -2,13 +2,23 @@ import { ref, readonly } from 'vue'
 import { defineStore } from 'pinia'
 import { DownloadJob } from '@/types/DownloadJob'
 import z from 'zod'
+import { Config } from '@/types/Config'
 
 export const useJobStore = defineStore('job', () => {
   const jobs = ref<DownloadJob[]>([])
   const baseUrl = 'localhost:9095'
+  const configs = ref<Config[]>([])
 
   async function init() {
     try {
+      const configResponse = await fetch(`http://${baseUrl}/configs`)
+      if (configResponse.status != 200) {
+        console.warn('could not get configs, got status code', configResponse.status)
+      } else {
+        const data = await configResponse.json()
+        configs.value = z.array(Config).parse(data)
+      }
+
       const response = await fetch(`http://${baseUrl}/jobs`)
       if (response.status != 200) {
         console.warn('could not get jobs, got status code', response.status)
@@ -16,9 +26,7 @@ export const useJobStore = defineStore('job', () => {
       }
 
       const data = await response.json()
-
-      const _jobs = z.array(DownloadJob).parse(data)
-      jobs.value = _jobs
+      jobs.value = z.array(DownloadJob).parse(data)
     } catch (e: unknown) {
       console.warn(e)
     }
@@ -89,5 +97,5 @@ export const useJobStore = defineStore('job', () => {
     }
   }
 
-  return { init, addJob, pauseJob, jobs: readonly(jobs) }
+  return { init, addJob, pauseJob, jobs: readonly(jobs), configs: configs }
 })
