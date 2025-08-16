@@ -8,23 +8,25 @@ import (
 )
 
 type DownloadJob struct {
-	Url             string        `json:"url"`
-	Filename        string        `json:"filename,omitempty"`
-	Id              string        `json:"id"`
-	Password        string        `json:"password,omitempty"`
-	Limit           int           `json:"limit,omitempty"`
-	ConfigId        string        `json:"configId,omitempty"`
-	Transformer     []string      `json:"transformer,omitempty"`
-	BytesDownloaded int           `json:"bytesDownloaded,omitempty"`
-	Size            int           `json:"size,omitempty"`
-	DeleteOnCancel  bool          `json:"deleteOnCancel,omitempty"`
-	Speed           float64       `json:"speed,omitempty"`
-	Eta             float64       `json:"eta,omitempty"`
-	ParentId        string        `json:"parentId"`
-	IsParent        bool          `json:"isParent"`
-	Status          atomic.Value  `json:"-"`
-	CancelCh        chan struct{} `json:"-"`
-	PauseCh         chan struct{} `json:"-"`
+	Url             string            `json:"url"`
+	Filename        string            `json:"filename,omitempty"`
+	Id              string            `json:"id"`
+	Password        string            `json:"password,omitempty"`
+	Limit           int               `json:"limit,omitempty"`
+	ConfigId        string            `json:"configId,omitempty"`
+	Transformer     []string          `json:"transformer,omitempty"`
+	BytesDownloaded int               `json:"bytesDownloaded,omitempty"`
+	Size            int               `json:"size,omitempty"`
+	DeleteOnCancel  bool              `json:"deleteOnCancel,omitempty"`
+	Speed           float64           `json:"speed,omitempty"`
+	Eta             float64           `json:"eta,omitempty"`
+	ParentId        string            `json:"parentId,omitempty"`
+	IsParent        bool              `json:"isParent,omitempty"`
+	Urls            []string          `json:"urls,omitempty"`
+	Headers         map[string]string `json:"headers,omitempty"`
+	Status          atomic.Value      `json:"-"`
+	CancelCh        chan struct{}     `json:"-"`
+	PauseCh         chan struct{}     `json:"-"`
 }
 
 func (j *DownloadJob) MarshalJSON() ([]byte, error) {
@@ -45,7 +47,7 @@ func (j *DownloadJob) MarshalJSON() ([]byte, error) {
 }
 
 func NewDownloadJob() *DownloadJob {
-	job := DownloadJob{Id: uuid.NewString(), CancelCh: make(chan struct{}), PauseCh: make(chan struct{}), Transformer: []string{}}
+	job := DownloadJob{Id: uuid.NewString(), CancelCh: make(chan struct{}), PauseCh: make(chan struct{}), Transformer: []string{}, Headers: map[string]string{}}
 	job.Status.Store(IDLE)
 	return &job
 }

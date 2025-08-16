@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 
 	"github.com/KhoalaS/godel/pkg/auth"
@@ -57,11 +56,12 @@ func GofileTransformer(job *types.DownloadJob) error {
 		return err
 	}
 
-	data, _ := io.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	
 	defer response.Body.Close()
-
-	f, _ := os.Create("gofile_dump.json")
-	f.Write(data)
 
 	var fileResponse FileResponse
 
@@ -69,6 +69,17 @@ func GofileTransformer(job *types.DownloadJob) error {
 	if err != nil {
 		return err
 	}
+
+	_urls := []string{}
+
+	for _, child := range fileResponse.Data.Children {
+		_urls = append(_urls, child.Link)
+	}
+
+	job.Urls = _urls
+	job.IsParent = true
+	job.Headers["Cookie"] = fmt.Sprintf("accountToken=%s", creds.Token)
+	job.Headers["User-Agent"] = auth.GofileUserAgent
 
 	return nil
 }

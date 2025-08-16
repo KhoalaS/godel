@@ -29,7 +29,6 @@ import (
 var upgrader = websocket.Upgrader{}
 
 var jobs = make(chan *types.DownloadJob, 12)
-var configs map[string]types.DownloadConfig
 
 var deleteOnCancel *bool
 var debugMode *bool
@@ -87,6 +86,7 @@ func main() {
 
 	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
 	registries.TransformerRegistry.Store("reddit", transformer.RedditTransformer)
+	registries.TransformerRegistry.Store("gofile", transformer.GofileTransformer)
 
 	for i := range *numWorkers {
 		wg.Add(1)
@@ -106,6 +106,7 @@ func main() {
 	mux.HandleFunc("POST /pause", handlePause)
 	mux.HandleFunc("GET /configs", handleConfigs)
 	mux.HandleFunc("GET /jobs", handleJobs)
+	mux.HandleFunc("POST /addmultiple", handleAddMultiple)
 
 	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
 
@@ -154,16 +155,23 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	var job types.DownloadJob
 
-	json.Unmarshal(data, &job)
+	err := json.Unmarshal(data, &job)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	job.Id = uuid.New().String()
 	job.CancelCh = make(chan struct{}, 1)
 	job.PauseCh = make(chan struct{}, 1)
 	job.DeleteOnCancel = *deleteOnCancel
 	job.Status.Store(types.IDLE)
+	job.Headers = map[string]string{}
 
 	if job.ConfigId != "" {
-		if config, exist := configs[job.ConfigId]; exist {
-			utils.ApplyConfig(&job, config)
+		if config, exist := registries.ConfigReistry.Load(job.ConfigId); exist {
+			utils.ApplyConfig(&job, *config)
 		}
 	}
 
@@ -175,11 +183,11 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(http.StatusBadRequest)
 					w.Write(fmt.Appendf(nil, "bad transformer %s", id))
 				}
-			} else {
-
 			}
 		}
 	}
+
+	log.Debug().Any("job", job).Send()
 
 	registries.JobRegistry.Store(job.Id, &job)
 
@@ -257,8 +265,8 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 
 func handleConfigs(w http.ResponseWriter, r *http.Request) {
 	configArray := []*types.DownloadConfig{}
-	for _, config := range configs {
-		configArray = append(configArray, &config)
+	for _, config := range registries.ConfigReistry.All() {
+		configArray = append(configArray, config)
 	}
 
 	data, err := json.Marshal(configArray)
@@ -292,6 +300,35 @@ func handleJobs(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func handleAddMultiple(w http.ResponseWriter, r *http.Request) {
+	data, _ := io.ReadAll(r.Body)
+
+	var parentJob types.DownloadJob
+
+	err := json.Unmarshal(data, &parentJob)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !parentJob.IsParent {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	parentJob.BytesDownloaded = 0
+	parentJob.Size = len(parentJob.Urls)
+	parentJob.Id = uuid.NewString()
+	parentJob.Status.Store(types.IDLE)
+	parentJob.DeleteOnCancel = *deleteOnCancel
+
+	registries.JobRegistry.Store(parentJob.Id, &parentJob)
+
+	jobs <- &parentJob
+
+	w.Write([]byte(parentJob.Id))
+}
+
 func corsMiddleWare(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
@@ -312,16 +349,12 @@ func loadConfig() {
 		err = json.Unmarshal(configData, &configArray)
 		if err != nil {
 			log.Warn().Msg("Could not unmarshal configs.json")
-			configs = map[string]types.DownloadConfig{}
 		} else {
-			configs = map[string]types.DownloadConfig{}
 			for _, config := range configArray {
-				configs[config.Id] = config
+				registries.ConfigReistry.Store(config.Id, &config)
 			}
 		}
 		configFile.Close()
-	} else {
-		configs = map[string]types.DownloadConfig{}
 	}
 }
 

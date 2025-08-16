@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func DownloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan *types.DownloadJob, client *http.Client) {
+func DownloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs chan *types.DownloadJob, client *http.Client) {
 	log.Debug().Int("id", id).Msg("Worker online")
 
 	defer wg.Done()
@@ -27,6 +27,12 @@ func DownloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan
 			}
 
 			log.Debug().Int("id", id).Msg("Downloading using worker")
+
+			if job.IsParent {
+				utils.DownloadBulk(ctx, client, job, jobs)
+				continue
+			}
+
 			err := utils.Download(ctx, client, job, nil)
 			if err != nil {
 				log.Err(err).Str("status", string(job.Status.Load().(types.DownloadState))).Str("filename", job.Filename).Str("id", job.Id).Msg("error during download")

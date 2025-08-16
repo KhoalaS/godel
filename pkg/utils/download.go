@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -34,10 +35,18 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		return err
 	}
 
+	log.Debug().Str("url", job.Url).Send()
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
 	if err != nil {
 		return err
 	}
+
+	for k, v := range job.Headers {
+		request.Header.Add(k, v)
+	}
+
+	log.Debug().Any("headers", request.Header).Send()
 
 	if job.Status.Load() == types.PAUSED {
 		log.Info().Int("bytes", job.BytesDownloaded).Msg("Partial file size")
@@ -61,6 +70,8 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	}
 
 	currentState := job.Status.Load()
+
+	log.Debug().Str("url", job.Url).Msg("Making request")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -87,6 +98,11 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	}
 
 	var outfile *os.File
+	destDir := filepath.Dir(job.Filename)
+	err = os.MkdirAll(destDir, 0755)
+	if err != nil {
+		return err
+	}
 
 	if currentState == types.PAUSED {
 		outfile, err = os.OpenFile(job.Filename, os.O_APPEND|os.O_WRONLY, 0)

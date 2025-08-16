@@ -16,12 +16,11 @@ import (
 func TestDownloadBulk(t *testing.T) {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
-	urls := []string{
+	job := types.NewDownloadJob()
+	job.Urls = []string{
 		"http://localhost:9999/files/1.txt",
 		"http://localhost:9999/files/2.txt",
 	}
-
-	job := types.NewDownloadJob()
 	ctx := context.TODO()
 	client := &http.Client{}
 	jobs := make(chan *types.DownloadJob, 12)
@@ -30,7 +29,7 @@ func TestDownloadBulk(t *testing.T) {
 	wg.Add(1)
 	go downloadWorker(ctx, &wg, 0, jobs, client)
 
-	DownloadBulk(ctx, client, urls, job, map[string]string{}, jobs)
+	DownloadBulk(ctx, client, job, jobs)
 
 	close(jobs)
 	wg.Wait()

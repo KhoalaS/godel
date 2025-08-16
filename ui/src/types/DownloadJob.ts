@@ -14,6 +14,10 @@ export const DownloadJob = z.object({
   status: z.literal(['idle', 'paused', 'canceled', 'downloading', 'done', 'error']).optional(),
   speed: z.float64().optional(),
   eta: z.float64().optional(),
+  isParent: z.boolean().optional(),
+  urls: z.array(z.string()).optional(),
+  parentId: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional()
 })
 
 export type DownloadJob = z.infer<typeof DownloadJob>
