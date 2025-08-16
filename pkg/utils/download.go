@@ -22,6 +22,13 @@ import (
 )
 
 func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, headers map[string]string) error {
+	if job.IsParent {
+		log.Debug().Str("id", job.Id).Msg("Added bulk download")
+		job.Status.Store(types.DOWNLOADING)
+		BroadCastUpdate(job)
+		return nil
+	}
+
 	parsedUrl, err := url.Parse(job.Url)
 	if err != nil {
 		return err
@@ -175,6 +182,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 	defer close(done)
 	defer BroadCastUpdate(job)
+	defer updateParentJob(job)
 
 	for {
 		select {
@@ -216,6 +224,21 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 					return err
 				}
 			}
+		}
+	}
+}
+
+func updateParentJob(job *types.DownloadJob) {
+
+	if job.ParentId == "" {
+		return
+	}
+
+	if parentJob, ok := registries.JobRegistry.Load(job.ParentId); ok {
+		log.Debug().Str("parentId", job.ParentId).Msg("Updating parent")
+		parentJob.BytesDownloaded = parentJob.BytesDownloaded + 1
+		if parentJob.BytesDownloaded == parentJob.Size {
+			parentJob.Status.Store(types.DONE)
 		}
 	}
 }

@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"sync/atomic"
+
+	"github.com/google/uuid"
 )
 
 type DownloadJob struct {
@@ -18,6 +20,8 @@ type DownloadJob struct {
 	DeleteOnCancel  bool          `json:"deleteOnCancel,omitempty"`
 	Speed           float64       `json:"speed,omitempty"`
 	Eta             float64       `json:"eta,omitempty"`
+	ParentId        string        `json:"parentId"`
+	IsParent        bool          `json:"isParent"`
 	Status          atomic.Value  `json:"-"`
 	CancelCh        chan struct{} `json:"-"`
 	PauseCh         chan struct{} `json:"-"`
@@ -41,7 +45,7 @@ func (j *DownloadJob) MarshalJSON() ([]byte, error) {
 }
 
 func NewDownloadJob() *DownloadJob {
-	job := DownloadJob{CancelCh: make(chan struct{}), PauseCh: make(chan struct{}), Transformer: []string{}}
+	job := DownloadJob{Id: uuid.NewString(), CancelCh: make(chan struct{}), PauseCh: make(chan struct{}), Transformer: []string{}}
 	job.Status.Store(IDLE)
 	return &job
 }

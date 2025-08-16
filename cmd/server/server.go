@@ -29,7 +29,6 @@ import (
 var upgrader = websocket.Upgrader{}
 
 var jobs = make(chan *types.DownloadJob, 12)
-var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
 var configs map[string]types.DownloadConfig
 
 var deleteOnCancel *bool
@@ -60,12 +59,12 @@ func main() {
 	}
 
 	if *debugMode {
-		log.Info().Msg("Starting debug http file server at http://localhost:8080/files/")
+		log.Info().Msg("Starting debug http file server at http://localhost:9999/files/")
 
 		testMux := http.NewServeMux()
 		testMux.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("./testfiles"))))
 		testServer := http.Server{
-			Addr:    ":8080",
+			Addr:    ":9999",
 			Handler: testMux,
 		}
 		go func() {
@@ -182,7 +181,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	jobRegistry.Store(job.Id, &job)
+	registries.JobRegistry.Store(job.Id, &job)
 
 	jobs <- &job
 
@@ -194,7 +193,7 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 
 	jobId := string(data)
 
-	job, ok := jobRegistry.Load(jobId)
+	job, ok := registries.JobRegistry.Load(jobId)
 	if !ok {
 		log.Info().Str("id", jobId).Msg("Tried canceling unknown job")
 		w.WriteHeader(404)
@@ -228,7 +227,7 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 
 	jobId := string(data)
 
-	job, ok := jobRegistry.Load(jobId)
+	job, ok := registries.JobRegistry.Load(jobId)
 	if !ok {
 		log.Info().Str("id", jobId).Msg("Tried pausing unkown job")
 		w.WriteHeader(404)
@@ -277,7 +276,7 @@ func handleConfigs(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleJobs(w http.ResponseWriter, r *http.Request) {
-	jobs := jobRegistry.All()
+	jobs := registries.JobRegistry.All()
 
 	data, err := json.Marshal(jobs)
 	if err != nil {
