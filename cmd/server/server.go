@@ -28,16 +28,11 @@ import (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		switch r.Header.Get("Origin") {
-		case "http://localhost:9095":
+		if *debugMode {
 			return true
-		case "http://localhost:5173":
-			if *debugMode {
-				return true
-			}
+		} else {
+			return r.Header.Get("Origin") == r.Header.Get("Host")
 		}
-
-		return false
 	},
 }
 
