@@ -26,15 +26,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		if *debugMode {
-			return true
-		} else {
-			return r.Header.Get("Origin") == r.Header.Get("Host")
-		}
-	},
-}
+var upgrader = websocket.Upgrader{}
 
 var jobs = make(chan *types.DownloadJob, 12)
 var jobRegistry = &registries.TypedSyncMap[string, *types.DownloadJob]{}
@@ -78,7 +70,7 @@ func main() {
 		}
 		go func() {
 			if err := testServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				log.Fatal().Err(err).Msg("Listen error on test server")
+				log.Warn().Err(err).Msg("Listen error on test server")
 			}
 		}()
 
