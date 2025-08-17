@@ -11,7 +11,6 @@ import (
 )
 
 const WT string = "4fd6sg89d7s6"
-const GofileUserAgent string = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
 
 func GofileAuthprovider() (types.Credentials, error) {
 
@@ -25,7 +24,7 @@ func GofileAuthprovider() (types.Credentials, error) {
 	request, err := http.NewRequest(http.MethodPost, accountsUrl, nil)
 	request.Header.Add("Origin", origin)
 	request.Header.Add("Referer", referer)
-	request.Header.Add("User-Agent", GofileUserAgent)
+	request.Header.Add("User-Agent", UserAgent)
 
 	if err != nil {
 		return creds, err
@@ -63,7 +62,7 @@ func GofileAuthprovider() (types.Credentials, error) {
 			"authorization": fmt.Sprintf("Bearer %s", accountResponse.Data.Token),
 			"origin":        origin,
 			"referer":       referer,
-			"user-agent":    GofileUserAgent,
+			"user-agent":    UserAgent,
 		},
 	}
 

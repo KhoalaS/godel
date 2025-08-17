@@ -79,7 +79,7 @@ func GofileTransformer(job *types.DownloadJob) error {
 	job.Urls = _urls
 	job.IsParent = true
 	job.Headers["Cookie"] = fmt.Sprintf("accountToken=%s", creds.Token)
-	job.Headers["User-Agent"] = auth.GofileUserAgent
+	job.Headers["User-Agent"] = auth.UserAgent
 
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
 )
+
+var cdRegex = regexp.MustCompile(`filename="(.+?)"`)
 
 func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, headers map[string]string) error {
 	if job.IsParent {
@@ -91,9 +94,12 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	log.Info().Str("id", job.Id).Msg("Request successful")
 
 	if strings.TrimSpace(job.Filename) == "" {
-		job.Filename = FallbackFilename(parsedUrl)
+		job.Filename = nameFromContentDisposition(response)
 		if job.Filename == "" {
-			job.Filename = uuid.NewString()
+			job.Filename = FallbackFilename(parsedUrl)
+			if job.Filename == "" {
+				job.Filename = uuid.NewString()
+			}
 		}
 	}
 
@@ -243,6 +249,20 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 			}
 		}
 	}
+}
+
+func nameFromContentDisposition(r *http.Response) string {
+	cd := r.Header.Get("content-disposition")
+	if cd == "" {
+		return ""
+	}
+
+	m := cdRegex.FindStringSubmatch(cd)
+	if len(m) != 2 {
+		return ""
+	}
+
+	return m[1]
 }
 
 func updateParentJob(job *types.DownloadJob) {

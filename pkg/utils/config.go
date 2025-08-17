@@ -15,15 +15,6 @@ func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
 		job.Limit = config.Limit
 	}
 
-	if job.Filename == "" {
-		inferredName, err := InferFilename(job.Url)
-		if err != nil {
-			return err
-		}
-
-		job.Filename = inferredName
-	}
-
 	if config.DestPath != "" {
 		job.DestPath = config.DestPath
 	}

@@ -88,6 +88,7 @@ func main() {
 	registries.TransformerRegistry.Store("reddit", transformer.RedditTransformer)
 	registries.TransformerRegistry.Store("gofile", transformer.GofileTransformer)
 	registries.TransformerRegistry.Store("linux_mount", transformer.LinuxMountTransformer)
+	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
 
 	for i := range *numWorkers {
 		wg.Add(1)
@@ -107,7 +108,6 @@ func main() {
 	mux.HandleFunc("POST /pause", handlePause)
 	mux.HandleFunc("GET /configs", handleConfigs)
 	mux.HandleFunc("GET /jobs", handleJobs)
-	mux.HandleFunc("POST /addmultiple", handleAddMultiple)
 
 	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
 
@@ -168,7 +168,9 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	job.PauseCh = make(chan struct{}, 1)
 	job.DeleteOnCancel = *deleteOnCancel
 	job.Status.Store(types.IDLE)
-	job.Headers = map[string]string{}
+	if job.Headers == nil {
+		job.Headers = map[string]string{}
+	}
 
 	if job.ConfigId != "" {
 		if config, exist := registries.ConfigReistry.Load(job.ConfigId); exist {
@@ -299,35 +301,6 @@ func handleJobs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(data)
-}
-
-func handleAddMultiple(w http.ResponseWriter, r *http.Request) {
-	data, _ := io.ReadAll(r.Body)
-
-	var parentJob types.DownloadJob
-
-	err := json.Unmarshal(data, &parentJob)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if !parentJob.IsParent {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	parentJob.BytesDownloaded = 0
-	parentJob.Size = len(parentJob.Urls)
-	parentJob.Id = uuid.NewString()
-	parentJob.Status.Store(types.IDLE)
-	parentJob.DeleteOnCancel = *deleteOnCancel
-
-	registries.JobRegistry.Store(parentJob.Id, &parentJob)
-
-	jobs <- &parentJob
-
-	w.Write([]byte(parentJob.Id))
 }
 
 func corsMiddleWare(next http.Handler) http.Handler {
