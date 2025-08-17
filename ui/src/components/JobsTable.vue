@@ -3,7 +3,6 @@ import { useJobStore } from '@/stores/job'
 import JobComponent from './JobComponent.vue'
 
 const jobStore = useJobStore()
-await jobStore.init()
 </script>
 <template>
   <div>

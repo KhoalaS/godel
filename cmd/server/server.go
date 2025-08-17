@@ -89,6 +89,7 @@ func main() {
 	registries.TransformerRegistry.Store("gofile", transformer.GofileTransformer)
 	registries.TransformerRegistry.Store("linux_mount", transformer.LinuxMountTransformer)
 	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
+	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
 
 	for i := range *numWorkers {
 		wg.Add(1)
@@ -107,6 +108,7 @@ func main() {
 	mux.HandleFunc("POST /cancel", handleCancel)
 	mux.HandleFunc("POST /pause", handlePause)
 	mux.HandleFunc("GET /configs", handleConfigs)
+	mux.HandleFunc("GET /transformers", handleTransformers)
 	mux.HandleFunc("GET /jobs", handleJobs)
 
 	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
@@ -173,7 +175,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if job.ConfigId != "" {
-		if config, exist := registries.ConfigReistry.Load(job.ConfigId); exist {
+		if config, exist := registries.ConfigRegistry.Load(job.ConfigId); exist {
 			utils.ApplyConfig(&job, *config)
 		}
 	}
@@ -268,7 +270,7 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 
 func handleConfigs(w http.ResponseWriter, r *http.Request) {
 	configArray := []*types.DownloadConfig{}
-	for _, config := range registries.ConfigReistry.All() {
+	for _, config := range registries.ConfigRegistry.All() {
 		configArray = append(configArray, config)
 	}
 
@@ -277,6 +279,25 @@ func handleConfigs(w http.ResponseWriter, r *http.Request) {
 		responseData, _ := json.Marshal(types.ErrorResponse{
 			Error: utils.INTERNAL_ERROR_MESSAGE,
 		})
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(responseData)
+		return
+	}
+
+	w.Write(data)
+}
+
+func handleTransformers(w http.ResponseWriter, r *http.Request) {
+	transformers := registries.TransformerRegistry.Keys()
+
+	data, err := json.Marshal(transformers)
+	if err != nil {
+		responseData, _ := json.Marshal(types.ErrorResponse{
+			Error: utils.INTERNAL_ERROR_MESSAGE,
+		})
+
+		log.Error().Err(err).Send()
 
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(responseData)
@@ -325,7 +346,7 @@ func loadConfig() {
 			log.Warn().Msg("Could not unmarshal configs.json")
 		} else {
 			for _, config := range configArray {
-				registries.ConfigReistry.Store(config.Id, &config)
+				registries.ConfigRegistry.Store(config.Id, &config)
 			}
 		}
 		configFile.Close()

@@ -12,6 +12,7 @@ import (
 )
 
 func PixeldrainTransformer(job *types.DownloadJob) error {
+	// TODO only works for file lists right now
 	parsedUrl, err := url.Parse(job.Url)
 	if err != nil {
 		return err

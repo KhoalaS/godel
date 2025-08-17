@@ -14,6 +14,14 @@ func (tm *TypedSyncMap[K, V]) All() []V {
 	})
 	return values
 }
+func (tm *TypedSyncMap[K, V]) Keys() []K {
+	keys := []K{}
+	tm.m.Range(func(k any, v any) bool {
+		keys = append(keys, k.(K))
+		return true
+	})
+	return keys
+}
 
 func (tm *TypedSyncMap[K, V]) Store(key K, value V) {
 	tm.m.Store(key, value)

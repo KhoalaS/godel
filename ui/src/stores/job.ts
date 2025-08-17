@@ -5,9 +5,10 @@ import z from 'zod'
 import { Config } from '@/types/Config'
 
 export const useJobStore = defineStore('job', () => {
-  const jobs = ref<DownloadJob[]>([])
   const baseUrl = 'localhost:9095'
+  const jobs = ref<DownloadJob[]>([])
   const configs = ref<Config[]>([])
+  const transformers = ref<string[]>([])
 
   async function init() {
     try {
@@ -17,6 +18,15 @@ export const useJobStore = defineStore('job', () => {
       } else {
         const data = await configResponse.json()
         configs.value = z.array(Config).parse(data)
+      }
+
+      const trResponse = await fetch(`http://${baseUrl}/transformers`)
+      if (trResponse.status != 200) {
+        console.warn('could not get transformers, got status code', trResponse.status)
+        return
+      } else {
+        const data = await trResponse.json()
+        transformers.value = z.array(z.string()).parse(data)
       }
 
       const response = await fetch(`http://${baseUrl}/jobs`)
@@ -59,11 +69,12 @@ export const useJobStore = defineStore('job', () => {
     })
   }
 
-  async function addJob(url: string, configId?: string) {
+  async function addJob(url: string, configId?: string, transformer?: string[]) {
     const job: DownloadJob = {
       url: url,
       id: '-1',
       configId: configId,
+      transformer: transformer
     }
 
     try {
@@ -97,5 +108,5 @@ export const useJobStore = defineStore('job', () => {
     }
   }
 
-  return { init, addJob, pauseJob, jobs: readonly(jobs), configs: configs }
+  return { init, addJob, pauseJob, jobs: readonly(jobs), configs: configs, transformers }
 })

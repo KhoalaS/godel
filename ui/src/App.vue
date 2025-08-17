@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import JobsTable from './components/JobsTable.vue'
 import { useJobStore } from './stores/job'
 import {
@@ -24,6 +24,12 @@ const noneOption: Config = {
   transformer: [],
 }
 
+const noneTransformer = {
+  id: 'NONE',
+  name: 'None',
+}
+const transformer = ref<{ id: string; name: string }>(noneTransformer)
+
 function download() {
   const parsedUrl = URL.parse(url.value)
   if (!parsedUrl) {
@@ -32,9 +38,18 @@ function download() {
   }
 
   const configId = config.value?.id != noneOption.id ? config.value : undefined
-  jobStore.addJob(url.value, configId?.id)
+  const tr: string[] = []
+  if (transformer.value.id != 'NONE') {
+    tr.push(transformer.value.id)
+  }
+
+  jobStore.addJob(url.value, configId?.id, tr)
   url.value = ''
 }
+
+onMounted(async () => {
+  await jobStore.init()
+})
 </script>
 
 <template>
@@ -63,6 +78,20 @@ function download() {
                 v-model="config"
                 :options="jobStore.configs"
                 :none-option="noneOption"
+              >
+              </WAutocomplete>
+              <WAutocomplete
+                style="width: 200px"
+                v-model="transformer"
+                :options="
+                  jobStore.transformers.map((tr) => {
+                    return {
+                      id: tr,
+                      name: tr,
+                    }
+                  })
+                "
+                :none-option="noneTransformer"
               >
               </WAutocomplete>
             </div>

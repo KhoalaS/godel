@@ -49,8 +49,6 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		request.Header.Add(k, v)
 	}
 
-	log.Debug().Any("headers", request.Header).Send()
-
 	if job.Status.Load() == types.PAUSED {
 		log.Info().Int("bytes", job.BytesDownloaded).Msg("Partial file size")
 
