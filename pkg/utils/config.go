@@ -11,20 +11,6 @@ import (
 )
 
 func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
-	// apply the transformers
-	for _, transformerId := range config.Transformer {
-		val, ok := registries.TransformerRegistry.Load(transformerId)
-		if !ok {
-			continue
-		}
-
-		var err error
-		err = val(job)
-		if err != nil {
-			return err
-		}
-	}
-
 	// apply the config values
 	if config.Limit > 0 {
 		job.Limit = config.Limit
@@ -44,6 +30,20 @@ func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
 	}
 
 	job.DeleteOnCancel = config.DeleteOnCancel
+
+	// apply the transformers
+	for _, transformerId := range config.Transformer {
+		val, ok := registries.TransformerRegistry.Load(transformerId)
+		if !ok {
+			continue
+		}
+
+		var err error
+		err = val(job)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
