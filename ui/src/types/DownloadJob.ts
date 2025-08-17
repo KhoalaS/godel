@@ -17,7 +17,8 @@ export const DownloadJob = z.object({
   isParent: z.boolean().optional(),
   urls: z.array(z.string()).optional(),
   parentId: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional()
+  headers: z.record(z.string(), z.string()).optional(),
+  destPath: z.string().optional(),
 })
 
 export type DownloadJob = z.infer<typeof DownloadJob>

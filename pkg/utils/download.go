@@ -98,20 +98,21 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	}
 
 	var outfile *os.File
-	destDir := filepath.Dir(job.Filename)
+	outPath := filepath.Join(job.DestPath, job.Filename)
+	destDir := filepath.Dir(outPath)
 	err = os.MkdirAll(destDir, 0755)
 	if err != nil {
 		return err
 	}
 
 	if currentState == types.PAUSED {
-		outfile, err = os.OpenFile(job.Filename, os.O_APPEND|os.O_WRONLY, 0)
+		outfile, err = os.OpenFile(outPath, os.O_APPEND|os.O_WRONLY, 0)
 		if err != nil {
 			return err
 		}
 		log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Opened file for appending")
 	} else {
-		outfile, err = os.Create(job.Filename)
+		outfile, err = os.Create(outPath)
 		if err != nil {
 			return err
 		}
@@ -182,7 +183,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	var reader io.Reader
 
 	if job.Limit > 0 {
-		limit := rate.NewLimiter(rate.Limit(job.Limit), job.Limit)
+		limit := rate.NewLimiter(rate.Limit(job.Limit), 2*job.Limit)
 		reader = &RateLimitReader{
 			limiter: limit,
 			reader:  response.Body,

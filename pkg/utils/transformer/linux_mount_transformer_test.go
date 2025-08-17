@@ -9,13 +9,14 @@ import (
 
 func TestLinuxMountTransformer(t *testing.T) {
 	job := types.DownloadJob{
-		Filename: "C:/Users/1/Downloads/1.txt",
+		Filename: "1.txt",
+		DestPath: "C:/Users/1/Downloads/",
 	}
 
 	LinuxMountTransformer(&job)
 
 	if runtime.GOOS == "linux" {
-		if job.Filename != "/mnt/c/Users/1/Downloads/1.txt" {
+		if job.DestPath != "/mnt/c/Users/1/Downloads/" {
 			t.Fail()
 		}
 	}

@@ -3,7 +3,6 @@ package utils
 import (
 	"net/url"
 	"path"
-	"path/filepath"
 
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
@@ -26,7 +25,7 @@ func ApplyConfig(job *types.DownloadJob, config types.DownloadConfig) error {
 	}
 
 	if config.DestPath != "" {
-		job.Filename = filepath.Join(config.DestPath, job.Filename)
+		job.DestPath = config.DestPath
 	}
 
 	job.DeleteOnCancel = config.DeleteOnCancel

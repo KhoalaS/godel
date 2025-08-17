@@ -87,6 +87,7 @@ func main() {
 	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
 	registries.TransformerRegistry.Store("reddit", transformer.RedditTransformer)
 	registries.TransformerRegistry.Store("gofile", transformer.GofileTransformer)
+	registries.TransformerRegistry.Store("linux_mount", transformer.LinuxMountTransformer)
 
 	for i := range *numWorkers {
 		wg.Add(1)

@@ -19,17 +19,17 @@ func LinuxMountTransformer(job *types.DownloadJob) error {
 		return nil
 	}
 
-	m := driveRegex.FindStringSubmatch(job.Filename)
+	m := driveRegex.FindStringSubmatch(job.DestPath)
 	if len(m) != 2 {
-		log.Debug().Str("filename", job.Filename).Str("transformer", "linux_mount").Send()
-		return fmt.Errorf("could not find drive name in filename %s", job.Filename)
+		log.Debug().Str("destPath", job.DestPath).Str("transformer", "linux_mount").Send()
+		return fmt.Errorf("could not find drive name in destination %s", job.DestPath)
 	}
 
 	match := m[0]
 	driveChar := strings.ToLower(m[1])
 
-	newFilename := strings.Replace(job.Filename, match, fmt.Sprintf("/mnt/%s/", driveChar), 1)
-	job.Filename = newFilename
+	newDest := strings.Replace(job.DestPath, match, fmt.Sprintf("/mnt/%s/", driveChar), 1)
+	job.DestPath = newDest
 
 	return nil
 }

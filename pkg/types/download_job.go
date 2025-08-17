@@ -24,6 +24,7 @@ type DownloadJob struct {
 	IsParent        bool              `json:"isParent,omitempty"`
 	Urls            []string          `json:"urls,omitempty"`
 	Headers         map[string]string `json:"headers,omitempty"`
+	DestPath        string            `json:"destPath,omitempty"`
 	Status          atomic.Value      `json:"-"`
 	CancelCh        chan struct{}     `json:"-"`
 	PauseCh         chan struct{}     `json:"-"`
