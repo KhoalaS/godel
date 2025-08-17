@@ -131,12 +131,8 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	contentLength := response.Header.Get("content-length")
 
 	if contentLength == "" {
-		log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("No content length do io.Copy")
-		_, err = io.Copy(outfile, response.Body)
-		if err != nil {
-			return err
-		}
-		return nil
+		log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("No content length")
+		contentLength = "-1"
 	}
 
 	contentLengthInt, err := strconv.Atoi(contentLength)
@@ -148,7 +144,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		contentLengthInt += job.BytesDownloaded
 	}
 
-	if job.Size == 0 {
+	if job.Size == 0 && contentLengthInt > 0 {
 		job.Size = contentLengthInt
 	}
 
@@ -173,11 +169,15 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				speed := float64(deltaBytes) / elapsed
 				job.Speed = speed
 
-				remaining := contentLengthInt - bytesRead
-				eta := float64(remaining) / float64(deltaBytes) * float64(elapsed)
-				job.Eta = eta
+				if contentLengthInt == -1 {
+					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msgf("Speed: %.2f MB/s (eta: unknown)", speed/1024/1024)
+				} else {
+					remaining := contentLengthInt - bytesRead
+					eta := float64(remaining) / float64(deltaBytes) * float64(elapsed)
+					job.Eta = eta
 
-				log.Info().Str("filename", job.Filename).Str("id", job.Id).Msgf("Speed: %.2f MB/s (eta: %.2f seconds)", speed/1024/1024, eta)
+					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msgf("Speed: %.2f MB/s (eta: %.2f seconds)", speed/1024/1024, eta)
+				}
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()
