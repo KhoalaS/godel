@@ -113,6 +113,7 @@ func JpgfishTransformer(job *types.DownloadJob) error {
 
 	job.IsParent = true
 	job.Urls = urls
+	job.Headers["user-agent"] = auth.UserAgent
 
 	return nil
 }
