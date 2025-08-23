@@ -10,7 +10,10 @@ const props = defineProps<{
 
 const jobStore = useJobStore()
 const progress = computed(() => {
-  return (props.job.bytesDownloaded ?? 0) / (props.job.size ?? 100)
+  if (!props.job.size) {
+    return 1
+  }
+  return (props.job.bytesDownloaded ?? 0) / props.job.size
 })
 
 const pauseButtonState = computed(() => {
