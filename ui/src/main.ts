@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 
 import 'vue-98/dist/main.css'
+import './main.css'
 
 const app = createApp(App)
 
