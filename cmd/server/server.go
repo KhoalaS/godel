@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/KhoalaS/godel"
+	"github.com/KhoalaS/godel/pkg/nodes"
+	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
@@ -91,6 +93,20 @@ func main() {
 	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
 
+	registries.NodeRegistry["limiter"] = pipeline.Node{
+		Type: "limiter",
+		Name: "Limiter",
+		Run:  nodes.LimiterNodeFunc,
+		Inputs: []pipeline.NodeInput{
+			{
+				Id:       "limit",
+				Type:     "number",
+				Label:    "Limit",
+				Required: true,
+			},
+		},
+	}
+
 	for i := range *numWorkers {
 		wg.Add(1)
 		go godel.DownloadWorker(ctx, &wg, i, jobs, &client)
@@ -110,6 +126,7 @@ func main() {
 	mux.HandleFunc("GET /configs", handleConfigs)
 	mux.HandleFunc("GET /transformers", handleTransformers)
 	mux.HandleFunc("GET /jobs", handleJobs)
+	mux.HandleFunc("GET /nodes", handleNodes)
 
 	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
 
@@ -311,6 +328,27 @@ func handleJobs(w http.ResponseWriter, r *http.Request) {
 	jobs := registries.JobRegistry.All()
 
 	data, err := json.Marshal(jobs)
+	if err != nil {
+		responseData, _ := json.Marshal(types.ErrorResponse{
+			Error: utils.INTERNAL_ERROR_MESSAGE,
+		})
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(responseData)
+		return
+	}
+
+	w.Write(data)
+}
+
+func handleNodes(w http.ResponseWriter, r *http.Request) {
+	nodes := []pipeline.Node{}
+
+	for _, v := range registries.NodeRegistry {
+		nodes = append(nodes, v)
+	}
+
+	data, err := json.Marshal(nodes)
 	if err != nil {
 		responseData, _ := json.Marshal(types.ErrorResponse{
 			Error: utils.INTERNAL_ERROR_MESSAGE,
