@@ -1,9 +1,9 @@
 package pipeline
 
-type Phase int
+type Phase string
 
 const (
-	PrePhase Phase = iota
-	DownloadPhase
-	AfterPhase
+	PrePhase      Phase = "pre"
+	DownloadPhase Phase = "download"
+	AfterPhase    Phase = "after"
 )

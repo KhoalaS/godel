@@ -94,9 +94,10 @@ func main() {
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
 
 	registries.NodeRegistry["limiter"] = pipeline.Node{
-		Type: "limiter",
-		Name: "Limiter",
-		Run:  nodes.LimiterNodeFunc,
+		Type:  "limiter",
+		Name:  "Limiter",
+		Run:   nodes.LimiterNodeFunc,
+		Phase: pipeline.PrePhase,
 		Inputs: []pipeline.NodeInput{
 			{
 				Id:       "limit",

@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { VueFlow, type Edge, type Node } from '@vue-flow/core'
+import { onMounted, ref } from 'vue'
+import { useVueFlow, VueFlow, type Edge, type Node } from '@vue-flow/core'
+import LimiterNode from './LimiterNode.vue'
+import { usePipelineStore } from '@/stores/pipeline'
+import { Background } from '@vue-flow/background'
+
+const pipelineStore = usePipelineStore()
+const { addNodes, onConnect, addEdges, screenToFlowCoordinate } = useVueFlow()
 
 // these components are only shown as examples of how to use a custom node or edge
 // you can find many examples of how to create these custom components in the examples page of the docs
@@ -86,20 +92,89 @@ const edges = ref<Edge[]>([
     },
   },
 ])
+onMounted(async () => {
+  await pipelineStore.init()
+  for (const node of pipelineStore.registeredNodes) {
+    const id = crypto.randomUUID()
+    addNodes({
+      id: id,
+      position: {
+        x: 100,
+        y: 200,
+      },
+      type: 'limiter',
+      data: {
+        id,
+        ...node,
+      },
+    })
+  }
+})
+
+onConnect((params) => {
+  console.log(params)
+  addEdges([params])
+})
+
+function onDragOver(event: DragEvent) {
+  event.preventDefault()
+  event.dataTransfer!.dropEffect = 'move'
+}
+
+function onDrop(event: DragEvent) {
+  const type = event.dataTransfer?.getData('application/vueflow')
+  const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
+  console.log(position, event.clientX, event.clientY)
+
+  const target = pipelineStore.registeredNodes.find((node) => node.type == type)
+  if (target) {
+    const id = crypto.randomUUID()
+    addNodes({
+      id: id,
+      position: position,
+      type: type,
+      data: {
+        id,
+        ...target,
+      },
+    })
+  }
+}
 </script>
 
 <template>
-  <VueFlow style="height: 600px" :nodes="nodes" :edges="edges">
-    <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
-
-    <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
-  </VueFlow>
+  <div class="p-[1px]" style="height: 600px; width: 800px; display: flex">
+    <div class="m-2">
+      <div
+        class="node w-32 text-center p-3"
+        draggable="true"
+        @dragstart="(e) => e.dataTransfer?.setData('application/vueflow', node.type)"
+        style="cursor: grab"
+        :key="node.type"
+        v-for="node in pipelineStore.registeredNodes"
+      >
+        {{ node.name }}
+      </div>
+    </div>
+    <div style="flex: 1; background-color: white">
+      <VueFlow @drop="onDrop" @dragover="onDragOver" :nodes="nodes" :edges="edges">
+        <Background :size="1.6"></Background>
+        <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
+        <template #node-limiter="nodeProps">
+          <LimiterNode v-bind="nodeProps" />
+        </template>
+        <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
+      </VueFlow>
+    </div>
+  </div>
 </template>
 
-<style>
-/* import the necessary styles for Vue Flow to work */
-@import '@vue-flow/core/dist/style.css';
-
-/* import the default theme, this is optional but generally recommended */
-@import '@vue-flow/core/dist/theme-default.css';
+<style scoped>
+.node {
+  box-shadow:
+    inset -1px -1px black,
+    inset 1px 1px white,
+    inset -2px -2px var(--border-gray);
+  background-color: var(--main-bg-color);
+}
 </style>
