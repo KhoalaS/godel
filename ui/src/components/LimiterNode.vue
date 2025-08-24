@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import type { PipelineNode } from '@/types/Node'
 import { Handle, Position, type NodeProps } from '@vue-flow/core'
-import { ref } from 'process'
-import { reactive, toRefs } from 'vue'
+import { reactive } from 'vue'
 import { WInput } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
