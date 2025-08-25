@@ -20,6 +20,8 @@ func main() {
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	comm := make(chan pipeline.PipelineMessage, 96)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
@@ -47,14 +49,14 @@ func main() {
 				Run:    nodes.LimiterNodeFunc,
 			},
 		},
-		Comm: make(chan pipeline.PipelineMessage, 24),
+		Comm: comm,
 		Job: types.DownloadJob{
 			Url: "http://localhost:9095",
 		},
 	}
 
 	go func() {
-		for msg := range p.Comm {
+		for msg := range comm {
 			log.Debug().Any("msg", msg).Send()
 		}
 	}()

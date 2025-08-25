@@ -22,9 +22,10 @@ type Pipeline struct {
 }
 
 type PipelineMessage struct {
-	NodeId string      `json:"id"`
-	Type   MessageType `json:"type"`
-	Data   MessageData `json:"data"`
+	PipelineId string      `json:"pipelineId"`
+	NodeId     string      `json:"nodeId"`
+	Type       MessageType `json:"type"`
+	Data       MessageData `json:"data"`
 }
 
 type MessageData struct {
@@ -46,8 +47,9 @@ func (p *Pipeline) Run() error {
 
 	for _, node := range p.Nodes {
 		p.Comm <- PipelineMessage{
-			NodeId: node.Id,
-			Type:   StatusMessage,
+			PipelineId: p.Id,
+			NodeId:     node.Id,
+			Type:       StatusMessage,
 			Data: MessageData{
 				Status: StatusRunning,
 			},
@@ -59,8 +61,9 @@ func (p *Pipeline) Run() error {
 			log.Warn().Err(err).Send()
 			node.Status = StatusFailed
 			p.Comm <- PipelineMessage{
-				NodeId: node.Id,
-				Type:   ErrorMessage,
+				PipelineId: p.Id,
+				NodeId:     node.Id,
+				Type:       ErrorMessage,
 				Data: MessageData{
 					Error:  err.Error(),
 					Status: StatusFailed,
@@ -71,8 +74,9 @@ func (p *Pipeline) Run() error {
 			}
 		} else {
 			p.Comm <- PipelineMessage{
-				NodeId: node.Id,
-				Type:   StatusMessage,
+				PipelineId: p.Id,
+				NodeId:     node.Id,
+				Type:       StatusMessage,
 				Data: MessageData{
 					Status: StatusSuccess,
 				},
