@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"net/http"
 	"os"
+	"os/signal"
+	"sync"
 
+	"github.com/KhoalaS/godel"
 	"github.com/KhoalaS/godel/pkg/nodes"
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/types"
@@ -15,7 +20,20 @@ func main() {
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	var wg sync.WaitGroup
+	var pipelines = make(chan *pipeline.Pipeline, 12)
+	client := http.Client{}
+
+	for i := range 4 {
+		wg.Add(1)
+		go godel.PipelineWorker(ctx, &wg, i, pipelines, &client)
+	}
+
 	p := pipeline.Pipeline{
+		Id: uuid.NewString(),
 		Nodes: []pipeline.Node{
 			{
 				Id:    uuid.NewString(),
@@ -23,23 +41,29 @@ func main() {
 				Phase: pipeline.PrePhase,
 				Name:  "Limiter",
 				Config: map[string]any{
-					"limit": 1000,
+					"limit": "1000",
 				},
 				Status: pipeline.StatusPending,
 				Run:    nodes.LimiterNodeFunc,
 			},
 		},
 		Comm: make(chan pipeline.PipelineMessage, 24),
+		Job: types.DownloadJob{
+			Url: "http://localhost:9095",
+		},
 	}
 
-	job := types.DownloadJob{
-		Url: "http://localhost:9095",
-	}
+	go func() {
+		for msg := range p.Comm {
+			log.Debug().Any("msg", msg).Send()
+		}
+	}()
 
-	// simulate running the pipeline concurrently
-	go p.Run(job)
+	pipelines <- &p
 
-	for message := range p.Comm {
-		log.Debug().Any("msg", message).Send()
-	}
+	<-ctx.Done()
+
+	log.Info().Msg("Waiting for workers to exit")
+	wg.Wait()
+
 }

@@ -14,8 +14,11 @@ const (
 )
 
 type Pipeline struct {
-	Nodes []Node               `json:"nodes"`
-	Comm  chan PipelineMessage `json:"-"`
+	Id              string               `json:"id"`
+	FailOnNodeError bool                 `json:"failOnNodeError"`
+	Job             types.DownloadJob    `json:"job"`
+	Nodes           []Node               `json:"nodes"`
+	Comm            chan PipelineMessage `json:"-"`
 }
 
 type PipelineMessage struct {
@@ -38,8 +41,9 @@ const (
 	StatusMessage   MessageType = "status"
 )
 
-func (p *Pipeline) Run(job types.DownloadJob) types.DownloadJob {
-	_job := job
+func (p *Pipeline) Run() error {
+	defer close(p.Comm)
+
 	for _, node := range p.Nodes {
 		p.Comm <- PipelineMessage{
 			NodeId: node.Id,
@@ -50,9 +54,10 @@ func (p *Pipeline) Run(job types.DownloadJob) types.DownloadJob {
 		}
 
 		var err error
-		_job, err = node.Run(_job, node, p.Comm)
+		p.Job, err = node.Run(p.Job, node, p.Comm)
 		if err != nil {
 			log.Warn().Err(err).Send()
+			node.Status = StatusFailed
 			p.Comm <- PipelineMessage{
 				NodeId: node.Id,
 				Type:   ErrorMessage,
@@ -61,18 +66,20 @@ func (p *Pipeline) Run(job types.DownloadJob) types.DownloadJob {
 					Status: StatusFailed,
 				},
 			}
-			break
+			if p.FailOnNodeError {
+				return err
+			}
+		} else {
+			p.Comm <- PipelineMessage{
+				NodeId: node.Id,
+				Type:   StatusMessage,
+				Data: MessageData{
+					Status: StatusSuccess,
+				},
+			}
 		}
 
-		p.Comm <- PipelineMessage{
-			NodeId: node.Id,
-			Type:   StatusMessage,
-			Data: MessageData{
-				Status: StatusSuccess,
-			},
-		}
 	}
 
-	close(p.Comm)
-	return _job
+	return nil
 }

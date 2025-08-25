@@ -1,6 +1,8 @@
 package nodes
 
 import (
+	"errors"
+
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/types"
 )
@@ -25,7 +27,11 @@ func CreateLimiterNode() pipeline.Node {
 
 func LimiterNodeFunc(job types.DownloadJob, node pipeline.Node, comm chan<- pipeline.PipelineMessage) (types.DownloadJob, error) {
 	if limit, ex := node.Config["limit"]; ex {
-		job.Limit = (limit).(int)
+		var ok bool
+		job.Limit, ok = (limit).(int)
+		if !ok {
+			return job, errors.New("limit was not a number")
+		}
 		return job, nil
 	} else {
 		return job, nil
