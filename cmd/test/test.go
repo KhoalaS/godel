@@ -45,8 +45,9 @@ func main() {
 				Config: map[string]any{
 					"limit": "1000",
 				},
-				Status: pipeline.StatusPending,
-				Run:    nodes.LimiterNodeFunc,
+				NodeType: pipeline.ConnectorNode,
+				Status:   pipeline.StatusPending,
+				Run:      nodes.LimiterNodeFunc,
 			},
 		},
 		Comm: comm,
@@ -60,6 +61,8 @@ func main() {
 			log.Debug().Any("msg", msg).Send()
 		}
 	}()
+
+	log.Debug().Msg("adding pipeline to channel")
 
 	pipelines <- &p
 
