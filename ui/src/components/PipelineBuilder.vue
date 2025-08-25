@@ -94,21 +94,6 @@ const edges = ref<Edge[]>([
 ])
 onMounted(async () => {
   await pipelineStore.init()
-  for (const node of pipelineStore.registeredNodes) {
-    const id = crypto.randomUUID()
-    addNodes({
-      id: id,
-      position: {
-        x: 100,
-        y: 200,
-      },
-      type: 'limiter',
-      data: {
-        id,
-        ...node,
-      },
-    })
-  }
 })
 
 onConnect((params) => {
@@ -124,7 +109,6 @@ function onDragOver(event: DragEvent) {
 function onDrop(event: DragEvent) {
   const type = event.dataTransfer?.getData('application/vueflow')
   const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
-  console.log(position, event.clientX, event.clientY)
 
   const target = pipelineStore.registeredNodes.find((node) => node.type == type)
   if (target) {
