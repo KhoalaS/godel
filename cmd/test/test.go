@@ -29,13 +29,17 @@ func main() {
 				Run:    nodes.LimiterNodeFunc,
 			},
 		},
+		Comm: make(chan pipeline.PipelineMessage, 24),
 	}
 
 	job := types.DownloadJob{
 		Url: "http://localhost:9095",
 	}
 
-	job = p.Run(job)
+	// simulate running the pipeline concurrently
+	go p.Run(job)
 
-	log.Debug().Any("job", job).Send()
+	for message := range p.Comm {
+		log.Debug().Any("msg", message).Send()
+	}
 }

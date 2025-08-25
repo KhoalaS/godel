@@ -23,7 +23,7 @@ func CreateLimiterNode() pipeline.Node {
 	}
 }
 
-func LimiterNodeFunc(job types.DownloadJob, node pipeline.Node) (types.DownloadJob, error) {
+func LimiterNodeFunc(job types.DownloadJob, node pipeline.Node, comm chan<- pipeline.PipelineMessage) (types.DownloadJob, error) {
 	if limit, ex := node.Config["limit"]; ex {
 		job.Limit = (limit).(int)
 		return job, nil
