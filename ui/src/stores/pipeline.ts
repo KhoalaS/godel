@@ -6,6 +6,7 @@ import z from 'zod'
 export const usePipelineStore = defineStore('pipeline', () => {
   const baseUrl = 'localhost:9095'
   const registeredNodes: Ref<PipelineNode[]> = ref([])
+  const pipelines = new Map<string, unknown>()
 
   async function init() {
     try {
@@ -21,8 +22,13 @@ export const usePipelineStore = defineStore('pipeline', () => {
     }
   }
 
+  async function startPipeline(pipeline: unknown) {
+    throw new Error('Unimplemented')
+  }
+
   return {
     init,
     registeredNodes,
+    startPipeline,
   }
 })
