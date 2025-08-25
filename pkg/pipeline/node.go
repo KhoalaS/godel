@@ -26,7 +26,7 @@ type NodeInput struct {
 	Options  []string `json:"options,omitempty"` // for enums
 }
 
-type NodeFunc func(job *types.DownloadJob, data map[string]any) (types.DownloadJob, error)
+type NodeFunc func(job types.DownloadJob, node Node) (types.DownloadJob, error)
 
 type NodeStatus string
 

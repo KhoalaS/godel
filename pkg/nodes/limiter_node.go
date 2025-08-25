@@ -23,12 +23,11 @@ func CreateLimiterNode() pipeline.Node {
 	}
 }
 
-func LimiterNodeFunc(job *types.DownloadJob, data map[string]any) (types.DownloadJob, error) {
-	next := *job.Clone()
-	if limit, ex := data["limit"]; ex {
-		next.Limit = (limit).(int)
-		return next, nil
+func LimiterNodeFunc(job types.DownloadJob, node pipeline.Node) (types.DownloadJob, error) {
+	if limit, ex := node.Config["limit"]; ex {
+		job.Limit = (limit).(int)
+		return job, nil
 	} else {
-		return next, nil
+		return job, nil
 	}
 }
