@@ -17,12 +17,13 @@ func CreateLimiterNode() pipeline.Node {
 		},
 	}
 	return pipeline.Node{
-		Type:   "limiter",
-		Phase:  pipeline.PrePhase,
-		Run:    LimiterNodeFunc,
-		Inputs: inputs,
-		Name:   "Limiter",
-		Status: pipeline.StatusPending,
+		Type:     "limiter",
+		Phase:    pipeline.PrePhase,
+		Run:      LimiterNodeFunc,
+		Inputs:   inputs,
+		Name:     "Limiter",
+		Status:   pipeline.StatusPending,
+		NodeType: pipeline.ConnectorNode,
 	}
 }
 

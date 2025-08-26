@@ -26,6 +26,7 @@ const (
 	SourceNode    NodeType = "source"
 	ConnectorNode NodeType = "connector"
 	EndNode       NodeType = "end"
+	DownloadNode  NodeType = "download"
 )
 
 type NodeInput struct {

@@ -12,12 +12,13 @@ import (
 func CreateDownloaderNode() pipeline.Node {
 	inputs := []pipeline.NodeInput{}
 	return pipeline.Node{
-		Type:   "default_downloader",
-		Phase:  pipeline.DownloadPhase,
-		Run:    DownloaderNodeFunc,
-		Inputs: inputs,
-		Name:   "Standard Downloader",
-		Status: pipeline.StatusPending,
+		Type:     "default_downloader",
+		Phase:    pipeline.DownloadPhase,
+		Run:      DownloaderNodeFunc,
+		Inputs:   inputs,
+		Name:     "Standard Downloader",
+		Status:   pipeline.StatusPending,
+		NodeType: pipeline.DownloadNode,
 	}
 }
 

@@ -17,12 +17,13 @@ func CreateUrlNode() pipeline.Node {
 		},
 	}
 	return pipeline.Node{
-		Type:   "url",
-		Phase:  pipeline.PrePhase,
-		Run:    UrlNodeFunc,
-		Inputs: inputs,
-		Name:   "Url",
-		Status: pipeline.StatusPending,
+		Type:     "url",
+		Phase:    pipeline.PrePhase,
+		Run:      UrlNodeFunc,
+		Inputs:   inputs,
+		Name:     "Url",
+		Status:   pipeline.StatusPending,
+		NodeType: pipeline.SourceNode,
 	}
 }
 
