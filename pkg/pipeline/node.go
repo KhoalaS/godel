@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"context"
+
 	"github.com/KhoalaS/godel/pkg/types"
 )
 
@@ -34,7 +36,7 @@ type NodeInput struct {
 	Options  []string `json:"options,omitempty"` // for enums
 }
 
-type NodeFunc func(job types.DownloadJob, node Node, comm chan<- PipelineMessage) (types.DownloadJob, error)
+type NodeFunc func(ctx context.Context, job types.DownloadJob, node Node, comm chan<- PipelineMessage) (types.DownloadJob, error)
 
 type NodeStatus string
 

@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"context"
+
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/rs/zerolog/log"
 )
@@ -42,7 +44,7 @@ const (
 	StatusMessage   MessageType = "status"
 )
 
-func (p *Pipeline) Run() error {
+func (p *Pipeline) Run(ctx context.Context) error {
 	defer close(p.Comm)
 
 	for _, node := range p.Nodes {
@@ -56,7 +58,7 @@ func (p *Pipeline) Run() error {
 		}
 
 		var err error
-		p.Job, err = node.Run(p.Job, node, p.Comm)
+		p.Job, err = node.Run(ctx, p.Job, node, p.Comm)
 		if err != nil {
 			log.Warn().Err(err).Send()
 			node.Status = StatusFailed

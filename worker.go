@@ -60,7 +60,7 @@ func PipelineWorker(ctx context.Context, wg *sync.WaitGroup, id int, pipelines c
 
 			log.Debug().Int("id", id).Msg("Downloading using worker")
 
-			err := pipeline.Run()
+			err := pipeline.Run(ctx)
 			if err != nil {
 				log.Err(err).Send()
 			}
