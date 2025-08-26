@@ -57,9 +57,7 @@ func NewDownloadJob() *DownloadJob {
 func (j *DownloadJob) Clone() *DownloadJob {
 	copy := *j
 	copy.Urls = []string{}
-	for _, _url := range j.Urls {
-		copy.Urls = append(copy.Urls, _url)
-	}
+	copy.Urls = append(copy.Urls, j.Urls...)
 
 	copy.Headers = make(map[string]string)
 	maps.Copy(copy.Headers, j.Headers)

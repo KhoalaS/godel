@@ -10,7 +10,6 @@ import (
 	"github.com/KhoalaS/godel"
 	"github.com/KhoalaS/godel/pkg/nodes"
 	"github.com/KhoalaS/godel/pkg/pipeline"
-	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -55,9 +54,6 @@ func main() {
 			downloadNode,
 		},
 		Comm: comm,
-		Job: types.DownloadJob{
-			Url: "http://localhost:9095",
-		},
 	}
 
 	go func() {

@@ -18,7 +18,6 @@ const (
 type Pipeline struct {
 	Id              string               `json:"id"`
 	FailOnNodeError bool                 `json:"failOnNodeError"`
-	Job             types.DownloadJob    `json:"job"`
 	Nodes           []Node               `json:"nodes"`
 	Comm            chan PipelineMessage `json:"-"`
 }
@@ -48,6 +47,8 @@ const (
 func (p *Pipeline) Run(ctx context.Context) error {
 	defer close(p.Comm)
 
+	job := *types.NewDownloadJob()
+
 	for _, node := range p.Nodes {
 		p.Comm <- PipelineMessage{
 			PipelineId: p.Id,
@@ -60,7 +61,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 		}
 
 		var err error
-		p.Job, err = node.Run(ctx, p.Job, node, p.Comm)
+		job, err = node.Run(ctx, job, node, p.Comm)
 		if err != nil {
 			log.Warn().Err(err).Send()
 			node.Status = StatusFailed
