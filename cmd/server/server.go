@@ -98,12 +98,13 @@ func main() {
 		Name:  "Limiter",
 		Run:   nodes.LimiterNodeFunc,
 		Phase: pipeline.PrePhase,
-		Inputs: []pipeline.NodeInput{
-			{
+		Inputs: map[string]pipeline.NodeIO{
+			"limit": {
 				Id:       "limit",
 				Type:     "number",
 				Label:    "Limit",
 				Required: true,
+				Value:    1000000,
 			},
 		},
 	}

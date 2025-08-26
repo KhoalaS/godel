@@ -9,11 +9,13 @@ import (
 )
 
 func CreateUrlNode() pipeline.Node {
-	inputs := []pipeline.NodeInput{
-		{
-			Id:    "url",
-			Type:  "string",
-			Label: "Url",
+	inputs := map[string]pipeline.NodeIO{
+		"url": {
+			Id:       "url",
+			Type:     "string",
+			Label:    "Url",
+			Required: true,
+			Value:    "",
 		},
 	}
 	return pipeline.Node{
@@ -28,9 +30,9 @@ func CreateUrlNode() pipeline.Node {
 }
 
 func UrlNodeFunc(ctx context.Context, job types.DownloadJob, node pipeline.Node, comm chan<- pipeline.PipelineMessage) (types.DownloadJob, error) {
-	if _url, ex := node.Config["url"]; ex {
+	if _url, ex := node.Inputs["url"]; ex {
 		var ok bool
-		job.Url, ok = (_url).(string)
+		job.Url, ok = (_url.Value).(string)
 		if !ok {
 			return job, errors.New("url was not a string")
 		}

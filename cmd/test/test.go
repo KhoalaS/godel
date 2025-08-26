@@ -36,11 +36,25 @@ func main() {
 	limitNode := nodes.CreateLimiterNode()
 	limitNode.Id = uuid.NewString()
 	// 1 MB per second limit
-	limitNode.Config = map[string]any{"limit": 1000000}
+	limitNode.Inputs = map[string]pipeline.NodeIO{
+		"limit": {
+			Id:       "limit",
+			Type:     pipeline.IOTypeNumber,
+			Required: true,
+			Value:    1000000,
+			Label:    "Limit",
+		},
+	}
 
 	urlNode := nodes.CreateUrlNode()
 	urlNode.Id = uuid.NewString()
-	urlNode.Config = map[string]any{"url": "http://localhost:9999/files/random.bin"}
+	urlNode.Inputs = map[string]pipeline.NodeIO{"url": {
+		Id:       "url",
+		Type:     pipeline.IOTypeString,
+		Label:    "Url",
+		Required: true,
+		Value:    "http://localhost:9999/files/random.bin",
+	}}
 
 	downloadNode := nodes.CreateDownloaderNode()
 	downloadNode.Id = uuid.NewString()

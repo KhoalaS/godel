@@ -10,15 +10,15 @@ import (
 )
 
 func CreateDownloaderNode() pipeline.Node {
-	inputs := []pipeline.NodeInput{}
 	return pipeline.Node{
 		Type:     "default_downloader",
 		Phase:    pipeline.DownloadPhase,
 		Run:      DownloaderNodeFunc,
-		Inputs:   inputs,
+		Inputs:   make(map[string]pipeline.NodeIO),
 		Name:     "Standard Downloader",
 		Status:   pipeline.StatusPending,
 		NodeType: pipeline.DownloadNode,
+		Outputs:  make(map[string]pipeline.NodeIO),
 	}
 }
 
