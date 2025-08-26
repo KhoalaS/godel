@@ -3,6 +3,7 @@ install:
 	go mod tidy
 	
 build: worker.go cmd/**/*.go pkg/**/*.go ui/dist/**/*
+	export GOEXPERIMENT=greenteagc
 	go build -o build/server.exe cmd/server/server.go
 
 build_ui: ui/src/**/*.vue ui/src/**/*.ts
