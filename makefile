@@ -1,10 +1,16 @@
+OS := $(shell go env GOOS)
+EXT := 
+ifeq ($(OS),windows)
+    EXT := .exe
+endif
+
 install:
 	cd ui && bun install
 	go mod tidy
 	
 build: worker.go cmd/**/*.go pkg/**/*.go ui/dist/**/*
 	export GOEXPERIMENT=greenteagc
-	go build -o build/server.exe cmd/server/server.go
+	go build -o build/server$(EXT) cmd/server/server.go
 
 build_ui: ui/src/**/*.vue ui/src/**/*.ts
 	cd ui && bun run build
