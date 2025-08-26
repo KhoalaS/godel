@@ -34,21 +34,25 @@ func main() {
 		go godel.PipelineWorker(ctx, &wg, i, pipelines, &client)
 	}
 
+	limitNode := nodes.CreateLimiterNode()
+	limitNode.Id = uuid.NewString()
+	// 1 MB per second limit
+	limitNode.Config = map[string]any{"limit": 1000000}
+
+	urlNode := nodes.CreateUrlNode()
+	urlNode.Id = uuid.NewString()
+	urlNode.Config = map[string]any{"url": "http://localhost:9999/files/random.bin"}
+
+	downloadNode := nodes.CreateDownloaderNode()
+	downloadNode.Id = uuid.NewString()
+
+	// TODO edges -> pipeline
 	p := pipeline.Pipeline{
 		Id: uuid.NewString(),
 		Nodes: []pipeline.Node{
-			{
-				Id:    uuid.NewString(),
-				Type:  "limiter",
-				Phase: pipeline.PrePhase,
-				Name:  "Limiter",
-				Config: map[string]any{
-					"limit": "1000",
-				},
-				NodeType: pipeline.ConnectorNode,
-				Status:   pipeline.StatusPending,
-				Run:      nodes.LimiterNodeFunc,
-			},
+			urlNode,
+			limitNode,
+			downloadNode,
 		},
 		Comm: comm,
 		Job: types.DownloadJob{
