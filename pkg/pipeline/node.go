@@ -30,14 +30,31 @@ const (
 )
 
 type NodeInput struct {
-	Id       string   `json:"id"`
-	Type     string   `json:"type"`
-	Label    string   `json:"label"`
-	Required bool     `json:"required"`
-	Options  []string `json:"options,omitempty"` // for enums
+	Id       string     `json:"id"`
+	Type     InputType  `json:"type"`
+	Label    string     `json:"label"`
+	Required bool       `json:"required"`
+	Handle   NodeHandle `json:"handle"`
+	Options  []string   `json:"options,omitempty"` // for enums
 }
 
 type NodeFunc func(ctx context.Context, job types.DownloadJob, node Node, comm chan<- PipelineMessage) (types.DownloadJob, error)
+
+type InputType string
+
+const (
+	InputTypeString    InputType = "string"
+	InputTypeNumber    InputType = "number"
+	InputTypeBoolean   InputType = "boolean"
+	InputTypeDirectory InputType = "directory"
+)
+
+type NodeHandle string
+
+const (
+	NodeHandleInput  NodeHandle = "input"
+	NodeHandleOutput NodeHandle = "output"
+)
 
 type NodeStatus string
 
