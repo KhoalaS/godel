@@ -26,6 +26,7 @@ type Pipeline struct {
 type PipelineMessage struct {
 	PipelineId string      `json:"pipelineId"`
 	NodeId     string      `json:"nodeId"`
+	NodeType   string      `json:"nodeType"`
 	Type       MessageType `json:"type"`
 	Data       MessageData `json:"data"`
 }
@@ -51,6 +52,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 		p.Comm <- PipelineMessage{
 			PipelineId: p.Id,
 			NodeId:     node.Id,
+			NodeType:   node.Type,
 			Type:       StatusMessage,
 			Data: MessageData{
 				Status: StatusRunning,
@@ -65,6 +67,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 			p.Comm <- PipelineMessage{
 				PipelineId: p.Id,
 				NodeId:     node.Id,
+				NodeType:   node.Type,
 				Type:       ErrorMessage,
 				Data: MessageData{
 					Error:  err.Error(),
@@ -78,6 +81,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 			p.Comm <- PipelineMessage{
 				PipelineId: p.Id,
 				NodeId:     node.Id,
+				NodeType:   node.Type,
 				Type:       StatusMessage,
 				Data: MessageData{
 					Status: StatusSuccess,
