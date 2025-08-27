@@ -23,21 +23,11 @@ func NewGraph() *Graph {
 	}
 }
 
-func applyInputs(graph *Graph, node *Node) {
+func ApplyInputs(graph *Graph, node *Node) {
 	for _, e := range graph.Edges {
 		if e.Target != node.Id {
 			continue
 		}
-		node.Inputs[e.TargetHandle] = graph.Nodes[e.Source].Outputs[e.TargetHandle]
+		node.Inputs[e.TargetHandle] = graph.Nodes[e.Source].Outputs[e.SourceHandle]
 	}
-}
-
-func findFirstNodes(graph *Graph) []*Node {
-	nodes := []*Node{}
-	for k, v := range graph.Incoming {
-		if len(v) == 0 {
-			nodes = append(nodes, graph.Nodes[k])
-		}
-	}
-	return nodes
 }

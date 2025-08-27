@@ -33,41 +33,46 @@ func main() {
 		go godel.PipelineWorker(ctx, &wg, i, pipelines, &client)
 	}
 
-	limitNode := nodes.CreateLimiterNode()
-	limitNode.Id = uuid.NewString()
-	// 1 MB per second limit
-	limitNode.Inputs = map[string]pipeline.NodeIO{
-		"limit": {
-			Id:       "limit",
-			Type:     pipeline.IOTypeNumber,
-			Required: true,
-			Value:    1000000,
-			Label:    "Limit",
-		},
-	}
-
-	urlNode := nodes.CreateUrlNode()
-	urlNode.Id = uuid.NewString()
-	urlNode.Inputs = map[string]pipeline.NodeIO{"url": {
-		Id:       "url",
-		Type:     pipeline.IOTypeString,
-		Label:    "Url",
-		Required: true,
-		Value:    "http://localhost:9999/files/random.bin",
-	}}
+	intInputNode := nodes.CreateIntInputNode()
+	intInputNode.Id = "1"
 
 	downloadNode := nodes.CreateDownloaderNode()
-	downloadNode.Id = uuid.NewString()
+	downloadNode.Id = "2"
 
-	// TODO edges -> pipeline
+	// mock inputs
+	if in, ok := intInputNode.Outputs["output"]; ok {
+		in.Value = 1000000
+	}
+	if in, ok := downloadNode.Inputs["filename"]; ok {
+		in.Value = "random.bin"
+	}
+	if in, ok := downloadNode.Inputs["output_dir"]; ok {
+		in.Value = "./"
+	}
+	if in, ok := downloadNode.Inputs["url"]; ok {
+		in.Value = "http://localhost:9999/files/random.bin"
+	}
+
+	// use the int input for the limit
+
+	graph := pipeline.NewGraph()
+	graph.Edges = append(graph.Edges, pipeline.Edge{
+		Source:       "1",
+		Target:       "2",
+		SourceHandle: "output",
+		TargetHandle: "limit",
+	})
+
+	graph.Nodes[intInputNode.Id] = &intInputNode
+	graph.Nodes[downloadNode.Id] = &downloadNode
+
+	graph.Incoming[downloadNode.Id] = []*pipeline.Node{&intInputNode}
+	graph.Outgoing[intInputNode.Id] = []*pipeline.Node{&downloadNode}
+
 	p := pipeline.Pipeline{
-		Id: uuid.NewString(),
-		Nodes: []pipeline.Node{
-			urlNode,
-			limitNode,
-			downloadNode,
-		},
-		Comm: comm,
+		Id:    uuid.NewString(),
+		Graph: graph,
+		Comm:  comm,
 	}
 
 	go func() {

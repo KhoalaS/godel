@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/KhoalaS/godel"
-	"github.com/KhoalaS/godel/pkg/nodes"
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
@@ -92,22 +91,6 @@ func main() {
 	registries.TransformerRegistry.Store("linux_mount", transformer.LinuxMountTransformer)
 	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
-
-	registries.NodeRegistry["limiter"] = pipeline.Node{
-		Type:  "limiter",
-		Name:  "Limiter",
-		Run:   nodes.LimiterNodeFunc,
-		Phase: pipeline.PrePhase,
-		Inputs: map[string]pipeline.NodeIO{
-			"limit": {
-				Id:       "limit",
-				Type:     "number",
-				Label:    "Limit",
-				Required: true,
-				Value:    1000000,
-			},
-		},
-	}
 
 	for i := range *numWorkers {
 		wg.Add(1)

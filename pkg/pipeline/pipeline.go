@@ -2,23 +2,12 @@ package pipeline
 
 import (
 	"context"
-
-	"github.com/KhoalaS/godel/pkg/types"
-	"github.com/rs/zerolog/log"
-)
-
-type Phase string
-
-const (
-	PrePhase      Phase = "pre"
-	DownloadPhase Phase = "download"
-	AfterPhase    Phase = "after"
 )
 
 type Pipeline struct {
 	Id              string               `json:"id"`
 	FailOnNodeError bool                 `json:"failOnNodeError"`
-	Nodes           []Node               `json:"nodes"`
+	Graph           *Graph               `json:"nodes"`
 	Comm            chan PipelineMessage `json:"-"`
 }
 
@@ -47,50 +36,64 @@ const (
 func (p *Pipeline) Run(ctx context.Context) error {
 	defer close(p.Comm)
 
-	job := *types.NewDownloadJob()
+	ready := findStartNodes(p.Graph)
+	done := map[string]bool{}
 
-	for _, node := range p.Nodes {
-		p.Comm <- PipelineMessage{
-			PipelineId: p.Id,
-			NodeId:     node.Id,
-			NodeType:   node.Type,
-			Type:       StatusMessage,
-			Data: MessageData{
-				Status: StatusRunning,
-			},
-		}
+	for len(ready) > 0 {
+		node := ready[0]
+		ready = ready[1:]
 
-		var err error
-		job, err = node.Run(ctx, job, node, p.Comm)
-		if err != nil {
-			log.Warn().Err(err).Send()
-			node.Status = StatusFailed
-			p.Comm <- PipelineMessage{
-				PipelineId: p.Id,
-				NodeId:     node.Id,
-				NodeType:   node.Type,
-				Type:       ErrorMessage,
-				Data: MessageData{
-					Error:  err.Error(),
-					Status: StatusFailed,
-				},
-			}
-			if p.FailOnNodeError {
-				return err
-			}
-		} else {
+		ApplyInputs(p.Graph, node)
+		if err := node.Run(ctx, *node, p.Comm); err != nil {
 			p.Comm <- PipelineMessage{
 				PipelineId: p.Id,
 				NodeId:     node.Id,
 				NodeType:   node.Type,
 				Type:       StatusMessage,
 				Data: MessageData{
-					Status: StatusSuccess,
+					Status: StatusFailed,
+					Error:  err.Error(),
 				},
 			}
+			return err
+		}
+		done[node.Id] = true
+
+		p.Comm <- PipelineMessage{
+			PipelineId: p.Id,
+			NodeId:     node.Id,
+			NodeType:   node.Type,
+			Type:       StatusMessage,
+			Data: MessageData{
+				Status: StatusSuccess,
+			},
 		}
 
+		for _, next := range p.Graph.Outgoing[node.Id] {
+			if allDepsDone(next, done, p.Graph.Incoming) {
+				ready = append(ready, next)
+			}
+		}
 	}
-
 	return nil
+}
+
+func findStartNodes(graph *Graph) []*Node {
+	nodes := []*Node{}
+
+	for _, node := range graph.Nodes {
+		if inc, ok := graph.Incoming[node.Id]; !ok || len(inc) == 0 {
+			nodes = append(nodes, node)
+		}
+	}
+	return nodes
+}
+
+func allDepsDone(node *Node, done map[string]bool, incoming map[string][]*Node) bool {
+	for _, dep := range incoming[node.Id] {
+		if !done[dep.Id] {
+			return false
+		}
+	}
+	return true
 }

@@ -2,20 +2,17 @@ package pipeline
 
 import (
 	"context"
-
-	"github.com/KhoalaS/godel/pkg/types"
 )
 
 type Node struct {
-	Id       string            `json:"id,omitempty"`
-	Type     string            `json:"type"`
-	Phase    Phase             `json:"phase"`
-	Name     string            `json:"name"`
-	NodeType NodeType          `json:"nodeType"`
-	Error    string            `json:"error,omitempty"`
-	Inputs   map[string]NodeIO `json:"inputs,omitempty"`
-	Outputs  map[string]NodeIO `json:"outputs,omitempty"`
-	Status   NodeStatus        `json:"status,omitempty"`
+	Id       string             `json:"id,omitempty"`
+	Type     string             `json:"type"`
+	Name     string             `json:"name"`
+	NodeType NodeType           `json:"nodeType"`
+	Error    string             `json:"error,omitempty"`
+	Inputs   map[string]*NodeIO `json:"inputs,omitempty"`
+	Outputs  map[string]*NodeIO `json:"outputs,omitempty"`
+	Status   NodeStatus         `json:"status,omitempty"`
 
 	Run NodeFunc `json:"-"`
 }
@@ -39,7 +36,7 @@ type NodeIO struct {
 	Options  []string `json:"options,omitempty"` // for enums
 }
 
-type NodeFunc func(ctx context.Context, job types.DownloadJob, node Node, comm chan<- PipelineMessage) (types.DownloadJob, error)
+type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) error
 
 type IOType string
 
