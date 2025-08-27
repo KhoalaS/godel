@@ -1,4 +1,3 @@
-import type { Edge, GraphEdge } from '@vue-flow/core'
 import z from 'zod'
 
 export const NodeIO = z.object({
@@ -12,7 +11,7 @@ export const NodeIO = z.object({
 })
 
 export const PipelineNode = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   type: z.string(),
   name: z.string(),
   nodeType: z.enum(['input', 'downloader']).optional(),
