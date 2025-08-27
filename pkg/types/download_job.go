@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"maps"
 	"sync/atomic"
 
 	"github.com/google/uuid"
@@ -51,6 +52,17 @@ func NewDownloadJob() *DownloadJob {
 	job := DownloadJob{Id: uuid.NewString(), CancelCh: make(chan struct{}), PauseCh: make(chan struct{}), Transformer: []string{}, Headers: map[string]string{}}
 	job.Status.Store(IDLE)
 	return &job
+}
+
+func (j *DownloadJob) Clone() *DownloadJob {
+	copy := *j
+	copy.Urls = []string{}
+	copy.Urls = append(copy.Urls, j.Urls...)
+
+	copy.Headers = make(map[string]string)
+	maps.Copy(copy.Headers, j.Headers)
+
+	return &copy
 }
 
 type DownloadState string

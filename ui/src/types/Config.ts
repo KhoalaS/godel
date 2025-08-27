@@ -10,3 +10,7 @@ export const Config = z.object({
 })
 
 export type Config = z.infer<typeof Config>
+
+export const LimiterConfig = z.object({
+  limit: z.number().gt(0),
+})

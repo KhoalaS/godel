@@ -99,13 +99,14 @@ onMounted(async () => {
       </WindowBody>
     </template>
   </WindowComponent>
-  <WindowComponent
-    title="Pipeline Builder"
-    :controls="['Minimize', 'Maximize']"
-    style="width: 800px; height: 600px"
-  >
+  <WindowComponent title="Pipeline Builder" :controls="['Minimize', 'Maximize']">
     <template #body>
       <WindowBody>
+        <template #toolbars>
+          <div class="flex gap-1 items-center py-1 px-[2px] justify-start">
+            <WButton>Start</WButton>
+          </div>
+        </template>
         <PipelineBuilder></PipelineBuilder>
       </WindowBody>
     </template>
