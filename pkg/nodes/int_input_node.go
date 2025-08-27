@@ -13,7 +13,7 @@ func CreateIntInputNode() pipeline.Node {
 		Inputs:   make(map[string]*pipeline.NodeIO),
 		Name:     "Integer Input",
 		Status:   pipeline.StatusPending,
-		NodeType: pipeline.SourceNode,
+		NodeType: pipeline.InputNode,
 		Outputs: map[string]*pipeline.NodeIO{
 			"output": {
 				Id:       "output",

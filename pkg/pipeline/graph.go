@@ -8,6 +8,7 @@ type Graph struct {
 }
 
 type Edge struct {
+	Id           string `json:"id"`
 	Target       string `json:"target"`
 	Source       string `json:"source"`
 	SourceHandle string `json:"sourceHandle"`
