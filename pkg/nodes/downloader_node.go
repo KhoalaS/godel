@@ -11,7 +11,7 @@ import (
 
 func CreateDownloaderNode() pipeline.Node {
 	return pipeline.Node{
-		Type: "default_downloader",
+		Type: "default-downloader",
 		Run:  DownloaderNodeFunc,
 		Inputs: map[string]*pipeline.NodeIO{
 			"limit": {
