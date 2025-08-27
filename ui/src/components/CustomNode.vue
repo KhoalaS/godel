@@ -37,6 +37,15 @@ const config = reactive(_config)
     {{ config }}
     <Handle
       :key="value.id"
+      v-for="value in data.inputs"
+      type="target"
+      :id="value.id"
+      :position="Position.Left"
+      :connectable-start="false"
+      :connectable-end="true"
+    />
+    <Handle
+      :key="value.id"
       v-for="value in data.outputs"
       type="source"
       :id="value.id"
@@ -44,6 +53,10 @@ const config = reactive(_config)
       :connectable-start="true"
       :connectable-end="false"
     />
+    <div class="text-left" :key="input.id" v-for="input in data.inputs">
+      <label>{{ input.label }}</label>
+      <WInput v-model="config[input.id]" :type="input.type" />
+    </div>
     <div class="text-left" :key="output.id" v-for="output in data.outputs">
       <label>{{ output.label }}</label>
       <WInput v-model="config[output.id]" :type="output.type" />

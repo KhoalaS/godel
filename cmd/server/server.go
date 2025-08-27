@@ -93,7 +93,8 @@ func main() {
 	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
 
-	registries.NodeRegistry["int_input"] = nodes.CreateIntInputNode()
+	registries.NodeRegistry["int-input"] = nodes.CreateIntInputNode()
+	registries.NodeRegistry["default-downloader"] = nodes.CreateDownloaderNode()
 
 	for i := range *numWorkers {
 		wg.Add(1)

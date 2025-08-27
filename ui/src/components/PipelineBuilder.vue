@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useVueFlow, VueFlow, type Edge, type Node } from '@vue-flow/core'
-import IntInputNode from './IntInputNode.vue'
+import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
 
@@ -116,7 +116,7 @@ function onDrop(event: DragEvent) {
     addNodes({
       id: id,
       position: position,
-      type: type,
+      type: 'custom',
       data: {
         ...target,
         id,
@@ -144,8 +144,8 @@ function onDrop(event: DragEvent) {
       <VueFlow @drop="onDrop" @dragover="onDragOver" :nodes="nodes" :edges="edges">
         <Background :size="1.6"></Background>
         <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
-        <template #node-int-input="nodeProps">
-          <IntInputNode v-bind="nodeProps" />
+        <template #node-custom="nodeProps">
+          <CustomNode v-bind="nodeProps" />
         </template>
         <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
       </VueFlow>
