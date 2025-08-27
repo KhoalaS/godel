@@ -8,12 +8,12 @@ import (
 
 func CreateIntInputNode() pipeline.Node {
 	return pipeline.Node{
-		Type:     "int_input",
+		Type:     "int-input",
 		Run:      IntInputNodeFunc,
 		Inputs:   make(map[string]*pipeline.NodeIO),
 		Name:     "Integer Input",
 		Status:   pipeline.StatusPending,
-		NodeType: pipeline.SourceNode,
+		NodeType: pipeline.InputNode,
 		Outputs: map[string]*pipeline.NodeIO{
 			"output": {
 				Id:       "output",

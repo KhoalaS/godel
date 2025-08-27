@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/KhoalaS/godel"
+	"github.com/KhoalaS/godel/pkg/nodes"
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
@@ -91,6 +92,8 @@ func main() {
 	registries.TransformerRegistry.Store("linux_mount", transformer.LinuxMountTransformer)
 	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
+
+	registries.NodeRegistry["int_input"] = nodes.CreateIntInputNode()
 
 	for i := range *numWorkers {
 		wg.Add(1)

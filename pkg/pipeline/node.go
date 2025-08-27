@@ -8,7 +8,7 @@ type Node struct {
 	Id       string             `json:"id,omitempty"`
 	Type     string             `json:"type"`
 	Name     string             `json:"name"`
-	NodeType NodeType           `json:"nodeType"`
+	NodeType NodeType           `json:"nodeType,omitempty"`
 	Error    string             `json:"error,omitempty"`
 	Inputs   map[string]*NodeIO `json:"inputs,omitempty"`
 	Outputs  map[string]*NodeIO `json:"outputs,omitempty"`
@@ -20,10 +20,8 @@ type Node struct {
 type NodeType string
 
 const (
-	SourceNode    NodeType = "source"
-	ConnectorNode NodeType = "connector"
-	EndNode       NodeType = "end"
-	DownloadNode  NodeType = "download"
+	InputNode      NodeType = "input"
+	DownloaderNode NodeType = "downloader"
 )
 
 type NodeIO struct {
