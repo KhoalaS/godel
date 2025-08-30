@@ -15,7 +15,7 @@ func CreateIntInputNode() pipeline.Node {
 		NodeType: pipeline.InputNode,
 		Io: map[string]*pipeline.NodeIO{
 			"output": {
-				Type:      pipeline.IOTypeOutput,
+				Type:      pipeline.IOTypePassthrough,
 				Id:        "output",
 				ValueType: pipeline.ValueTypeNumber,
 				Label:     "Output",
