@@ -6,6 +6,7 @@ import {
   useNodeConnections,
   useNodesData,
   useVueFlow,
+  type GraphNode,
   type NodeProps,
 } from '@vue-flow/core'
 import { WInput } from 'vue-98'
@@ -19,7 +20,7 @@ const sourceConnections = useNodeConnections({
   handleType: 'target',
 })
 
-const sourceData = useNodesData(() =>
+const sourceData = useNodesData<GraphNode<PipelineNode>>(() =>
   sourceConnections.value.map((connection) => connection.source),
 )
 
@@ -32,6 +33,31 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
       },
     })
   }
+}
+
+function hasIncoming(inputId: string) {
+  const targetConn = sourceConnections.value.find((conn) => {
+    return conn.targetHandle == inputId
+  })
+
+  return Boolean(targetConn)
+}
+
+function getIncomingData(inputId: string) {
+  const targetConn = sourceConnections.value.find((conn) => {
+    return conn.targetHandle == inputId
+  })
+
+  if (targetConn && targetConn.targetHandle) {
+    const node = sourceData.value?.find((node) => {
+      return node.id == targetConn.source
+    })
+    if (node) {
+      return node.data.io?.[targetConn.sourceHandle!].value!
+    }
+  }
+
+  return ''
 }
 </script>
 
@@ -59,7 +85,13 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
         :connectable-end="false"
       />
       <label>{{ input.label }}</label>
-      <WInput @update="(v) => onUpdate(v, input)" :type="input.valueType" />
+      <WInput
+        v-if="!hasIncoming(input.id)"
+        :initial="input.value"
+        @update="(v) => onUpdate(v, input)"
+        :type="input.valueType"
+      />
+      <WInput v-else :value="getIncomingData(input.id)" :disabled="true" :type="input.valueType" />
     </div>
   </div>
   {{ sourceConnections }}

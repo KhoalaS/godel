@@ -6,7 +6,7 @@ export const NodeIO = z.object({
   label: z.string(),
   required: z.boolean().optional(),
   readOnly: z.boolean().optional(),
-  value: z.unknown().optional(),
+  value: z.union([z.string(), z.number(), z.boolean()]).optional(),
   options: z.array(z.string()).optional(),
   type: z.enum(['input', 'output', 'passthrough']),
 })
