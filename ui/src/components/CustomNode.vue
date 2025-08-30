@@ -128,13 +128,13 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
         v-else
         :value="getIncomingData(input.id)"
         :initial="getIncomingData(input.id)"
+        @update="(v) => onUpdate(v, input)"
         :disabled="true"
         :type="input.valueType"
       />
     </div>
   </div>
-  {{ sourceConnections }}
-  {{ sourceData }}
+  {{ sourceData.map((node) => node.data) }}
 </template>
 
 <style scoped>
