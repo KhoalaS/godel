@@ -24,14 +24,15 @@ const (
 )
 
 type NodeIO struct {
-	Id        string    `json:"id"`
-	ValueType ValueType `json:"valueType"`
-	Label     string    `json:"label"`
-	Required  bool      `json:"required"`
-	ReadOnly  bool      `json:"readOnly"`
-	Value     any       `json:"value,omitempty"`
-	Options   []string  `json:"options,omitempty"` // for enums
-	Type      IOType    `json:"type"`
+	Id        string            `json:"id"`
+	ValueType ValueType         `json:"valueType"`
+	Label     string            `json:"label"`
+	Required  bool              `json:"required"`
+	ReadOnly  bool              `json:"readOnly"`
+	Value     any               `json:"value,omitempty"`
+	Options   []string          `json:"options,omitempty"` // for enums
+	Type      IOType            `json:"type"`
+	Hooks     map[string]string `json:"hooks,omitempty"`
 }
 
 type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) error
@@ -51,6 +52,7 @@ const (
 	IOTypeInput       IOType = "input"
 	IOTypeOutput      IOType = "output"
 	IOTypePassthrough IOType = "passthrough"
+	IOTypeGenerated   IOType = "generated"
 )
 
 type NodeHandle string

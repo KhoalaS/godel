@@ -1,4 +1,4 @@
-import z from 'zod'
+import z, { optional } from 'zod'
 
 export const NodeIO = z.object({
   id: z.string(),
@@ -8,7 +8,8 @@ export const NodeIO = z.object({
   readOnly: z.boolean().optional(),
   value: z.union([z.string(), z.number(), z.boolean()]).optional(),
   options: z.array(z.string()).optional(),
-  type: z.enum(['input', 'output', 'passthrough']),
+  type: z.enum(['input', 'output', 'passthrough', 'generated']),
+  hooks: z.record(z.string(), z.string()).optional(),
 })
 
 export const PipelineNode = z.object({

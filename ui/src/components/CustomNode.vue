@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { FunctionRegistry } from '@/types/InputHook'
 import type { NodeIO, PipelineNode } from '@/types/Node'
 import {
   Handle,
@@ -32,6 +33,10 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
         [io.id]: { ...props.data.io?.[io.id], value: value },
       },
     })
+
+    if (io.hooks) {
+      hook(value, io.hooks)
+    }
   }
 }
 
@@ -59,6 +64,30 @@ function getIncomingData(inputId: string) {
 
   return ''
 }
+
+function hook(input: string | number | boolean, overwrites: Record<string, string>) {
+  for (const [inputId, functionId] of Object.entries(overwrites)) {
+    const func = FunctionRegistry.get(functionId)
+    if (func == undefined) {
+      continue
+    }
+
+    if (props.data.io?.[inputId].value != undefined) {
+      return
+    }
+
+    const newValue = func(input)
+
+    if (props.data.io) {
+      updateNodeData<PipelineNode>(props.id, {
+        io: {
+          ...props.data.io,
+          [inputId]: { ...props.data.io?.[inputId], value: newValue },
+        },
+      })
+    }
+  }
+}
 </script>
 
 <template>
@@ -75,7 +104,7 @@ function getIncomingData(inputId: string) {
         :connectable-end="true"
       />
       <Handle
-        v-if="input.type == 'output' || input.type == 'passthrough'"
+        v-if="input.type == 'output' || input.type == 'passthrough' || input.type == 'generated'"
         class="handle-output"
         :key="input.id"
         type="source"
@@ -85,13 +114,23 @@ function getIncomingData(inputId: string) {
         :connectable-end="false"
       />
       <label>{{ input.label }}</label>
+      <div v-if="input.type == 'generated'">
+        {{ input.value }}
+      </div>
       <WInput
-        v-if="!hasIncoming(input.id)"
+        v-else-if="!hasIncoming(input.id)"
         :initial="input.value"
         @update="(v) => onUpdate(v, input)"
         :type="input.valueType"
       />
-      <WInput v-else :value="getIncomingData(input.id)" :disabled="true" :type="input.valueType" />
+
+      <WInput
+        v-else
+        :value="getIncomingData(input.id)"
+        :initial="getIncomingData(input.id)"
+        :disabled="true"
+        :type="input.valueType"
+      />
     </div>
   </div>
   {{ sourceConnections }}
