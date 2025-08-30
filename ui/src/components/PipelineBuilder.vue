@@ -50,14 +50,6 @@ const nodes = ref<Node<{ label: string; hello?: string }>[]>([
     },
     connectable: true,
   },
-  {
-    id: '5',
-    position: { x: 500, y: 200 },
-    data: {
-      label: 'Node 5',
-    },
-    connectable: true,
-  },
 ])
 
 // these are our edges
@@ -127,6 +119,9 @@ function onDrop(event: DragEvent) {
 </script>
 
 <template>
+  <div>
+    {{ nodes }}
+  </div>
   <div class="p-[1px]" style="height: 600px; width: 800px; display: flex">
     <div class="m-2">
       <div
@@ -146,6 +141,9 @@ function onDrop(event: DragEvent) {
         <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
         <template #node-custom="nodeProps">
           <CustomNode v-bind="nodeProps" />
+        </template>
+        <template #node-test="nodeProps">
+          <TestNode v-bind="nodeProps"></TestNode>
         </template>
         <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
       </VueFlow>
