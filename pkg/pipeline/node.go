@@ -25,24 +25,33 @@ const (
 )
 
 type NodeIO struct {
-	Id       string   `json:"id"`
-	Type     IOType   `json:"type"`
-	Label    string   `json:"label"`
-	Required bool     `json:"required"`
-	ReadOnly bool     `json:"readOnly"`
-	Value    any      `json:"value,omitempty"`
-	Options  []string `json:"options,omitempty"` // for enums
+	Id        string    `json:"id"`
+	ValueType ValueType `json:"valueType"`
+	Label     string    `json:"label"`
+	Required  bool      `json:"required"`
+	ReadOnly  bool      `json:"readOnly"`
+	Value     any       `json:"value,omitempty"`
+	Options   []string  `json:"options,omitempty"` // for enums
+	Type      IOType    `json:"type,omitempty"`
 }
 
 type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) error
 
+type ValueType string
+
+const (
+	ValueTypeString    ValueType = "string"
+	ValueTypeNumber    ValueType = "number"
+	ValueTypeBoolean   ValueType = "boolean"
+	ValueTypeDirectory ValueType = "directory"
+)
+
 type IOType string
 
 const (
-	IOTypeString    IOType = "string"
-	IOTypeNumber    IOType = "number"
-	IOTypeBoolean   IOType = "boolean"
-	IOTypeDirectory IOType = "directory"
+	IOTypeInput       IOType = "input"
+	IOTypeOutput      IOType = "output"
+	IOTypePassthrough IOType = "passthrough"
 )
 
 type NodeHandle string

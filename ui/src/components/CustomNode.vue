@@ -13,7 +13,7 @@ if (props.data.outputs) {
     let value: unknown | undefined = input.value
 
     if (value == undefined) {
-      switch (input.type) {
+      switch (input.valueType) {
         case 'boolean':
           value = false
           break
@@ -70,7 +70,7 @@ function onUpdate(value: string | number | boolean, type: 'input' | 'output', io
         :connectable-end="true"
       />
       <label>{{ input.label }}</label>
-      <WInput @update="(v) => onUpdate(v, 'input', input)" :type="input.type" />
+      <WInput @update="(v) => onUpdate(v, 'input', input)" :type="input.valueType" />
     </div>
     <div class="input-wrapper" :key="output.id" v-for="output in data.outputs">
       <Handle
@@ -83,7 +83,7 @@ function onUpdate(value: string | number | boolean, type: 'input' | 'output', io
         :connectable-end="false"
       />
       <label>{{ output.label }}</label>
-      <WInput @update="(v) => onUpdate(v, 'output', output)" :type="output.type" />
+      <WInput @update="(v) => onUpdate(v, 'output', output)" :type="output.valueType" />
     </div>
   </div>
 </template>

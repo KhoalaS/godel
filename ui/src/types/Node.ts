@@ -2,12 +2,13 @@ import z from 'zod'
 
 export const NodeIO = z.object({
   id: z.string(),
-  type: z.enum(['string', 'number', 'boolean', 'directory']),
+  valueType: z.enum(['string', 'number', 'boolean', 'directory']),
   label: z.string(),
   required: z.boolean().optional(),
   readOnly: z.boolean().optional(),
   value: z.unknown().optional(),
   options: z.array(z.string()).optional(),
+  type: z.enum(['input', 'output', 'passthrough']).optional(),
 })
 
 export const PipelineNode = z.object({
