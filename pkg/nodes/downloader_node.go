@@ -36,7 +36,7 @@ func CreateDownloaderNode() pipeline.Node {
 				Required:  true,
 			},
 			"filename": {
-				Type:      pipeline.IOTypeInput,
+				Type:      pipeline.IOTypePassthrough,
 				Id:        "filename",
 				ValueType: pipeline.ValueTypeString,
 				Label:     "Filename",
