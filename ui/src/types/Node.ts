@@ -8,7 +8,7 @@ export const NodeIO = z.object({
   readOnly: z.boolean().optional(),
   value: z.unknown().optional(),
   options: z.array(z.string()).optional(),
-  type: z.enum(['input', 'output', 'passthrough']).optional(),
+  type: z.enum(['input', 'output', 'passthrough']),
 })
 
 export const PipelineNode = z.object({
@@ -17,8 +17,7 @@ export const PipelineNode = z.object({
   name: z.string(),
   nodeType: z.enum(['input', 'downloader']).optional(),
   error: z.string().optional(),
-  inputs: z.record(z.string(), NodeIO).optional(),
-  outputs: z.record(z.string(), NodeIO).optional(),
+  io: z.record(z.string(), NodeIO).optional(),
   status: z.enum(['pending', 'running', 'success', 'failed']).optional(),
 })
 

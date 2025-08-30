@@ -40,16 +40,16 @@ func main() {
 	downloadNode.Id = "2"
 
 	// mock inputs
-	if in, ok := intInputNode.Outputs["output"]; ok {
+	if in, ok := intInputNode.Io["output"]; ok {
 		in.Value = 1000000
 	}
-	if in, ok := downloadNode.Inputs["filename"]; ok {
+	if in, ok := downloadNode.Io["filename"]; ok {
 		in.Value = "random.bin"
 	}
-	if in, ok := downloadNode.Inputs["output_dir"]; ok {
+	if in, ok := downloadNode.Io["output_dir"]; ok {
 		in.Value = "./"
 	}
-	if in, ok := downloadNode.Inputs["url"]; ok {
+	if in, ok := downloadNode.Io["url"]; ok {
 		in.Value = "http://localhost:9999/files/random.bin"
 	}
 

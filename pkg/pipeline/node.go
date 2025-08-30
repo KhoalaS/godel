@@ -10,8 +10,7 @@ type Node struct {
 	Name     string             `json:"name"`
 	NodeType NodeType           `json:"nodeType,omitempty"`
 	Error    string             `json:"error,omitempty"`
-	Inputs   map[string]*NodeIO `json:"inputs,omitempty"`
-	Outputs  map[string]*NodeIO `json:"outputs,omitempty"`
+	Io       map[string]*NodeIO `json:"io,omitempty"`
 	Status   NodeStatus         `json:"status,omitempty"`
 
 	Run NodeFunc `json:"-"`
@@ -32,7 +31,7 @@ type NodeIO struct {
 	ReadOnly  bool      `json:"readOnly"`
 	Value     any       `json:"value,omitempty"`
 	Options   []string  `json:"options,omitempty"` // for enums
-	Type      IOType    `json:"type,omitempty"`
+	Type      IOType    `json:"type"`
 }
 
 type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) error

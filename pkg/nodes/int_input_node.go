@@ -10,17 +10,17 @@ func CreateIntInputNode() pipeline.Node {
 	return pipeline.Node{
 		Type:     "int-input",
 		Run:      IntInputNodeFunc,
-		Inputs:   make(map[string]*pipeline.NodeIO),
 		Name:     "Integer Input",
 		Status:   pipeline.StatusPending,
 		NodeType: pipeline.InputNode,
-		Outputs: map[string]*pipeline.NodeIO{
+		Io: map[string]*pipeline.NodeIO{
 			"output": {
-				Id:       "output",
-				ValueType:     pipeline.ValueTypeNumber,
-				Label:    "Output",
-				Required: true,
-				Value:    1000000,
+				Type:      pipeline.IOTypeOutput,
+				Id:        "output",
+				ValueType: pipeline.ValueTypeNumber,
+				Label:     "Output",
+				Required:  true,
+				Value:     1000000,
 			},
 		},
 	}

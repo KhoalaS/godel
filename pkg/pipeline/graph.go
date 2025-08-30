@@ -29,6 +29,6 @@ func ApplyInputs(graph *Graph, node *Node) {
 		if e.Target != node.Id {
 			continue
 		}
-		node.Inputs[e.TargetHandle] = graph.Nodes[e.Source].Outputs[e.SourceHandle]
+		node.Io[e.TargetHandle] = graph.Nodes[e.Source].Io[e.SourceHandle]
 	}
 }
