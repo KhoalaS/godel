@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/KhoalaS/godel"
-	"github.com/KhoalaS/godel/pkg/nodes"
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
@@ -93,9 +92,9 @@ func main() {
 	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
 
-	registries.NodeRegistry["int-input"] = nodes.CreateIntInputNode()
-	registries.NodeRegistry["download"] = nodes.CreateDownloadNode()
-	registries.NodeRegistry["downloader"] = nodes.CreateDownloaderNode()
+	pipeline.NodeRegistry["int-input"] = pipeline.CreateIntInputNode()
+	pipeline.NodeRegistry["download"] = pipeline.CreateDownloadNode()
+	pipeline.NodeRegistry["downloader"] = pipeline.CreateDownloaderNode()
 
 	for i := range *numWorkers {
 		wg.Add(1)
@@ -334,7 +333,7 @@ func handleJobs(w http.ResponseWriter, r *http.Request) {
 func handleNodes(w http.ResponseWriter, r *http.Request) {
 	nodes := []pipeline.Node{}
 
-	for _, v := range registries.NodeRegistry {
+	for _, v := range pipeline.NodeRegistry {
 		nodes = append(nodes, v)
 	}
 

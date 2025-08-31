@@ -1,61 +1,72 @@
-package nodes
+package pipeline
 
 import (
 	"context"
 	"net/http"
+	"strconv"
 
-	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
 )
 
-func CreateDownloadNode() pipeline.Node {
-	return pipeline.Node{
+func CreateDownloadNode() Node {
+	return Node{
 		Type: "download",
 		Run:  DownloadNodeFunc,
-		Io: map[string]*pipeline.NodeIO{
+		Io: map[string]*NodeIO{
 			"limit": {
-				Type:      pipeline.IOTypeInput,
+				Type:      IOTypeInput,
 				Id:        "limit",
-				ValueType: pipeline.ValueTypeNumber,
+				ValueType: ValueTypeNumber,
 				Label:     "Limit",
 				Required:  false,
 			},
 			"job": {
-				Type:      pipeline.IOTypeInput,
+				Type:      IOTypeInput,
 				Id:        "job",
-				ValueType: pipeline.ValueTypeDownloadJob,
+				ValueType: ValueTypeDownloadJob,
 				Label:     "Downloader",
 				Required:  true,
 			},
 			"output_dir": {
-				Type:      pipeline.IOTypeInput,
+				Type:      IOTypeInput,
 				Id:        "output_dir",
-				ValueType: pipeline.ValueTypeDirectory,
+				ValueType: ValueTypeDirectory,
 				Label:     "Output directory",
 				Required:  true,
 			},
 			"filename": {
-				Type:      pipeline.IOTypePassthrough,
+				Type:      IOTypePassthrough,
 				Id:        "filename",
-				ValueType: pipeline.ValueTypeString,
+				ValueType: ValueTypeString,
 				Label:     "Filename",
 				Required:  true,
 			},
 		},
 		Name:     "Download",
-		Status:   pipeline.StatusPending,
-		NodeType: pipeline.DownloaderNode,
+		Status:   StatusPending,
+		NodeType: DownloaderNode,
 	}
 }
 
-func DownloadNodeFunc(ctx context.Context, node pipeline.Node, comm chan<- pipeline.PipelineMessage) error {
+func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage) error {
 	client := http.Client{}
 
 	job := (node.Io["job"].Value).(*types.DownloadJob)
 
-	if node.Io["limit"] != nil {
-		job.Limit = (node.Io["limit"].Value).(int)
+	if node.Io["limit"] != nil && node.Io["limit"].Value != nil {
+		switch v := node.Io["limit"].Value.(type) {
+		case int:
+			job.Limit = v
+		case float64:
+			job.Limit = int(v)
+		case float32:
+			job.Limit = int(v)
+		case string:
+			if i, err := strconv.Atoi(v); err == nil {
+				job.Limit = i
+			}
+		}
 	}
 
 	job.DestPath = (node.Io["output_dir"].Value).(string)
