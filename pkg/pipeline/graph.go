@@ -13,6 +13,7 @@ type Edge struct {
 	Source       string `json:"source"`
 	SourceHandle string `json:"sourceHandle"`
 	TargetHandle string `json:"targetHandle"`
+	Label        string `json:"label"`
 }
 
 func NewGraph() *Graph {
@@ -29,6 +30,6 @@ func ApplyInputs(graph *Graph, node *Node) {
 		if e.Target != node.Id {
 			continue
 		}
-		node.Io[e.TargetHandle] = graph.Nodes[e.Source].Io[e.SourceHandle]
+		node.Io[e.TargetHandle].Value = graph.Nodes[e.Source].Io[e.SourceHandle].Value
 	}
 }

@@ -2,6 +2,8 @@ package pipeline
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Pipeline struct {
@@ -9,6 +11,15 @@ type Pipeline struct {
 	FailOnNodeError bool                 `json:"failOnNodeError"`
 	Graph           *Graph               `json:"nodes"`
 	Comm            chan PipelineMessage `json:"-"`
+}
+
+func NewPipeline(g *Graph, commSize int) *Pipeline {
+	return &Pipeline{
+		Id:              uuid.NewString(),
+		FailOnNodeError: false,
+		Graph:           g,
+		Comm:            make(chan PipelineMessage, commSize),
+	}
 }
 
 type PipelineMessage struct {
