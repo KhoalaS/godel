@@ -1,4 +1,4 @@
-import z, { optional } from 'zod'
+import z from 'zod'
 
 export const NodeIO = z.object({
   id: z.string(),
@@ -10,6 +10,7 @@ export const NodeIO = z.object({
   options: z.array(z.string()).optional(),
   type: z.enum(['input', 'output', 'passthrough', 'generated']),
   hooks: z.record(z.string(), z.string()).optional(),
+  disabled: z.boolean().optional(),
 })
 
 export const PipelineNode = z.object({
@@ -25,3 +26,10 @@ export const PipelineNode = z.object({
 export type NodeIO = z.infer<typeof NodeIO>
 
 export type PipelineNode = z.infer<typeof PipelineNode>
+
+export const HandleColors: Record<NodeIO['valueType'], string> = {
+  boolean: 'green',
+  directory: 'violet',
+  number: 'blue',
+  string: 'red',
+}

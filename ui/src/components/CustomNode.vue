@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { FunctionRegistry } from '@/types/InputHook'
-import type { NodeIO, PipelineNode } from '@/types/Node'
+import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
 import {
   Handle,
   Position,
@@ -95,23 +95,27 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
     <div class="input-wrapper" :key="input.id" v-for="input in data.io">
       <Handle
         v-if="input.type == 'input' || input.type == 'passthrough'"
-        class="handle-input"
+        class="handle handle-input"
+        :class="{ disabled: input.disabled }"
         :key="input.id"
         type="target"
         :id="input.id"
         :position="Position.Left"
-        :connectable-start="false"
-        :connectable-end="true"
+        :connectable-start="!input.disabled && false"
+        :connectable-end="!input.disabled && true"
+        :style="{ background: HandleColors[input.valueType] }"
       />
       <Handle
         v-if="input.type == 'output' || input.type == 'passthrough' || input.type == 'generated'"
-        class="handle-output"
+        class="handle handle-output"
+        :class="{ disabled: input.disabled }"
         :key="input.id"
         type="source"
         :id="input.id"
         :position="Position.Right"
-        :connectable-start="true"
-        :connectable-end="false"
+        :connectable-start="!input.disabled && true"
+        :connectable-end="!input.disabled && false"
+        :style="{ background: HandleColors[input.valueType] }"
       />
       <label>{{ input.label }}</label>
       <div v-if="input.type == 'generated'">
@@ -154,11 +158,21 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
   position: absolute;
 }
 
+.handle.disabled {
+  filter: grayscale(1);
+  opacity: 0.5;
+  transition-duration: 100ms;
+}
+
 .node {
   box-shadow:
     inset -1px -1px black,
     inset 1px 1px white,
     inset -2px -2px var(--border-gray);
   background-color: var(--main-bg-color);
+}
+
+.vue-flow__handle {
+  border-radius: unset;
 }
 </style>
