@@ -105,52 +105,57 @@ function onControlClick(ctrl: WindowControls) {
   >
     <template #body>
       <WindowBody class="m-2">
-        <div class="input-wrapper" :key="input.id" v-for="input in data.io">
-          <Handle
-            v-if="input.type == 'input' || input.type == 'passthrough'"
-            class="handle handle-input"
-            :class="{ disabled: input.disabled }"
-            :key="input.id"
-            type="target"
-            :id="input.id"
-            :position="Position.Left"
-            :connectable-start="!input.disabled && false"
-            :connectable-end="!input.disabled && true"
-            :style="{ background: HandleColors[input.valueType] }"
-          />
-          <Handle
-            v-if="
-              input.type == 'output' || input.type == 'passthrough' || input.type == 'generated'
-            "
-            class="handle handle-output"
-            :class="{ disabled: input.disabled }"
-            :key="input.id"
-            type="source"
-            :id="input.id"
-            :position="Position.Right"
-            :connectable-start="!input.disabled && true"
-            :connectable-end="!input.disabled && false"
-            :style="{ background: HandleColors[input.valueType] }"
-          />
-          <label v-if="input.label">{{ input.label }}</label>
-          <div v-if="input.type == 'generated'">
-            {{ input.value }}
+        <div class="flex flex-col items-start mt-1" :key="input.id" v-for="input in data.io">
+          <label :for="props.data.id + input.id" class="text-xs self-center" v-if="input.label">{{
+            input.label
+          }}</label>
+          <div class="relative w-full">
+            <Handle
+              v-if="input.type == 'input' || input.type == 'passthrough'"
+              class="handle handle-input"
+              :class="{ disabled: input.disabled }"
+              :key="input.id"
+              type="target"
+              :id="input.id"
+              :position="Position.Left"
+              :connectable-start="!input.disabled && false"
+              :connectable-end="!input.disabled && true"
+              :style="{ background: HandleColors[input.valueType] }"
+            />
+            <Handle
+              v-if="
+                input.type == 'output' || input.type == 'passthrough' || input.type == 'generated'
+              "
+              class="handle handle-output"
+              :class="{ disabled: input.disabled }"
+              :key="input.id"
+              type="source"
+              :id="input.id"
+              :position="Position.Right"
+              :connectable-start="!input.disabled && true"
+              :connectable-end="!input.disabled && false"
+              :style="{ background: HandleColors[input.valueType] }"
+            />
+            <div v-if="input.type == 'generated'">
+              {{ input.value }}
+            </div>
+            <WInput
+              v-else-if="!hasIncoming(input.id)"
+              :initial="input.value"
+              @update="(v) => onUpdate(v, input)"
+              :type="input.valueType"
+              :id="props.data.id + input.id"
+            />
+            <WInput
+              v-else
+              :value="getIncomingData(input.id)"
+              :initial="getIncomingData(input.id)"
+              @update="(v) => onUpdate(v, input)"
+              :disabled="true"
+              :type="input.valueType"
+              :id="props.data.id + input.id"
+            />
           </div>
-          <WInput
-            v-else-if="!hasIncoming(input.id)"
-            :initial="input.value"
-            @update="(v) => onUpdate(v, input)"
-            :type="input.valueType"
-          />
-
-          <WInput
-            v-else
-            :value="getIncomingData(input.id)"
-            :initial="getIncomingData(input.id)"
-            @update="(v) => onUpdate(v, input)"
-            :disabled="true"
-            :type="input.valueType"
-          />
         </div>
       </WindowBody>
     </template>
@@ -159,12 +164,6 @@ function onControlClick(ctrl: WindowControls) {
 </template>
 
 <style scoped>
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
 .handle-input {
   left: -12px;
   position: absolute;
@@ -183,5 +182,7 @@ function onControlClick(ctrl: WindowControls) {
 
 .vue-flow__handle {
   border-radius: unset;
+  width: 8px;
+  height: 8px;
 }
 </style>
