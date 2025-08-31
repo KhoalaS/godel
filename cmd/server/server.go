@@ -94,7 +94,8 @@ func main() {
 	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
 
 	registries.NodeRegistry["int-input"] = nodes.CreateIntInputNode()
-	registries.NodeRegistry["default-downloader"] = nodes.CreateDownloaderNode()
+	registries.NodeRegistry["download"] = nodes.CreateDownloadNode()
+	registries.NodeRegistry["downloader"] = nodes.CreateDownloaderNode()
 
 	for i := range *numWorkers {
 		wg.Add(1)

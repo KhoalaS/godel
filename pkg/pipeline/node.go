@@ -40,10 +40,11 @@ type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) 
 type ValueType string
 
 const (
-	ValueTypeString    ValueType = "string"
-	ValueTypeNumber    ValueType = "number"
-	ValueTypeBoolean   ValueType = "boolean"
-	ValueTypeDirectory ValueType = "directory"
+	ValueTypeString      ValueType = "string"
+	ValueTypeNumber      ValueType = "number"
+	ValueTypeBoolean     ValueType = "boolean"
+	ValueTypeDirectory   ValueType = "directory"
+	ValueTypeDownloadJob ValueType = "downloadjob"
 )
 
 type IOType string

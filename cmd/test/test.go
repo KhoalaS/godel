@@ -36,7 +36,7 @@ func main() {
 	intInputNode := nodes.CreateIntInputNode()
 	intInputNode.Id = "1"
 
-	downloadNode := nodes.CreateDownloaderNode()
+	downloadNode := nodes.CreateDownloadNode()
 	downloadNode.Id = "2"
 
 	// mock inputs

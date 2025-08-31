@@ -9,10 +9,10 @@ import (
 	"github.com/KhoalaS/godel/pkg/utils"
 )
 
-func CreateDownloaderNode() pipeline.Node {
+func CreateDownloadNode() pipeline.Node {
 	return pipeline.Node{
-		Type: "default-downloader",
-		Run:  DownloaderNodeFunc,
+		Type: "download",
+		Run:  DownloadNodeFunc,
 		Io: map[string]*pipeline.NodeIO{
 			"limit": {
 				Type:      pipeline.IOTypeInput,
@@ -21,11 +21,11 @@ func CreateDownloaderNode() pipeline.Node {
 				Label:     "Limit",
 				Required:  false,
 			},
-			"url": {
+			"job": {
 				Type:      pipeline.IOTypeInput,
-				Id:        "url",
-				ValueType: pipeline.ValueTypeString,
-				Label:     "Url",
+				Id:        "job",
+				ValueType: pipeline.ValueTypeDownloadJob,
+				Label:     "Downloader",
 				Required:  true,
 			},
 			"output_dir": {
@@ -43,21 +43,21 @@ func CreateDownloaderNode() pipeline.Node {
 				Required:  true,
 			},
 		},
-		Name:     "Standard Downloader",
+		Name:     "Download",
 		Status:   pipeline.StatusPending,
 		NodeType: pipeline.DownloaderNode,
 	}
 }
 
-func DownloaderNodeFunc(ctx context.Context, node pipeline.Node, comm chan<- pipeline.PipelineMessage) error {
+func DownloadNodeFunc(ctx context.Context, node pipeline.Node, comm chan<- pipeline.PipelineMessage) error {
 	client := http.Client{}
 
-	job := types.NewDownloadJob()
+	job := (node.Io["job"].Value).(*types.DownloadJob)
+
 	if node.Io["limit"] != nil {
 		job.Limit = (node.Io["limit"].Value).(int)
 	}
 
-	job.Url = (node.Io["url"].Value).(string)
 	job.DestPath = (node.Io["output_dir"].Value).(string)
 	job.Filename = (node.Io["filename"].Value).(string)
 

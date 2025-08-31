@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import JobsTable from './components/JobsTable.vue'
 import { useJobStore } from './stores/job'
 import {
@@ -30,6 +30,7 @@ const noneTransformer = {
   name: 'None',
 }
 const transformer = ref<{ id: string; name: string }>(noneTransformer)
+const pipelineBuilder = useTemplateRef('pipelineBuilder')
 
 function download() {
   const parsedUrl = URL.parse(url.value)
@@ -104,10 +105,10 @@ onMounted(async () => {
       <WindowBody>
         <template #toolbars>
           <div class="flex gap-1 items-center py-1 px-[2px] justify-start">
-            <WButton>Start</WButton>
+            <WButton @click="pipelineBuilder?.saveGraph()">Start</WButton>
           </div>
         </template>
-        <PipelineBuilder></PipelineBuilder>
+        <PipelineBuilder ref="pipelineBuilder"></PipelineBuilder>
       </WindowBody>
     </template>
   </WindowComponent>

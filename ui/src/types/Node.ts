@@ -2,7 +2,7 @@ import z from 'zod'
 
 export const NodeIO = z.object({
   id: z.string(),
-  valueType: z.enum(['string', 'number', 'boolean', 'directory']),
+  valueType: z.enum(['string', 'number', 'boolean', 'directory', 'downloadjob']),
   label: z.string().optional(),
   required: z.boolean().optional(),
   readOnly: z.boolean().optional(),
@@ -32,4 +32,5 @@ export const HandleColors: Record<NodeIO['valueType'], string> = {
   directory: 'violet',
   number: 'blue',
   string: 'red',
+  downloadjob: 'pink',
 }

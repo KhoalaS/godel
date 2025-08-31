@@ -17,6 +17,7 @@ const {
   findNode,
   nodes,
   updateNodeData,
+  toObject,
 } = useVueFlow()
 
 // these components are only shown as examples of how to use a custom node or edge
@@ -111,6 +112,14 @@ function onDrop(event: DragEvent) {
     })
   }
 }
+
+function saveGraph() {
+  console.log(toObject())
+}
+
+defineExpose({
+  saveGraph,
+})
 </script>
 
 <template>
