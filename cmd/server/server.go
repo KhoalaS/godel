@@ -30,6 +30,8 @@ import (
 var upgrader = websocket.Upgrader{}
 
 var jobs = make(chan *types.DownloadJob, 12)
+var comm = make(chan pipeline.PipelineMessage, 96)
+var pipelines = make(chan *pipeline.Pipeline, 12)
 
 var deleteOnCancel *bool
 var debugMode *bool
@@ -95,10 +97,11 @@ func main() {
 	pipeline.NodeRegistry["int-input"] = pipeline.CreateIntInputNode()
 	pipeline.NodeRegistry["download"] = pipeline.CreateDownloadNode()
 	pipeline.NodeRegistry["downloader"] = pipeline.CreateDownloaderNode()
+	pipeline.NodeRegistry["basename"] = pipeline.CreateBasenameNode()
 
-	for i := range *numWorkers {
+	for i := range 4 {
 		wg.Add(1)
-		go godel.DownloadWorker(ctx, &wg, i, jobs, &client)
+		go godel.PipelineWorker(ctx, &wg, i, pipelines, &client)
 	}
 
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
@@ -116,6 +119,7 @@ func main() {
 	mux.HandleFunc("GET /transformers", handleTransformers)
 	mux.HandleFunc("GET /jobs", handleJobs)
 	mux.HandleFunc("GET /nodes", handleNodes)
+	mux.HandleFunc("POST /pipeline/start", handleStartPipeline)
 
 	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
 
@@ -349,6 +353,38 @@ func handleNodes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(data)
+}
+
+func handleStartPipeline(w http.ResponseWriter, r *http.Request) {
+	var gv pipeline.GraphView
+
+	data, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	if err != nil {
+		responseData, _ := json.Marshal(types.ErrorResponse{
+			Error: utils.INTERNAL_ERROR_MESSAGE,
+		})
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(responseData)
+		return
+	}
+
+	err = json.Unmarshal(data, &gv)
+	if err != nil {
+		responseData, _ := json.Marshal(types.ErrorResponse{
+			Error: utils.INTERNAL_ERROR_MESSAGE,
+		})
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(responseData)
+		return
+	}
+
+	g := gv.ToPipelineGraph(pipeline.NodeRegistry)
+	p := pipeline.NewPipeline(g, comm)
+	pipelines <- p
 }
 
 func corsMiddleWare(next http.Handler) http.Handler {

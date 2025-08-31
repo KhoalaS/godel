@@ -106,9 +106,12 @@ function onControlClick(ctrl: WindowControls) {
     <template #body>
       <WindowBody class="m-2">
         <div class="flex flex-col items-start mt-1" :key="input.id" v-for="input in data.io">
-          <label :for="props.data.id + input.id" class="text-xs self-center" v-if="input.label">{{
-            input.label
-          }}</label>
+          <label
+            :for="props.data.id + input.id"
+            class="text-xs self-center"
+            v-if="input.label && input.type != 'generated'"
+            >{{ input.label }}</label
+          >
           <div class="relative w-full">
             <Handle
               v-if="input.type == 'input' || input.type == 'passthrough'"
@@ -136,9 +139,7 @@ function onControlClick(ctrl: WindowControls) {
               :connectable-end="!input.disabled && false"
               :style="{ background: HandleColors[input.valueType] }"
             />
-            <div v-if="input.type == 'generated'">
-              {{ input.value }}
-            </div>
+            <div class="text-xs text-right" v-if="input.type == 'generated'">{{ input.label }}</div>
             <WInput
               v-else-if="!hasIncoming(input.id)"
               :initial="input.value"
@@ -160,7 +161,6 @@ function onControlClick(ctrl: WindowControls) {
       </WindowBody>
     </template>
   </WindowComponent>
-  {{ sourceData.map((node) => node.data) }}
 </template>
 
 <style scoped>

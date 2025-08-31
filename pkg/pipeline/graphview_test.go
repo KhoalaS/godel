@@ -26,8 +26,10 @@ func TestGraphView(t *testing.T) {
 
 	graph := gv.ToPipelineGraph(registry)
 
+	comm := make(chan PipelineMessage, 96)
+
 	ctx := context.Background()
-	p := NewPipeline(graph, 96)
+	p := NewPipeline(graph, comm)
 	err = p.Run(ctx)
 
 	if err != nil {

@@ -114,7 +114,8 @@ function onDrop(event: DragEvent) {
 }
 
 function saveGraph() {
-  console.log(toObject())
+  const graph = toObject()
+  pipelineStore.startPipeline(graph)
 }
 
 defineExpose({

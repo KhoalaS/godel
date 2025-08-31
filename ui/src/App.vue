@@ -49,6 +49,10 @@ function download() {
   url.value = ''
 }
 
+function startPipeline() {
+  pipelineBuilder.value?.saveGraph()
+}
+
 onMounted(async () => {
   await jobStore.init()
 })
@@ -105,7 +109,7 @@ onMounted(async () => {
       <WindowBody>
         <template #toolbars>
           <div class="flex gap-1 items-center py-1 px-[2px] justify-start">
-            <WButton @click="pipelineBuilder?.saveGraph()">Start</WButton>
+            <WButton @click="startPipeline">Start</WButton>
           </div>
         </template>
         <PipelineBuilder ref="pipelineBuilder"></PipelineBuilder>

@@ -13,12 +13,12 @@ type Pipeline struct {
 	Comm            chan PipelineMessage `json:"-"`
 }
 
-func NewPipeline(g *Graph, commSize int) *Pipeline {
+func NewPipeline(g *Graph, comm chan PipelineMessage) *Pipeline {
 	return &Pipeline{
 		Id:              uuid.NewString(),
 		FailOnNodeError: false,
 		Graph:           g,
-		Comm:            make(chan PipelineMessage, commSize),
+		Comm:            comm,
 	}
 }
 

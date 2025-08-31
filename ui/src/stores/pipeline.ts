@@ -1,4 +1,5 @@
 import { PipelineNode } from '@/types/Node'
+import type { FlowExportObject } from '@vue-flow/core'
 import { defineStore } from 'pinia'
 import { ref, type Ref } from 'vue'
 import z from 'zod'
@@ -22,8 +23,18 @@ export const usePipelineStore = defineStore('pipeline', () => {
     }
   }
 
-  async function startPipeline(pipeline: unknown) {
-    throw new Error('Unimplemented')
+  async function startPipeline(graph: FlowExportObject) {
+    try {
+      const response = await fetch(`http://${baseUrl}/pipeline/start`, {
+        method: 'POST',
+        body: JSON.stringify(graph),
+      })
+      if (response.status != 200) {
+        return
+      }
+    } catch (e: unknown) {
+      console.log(e)
+    }
   }
 
   return {

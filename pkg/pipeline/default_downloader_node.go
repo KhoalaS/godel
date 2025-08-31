@@ -12,7 +12,7 @@ func CreateDownloaderNode() Node {
 		Run:  DownloaderNodeFunc,
 		Io: map[string]*NodeIO{
 			"job": {
-				Type:      IOTypeOutput,
+				Type:      IOTypeGenerated,
 				Id:        "job",
 				ValueType: ValueTypeDownloadJob,
 				Label:     "Downloader",
