@@ -26,11 +26,6 @@ func TestGraphView(t *testing.T) {
 
 	graph := gv.ToPipelineGraph(registry)
 
-	f, _ := os.Create("dump.json")
-	data, _ := json.Marshal(graph)
-	f.Write(data)
-	f.Close()
-
 	ctx := context.Background()
 	p := NewPipeline(graph, 96)
 	err = p.Run(ctx)
@@ -38,5 +33,7 @@ func TestGraphView(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
+
+	os.Remove("./1.bin")
 
 }
