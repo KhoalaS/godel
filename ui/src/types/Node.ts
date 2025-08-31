@@ -3,7 +3,7 @@ import z from 'zod'
 export const NodeIO = z.object({
   id: z.string(),
   valueType: z.enum(['string', 'number', 'boolean', 'directory']),
-  label: z.string(),
+  label: z.string().optional(),
   required: z.boolean().optional(),
   readOnly: z.boolean().optional(),
   value: z.union([z.string(), z.number(), z.boolean()]).optional(),

@@ -10,7 +10,7 @@ import {
   type GraphNode,
   type NodeProps,
 } from '@vue-flow/core'
-import { WInput } from 'vue-98'
+import { WindowBody, WindowComponent, WInput } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
 const { updateNodeData } = useVueFlow()
@@ -91,53 +91,59 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
 </script>
 
 <template>
-  <div class="node w-64 text-center p-3">
-    <div class="input-wrapper" :key="input.id" v-for="input in data.io">
-      <Handle
-        v-if="input.type == 'input' || input.type == 'passthrough'"
-        class="handle handle-input"
-        :class="{ disabled: input.disabled }"
-        :key="input.id"
-        type="target"
-        :id="input.id"
-        :position="Position.Left"
-        :connectable-start="!input.disabled && false"
-        :connectable-end="!input.disabled && true"
-        :style="{ background: HandleColors[input.valueType] }"
-      />
-      <Handle
-        v-if="input.type == 'output' || input.type == 'passthrough' || input.type == 'generated'"
-        class="handle handle-output"
-        :class="{ disabled: input.disabled }"
-        :key="input.id"
-        type="source"
-        :id="input.id"
-        :position="Position.Right"
-        :connectable-start="!input.disabled && true"
-        :connectable-end="!input.disabled && false"
-        :style="{ background: HandleColors[input.valueType] }"
-      />
-      <label>{{ input.label }}</label>
-      <div v-if="input.type == 'generated'">
-        {{ input.value }}
-      </div>
-      <WInput
-        v-else-if="!hasIncoming(input.id)"
-        :initial="input.value"
-        @update="(v) => onUpdate(v, input)"
-        :type="input.valueType"
-      />
+  <WindowComponent :title="data.name" class="w-64 text-center p-3" :controls="['Close']">
+    <template #body>
+      <WindowBody class="m-2">
+        <div class="input-wrapper" :key="input.id" v-for="input in data.io">
+          <Handle
+            v-if="input.type == 'input' || input.type == 'passthrough'"
+            class="handle handle-input"
+            :class="{ disabled: input.disabled }"
+            :key="input.id"
+            type="target"
+            :id="input.id"
+            :position="Position.Left"
+            :connectable-start="!input.disabled && false"
+            :connectable-end="!input.disabled && true"
+            :style="{ background: HandleColors[input.valueType] }"
+          />
+          <Handle
+            v-if="
+              input.type == 'output' || input.type == 'passthrough' || input.type == 'generated'
+            "
+            class="handle handle-output"
+            :class="{ disabled: input.disabled }"
+            :key="input.id"
+            type="source"
+            :id="input.id"
+            :position="Position.Right"
+            :connectable-start="!input.disabled && true"
+            :connectable-end="!input.disabled && false"
+            :style="{ background: HandleColors[input.valueType] }"
+          />
+          <label v-if="input.label">{{ input.label }}</label>
+          <div v-if="input.type == 'generated'">
+            {{ input.value }}
+          </div>
+          <WInput
+            v-else-if="!hasIncoming(input.id)"
+            :initial="input.value"
+            @update="(v) => onUpdate(v, input)"
+            :type="input.valueType"
+          />
 
-      <WInput
-        v-else
-        :value="getIncomingData(input.id)"
-        :initial="getIncomingData(input.id)"
-        @update="(v) => onUpdate(v, input)"
-        :disabled="true"
-        :type="input.valueType"
-      />
-    </div>
-  </div>
+          <WInput
+            v-else
+            :value="getIncomingData(input.id)"
+            :initial="getIncomingData(input.id)"
+            @update="(v) => onUpdate(v, input)"
+            :disabled="true"
+            :type="input.valueType"
+          />
+        </div>
+      </WindowBody>
+    </template>
+  </WindowComponent>
   {{ sourceData.map((node) => node.data) }}
 </template>
 
@@ -162,14 +168,6 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
   filter: grayscale(1);
   opacity: 0.5;
   transition-duration: 100ms;
-}
-
-.node {
-  box-shadow:
-    inset -1px -1px black,
-    inset 1px 1px white,
-    inset -2px -2px var(--border-gray);
-  background-color: var(--main-bg-color);
 }
 
 .vue-flow__handle {

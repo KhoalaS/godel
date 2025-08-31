@@ -26,7 +26,7 @@ const (
 type NodeIO struct {
 	Id        string            `json:"id"`
 	ValueType ValueType         `json:"valueType"`
-	Label     string            `json:"label"`
+	Label     string            `json:"label,omitempty"`
 	Required  bool              `json:"required"`
 	ReadOnly  bool              `json:"readOnly"`
 	Value     any               `json:"value,omitempty"`
