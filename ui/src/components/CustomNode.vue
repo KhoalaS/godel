@@ -10,10 +10,10 @@ import {
   type GraphNode,
   type NodeProps,
 } from '@vue-flow/core'
-import { WindowBody, WindowComponent, WInput } from 'vue-98'
+import { WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
-const { updateNodeData } = useVueFlow()
+const { updateNodeData, removeNodes } = useVueFlow()
 
 const sourceConnections = useNodeConnections({
   // type target means all connections where *this* node is the target
@@ -88,10 +88,21 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
     }
   }
 }
+
+function onControlClick(ctrl: WindowControls) {
+  if (ctrl == 'Close') {
+    removeNodes(props.id)
+  }
+}
 </script>
 
 <template>
-  <WindowComponent :title="data.name" class="w-64 text-center p-3" :controls="['Close']">
+  <WindowComponent
+    @click:control="onControlClick"
+    :title="data.name"
+    class="w-64 text-center p-3"
+    :controls="['Close']"
+  >
     <template #body>
       <WindowBody class="m-2">
         <div class="input-wrapper" :key="input.id" v-for="input in data.io">
