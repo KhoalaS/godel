@@ -124,7 +124,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="p-[1px]" style="height: 600px; width: 800px; display: flex">
+  <div class="p-[1px]" style="height: 800px; width: 1600px; display: flex">
     <div class="m-2">
       <div
         class="node w-32 text-center p-3 mb-2"
