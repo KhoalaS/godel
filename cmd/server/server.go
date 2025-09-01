@@ -98,6 +98,7 @@ func main() {
 	pipeline.NodeRegistry["download"] = pipeline.CreateDownloadNode()
 	pipeline.NodeRegistry["downloader"] = pipeline.CreateDownloaderNode()
 	pipeline.NodeRegistry["basename"] = pipeline.CreateBasenameNode()
+	pipeline.NodeRegistry["bytes-input"] = pipeline.CreateBytesInputNode()
 
 	for i := range 4 {
 		wg.Add(1)

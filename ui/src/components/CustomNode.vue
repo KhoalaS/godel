@@ -10,7 +10,7 @@ import {
   type GraphNode,
   type NodeProps,
 } from '@vue-flow/core'
-import { WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
+import { WAutocomplete, WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
 const { updateNodeData, removeNodes } = useVueFlow()
@@ -100,7 +100,7 @@ function onControlClick(ctrl: WindowControls) {
   <WindowComponent
     @click:control="onControlClick"
     :title="data.name"
-    class="w-64 text-center p-3"
+    class="w-64 p-3"
     :controls="['Close']"
   >
     <template #body>
@@ -146,6 +146,19 @@ function onControlClick(ctrl: WindowControls) {
             <div class="text-xs text-right" v-if="input.type == 'generated'">{{ input.label }}</div>
             <div class="text-xs text-left" v-else-if="input.type == 'connected_only'">
               {{ input.label }}
+            </div>
+            <div v-else-if="input.type == 'selection'">
+              <WAutocomplete
+                :initial="{
+                  name: String(input.value),
+                  id: String(input.value),
+                }"
+                :options="
+                  input.options?.map((opt) => {
+                    return { name: opt, id: opt }
+                  })
+                "
+              ></WAutocomplete>
             </div>
             <WInput
               v-else-if="!hasIncoming(input.id)"

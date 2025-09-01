@@ -56,6 +56,7 @@ const (
 	IOTypePassthrough   IOType = "passthrough"
 	IOTypeGenerated     IOType = "generated"
 	IOTypeConnectedOnly IOType = "connected_only"
+	IOTypeSelection     IOType = "selection"
 )
 
 type NodeHandle string
