@@ -13,7 +13,7 @@ import {
 import { WAutocomplete, WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
-const { updateNodeData, removeNodes } = useVueFlow()
+const { updateNodeData, removeNodes, findNode } = useVueFlow()
 
 const sourceConnections = useNodeConnections({
   // type target means all connections where *this* node is the target
@@ -58,6 +58,12 @@ function getIncomingData(inputId: string) {
       return node.id == targetConn.source
     })
     if (node) {
+      const targetNode = findNode<PipelineNode>(targetConn.target)
+      if (targetNode) {
+        if (targetNode.data.io?.[inputId] && targetNode.data.io?.[inputId].hooks) {
+          hook(node.data.io?.[targetConn.sourceHandle!].value!, targetNode.data.io?.[inputId].hooks)
+        }
+      }
       return node.data.io?.[targetConn.sourceHandle!].value!
     }
   }
@@ -72,11 +78,11 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
       continue
     }
 
-    if (props.data.io?.[inputId].value != undefined) {
-      return
-    }
-
     const newValue = func(input)
+
+    if (props.data.io?.[inputId].value == newValue) {
+      continue
+    }
 
     if (props.data.io) {
       updateNodeData<PipelineNode>(props.id, {
