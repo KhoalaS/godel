@@ -127,14 +127,21 @@ defineExpose({
   <div class="p-[1px]" style="height: 800px; width: 1600px; display: flex">
     <div class="m-2">
       <div
-        class="node w-32 text-center p-3 mb-2"
-        draggable="true"
-        @dragstart="(e) => e.dataTransfer?.setData('application/vueflow', node.type)"
-        style="cursor: grab"
-        :key="node.type"
-        v-for="node in pipelineStore.registeredNodes"
+        :key="category"
+        class="mb-8"
+        v-for="[category, nodes] in pipelineStore.getCategorizedNodes.entries()"
       >
-        {{ node.name }}
+        <p>{{ category }}</p>
+        <div
+          class="node w-32 text-center p-3 mb-2"
+          draggable="true"
+          @dragstart="(e) => e.dataTransfer?.setData('application/vueflow', node.type)"
+          style="cursor: grab"
+          :key="node.type"
+          v-for="node in nodes"
+        >
+          {{ node.name }}
+        </div>
       </div>
     </div>
     <div style="flex: 1; background-color: white">
