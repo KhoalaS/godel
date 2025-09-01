@@ -12,3 +12,15 @@ FunctionRegistry.set('basename', (...inputs) => {
   }
   return input.trim().split('/').pop() ?? input
 })
+
+const ByteUnits: Record<string, number> = {
+  B: 1,
+  KB: 1024,
+  MB: 1024 * 1024,
+  GB: 1024 * 1024 * 1024,
+}
+
+FunctionRegistry.set('toBytes', (...inputs) => {
+  // TODO
+  return NaN
+})
