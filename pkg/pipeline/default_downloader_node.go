@@ -28,7 +28,7 @@ func CreateDownloaderNode() Node {
 		},
 		Name:     "Downloader",
 		Status:   StatusPending,
-		NodeType: DownloaderNode,
+		Category: NodeCategoryDownloader,
 	}
 }
 

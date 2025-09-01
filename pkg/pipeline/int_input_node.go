@@ -10,7 +10,7 @@ func CreateIntInputNode() Node {
 		Run:      IntInputNodeFunc,
 		Name:     "Integer",
 		Status:   StatusPending,
-		NodeType: InputNode,
+		Category: NodeCategoryInput,
 		Io: map[string]*NodeIO{
 			"output": {
 				Type:      IOTypePassthrough,

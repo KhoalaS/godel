@@ -17,7 +17,7 @@ export const PipelineNode = z.object({
   id: z.string().optional(),
   type: z.string(),
   name: z.string(),
-  nodeType: z.enum(['input', 'downloader']).optional(),
+  category: z.enum(['input', 'downloader', 'utility']).optional(),
   error: z.string().optional(),
   io: z.record(z.string(), NodeIO).optional(),
   status: z.enum(['pending', 'running', 'success', 'failed']).optional(),

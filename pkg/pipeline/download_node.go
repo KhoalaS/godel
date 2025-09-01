@@ -45,7 +45,7 @@ func CreateDownloadNode() Node {
 		},
 		Name:     "Download",
 		Status:   StatusPending,
-		NodeType: DownloaderNode,
+		Category: NodeCategoryUtility,
 	}
 }
 

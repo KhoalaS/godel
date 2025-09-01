@@ -29,7 +29,7 @@ func CreateBasenameNode() Node {
 		},
 		Name:     "Basename",
 		Status:   StatusPending,
-		NodeType: InputNode,
+		Category: NodeCategoryUtility,
 	}
 }
 

@@ -1,7 +1,7 @@
 import { PipelineNode } from '@/types/Node'
 import type { FlowExportObject } from '@vue-flow/core'
 import { defineStore } from 'pinia'
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import z from 'zod'
 
 export const usePipelineStore = defineStore('pipeline', () => {
@@ -37,9 +37,29 @@ export const usePipelineStore = defineStore('pipeline', () => {
     }
   }
 
+  const getCategorizedNodes = computed(() => {
+    const acc = new Map<string, PipelineNode[]>()
+    acc.set('other', [])
+
+    registeredNodes.value.forEach((node) => {
+      if (node.category) {
+        if (acc.has(node.category)) {
+          acc.get(node.category)!.push(node)
+        } else {
+          acc.set(node.category, [node])
+        }
+      } else {
+        acc.get('other')!.push(node)
+      }
+    })
+
+    return acc
+  })
+
   return {
     init,
     registeredNodes,
     startPipeline,
+    getCategorizedNodes,
   }
 })
