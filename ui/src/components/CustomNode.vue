@@ -108,7 +108,7 @@ function onControlClick(ctrl: WindowControls) {
         <div class="flex flex-col items-start mt-1" :key="input.id" v-for="input in data.io">
           <label
             :for="props.data.id + input.id"
-            class="text-xs self-center"
+            class="text-xs"
             v-if="input.label && input.type != 'generated'"
             >{{ input.label }}</label
           >
