@@ -109,12 +109,16 @@ function onControlClick(ctrl: WindowControls) {
           <label
             :for="props.data.id + input.id"
             class="text-xs"
-            v-if="input.label && input.type != 'generated'"
+            v-if="input.label && input.type != 'generated' && input.type != 'connected_only'"
             >{{ input.label }}</label
           >
           <div class="relative w-full">
             <Handle
-              v-if="input.type == 'input' || input.type == 'passthrough'"
+              v-if="
+                input.type == 'input' ||
+                input.type == 'passthrough' ||
+                input.type == 'connected_only'
+              "
               class="handle handle-input"
               :class="{ disabled: input.disabled }"
               :key="input.id"
@@ -140,6 +144,9 @@ function onControlClick(ctrl: WindowControls) {
               :style="{ background: HandleColors[input.valueType] }"
             />
             <div class="text-xs text-right" v-if="input.type == 'generated'">{{ input.label }}</div>
+            <div class="text-xs text-left" v-else-if="input.type == 'connected_only'">
+              {{ input.label }}
+            </div>
             <WInput
               v-else-if="!hasIncoming(input.id)"
               :initial="input.value"

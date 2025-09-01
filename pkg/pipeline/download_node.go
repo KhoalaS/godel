@@ -22,7 +22,7 @@ func CreateDownloadNode() Node {
 				Required:  false,
 			},
 			"job": {
-				Type:      IOTypeInput,
+				Type:      IOTypeConnectedOnly,
 				Id:        "job",
 				ValueType: ValueTypeDownloadJob,
 				Label:     "Downloader",

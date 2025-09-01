@@ -50,10 +50,11 @@ const (
 type IOType string
 
 const (
-	IOTypeInput       IOType = "input"
-	IOTypeOutput      IOType = "output"
-	IOTypePassthrough IOType = "passthrough"
-	IOTypeGenerated   IOType = "generated"
+	IOTypeInput         IOType = "input"
+	IOTypeOutput        IOType = "output"
+	IOTypePassthrough   IOType = "passthrough"
+	IOTypeGenerated     IOType = "generated"
+	IOTypeConnectedOnly IOType = "connected_only"
 )
 
 type NodeHandle string

@@ -8,7 +8,7 @@ export const NodeIO = z.object({
   readOnly: z.boolean().optional(),
   value: z.union([z.string(), z.number(), z.boolean()]).optional(),
   options: z.array(z.string()).optional(),
-  type: z.enum(['input', 'output', 'passthrough', 'generated']),
+  type: z.enum(['input', 'output', 'passthrough', 'generated', 'connected_only']),
   hooks: z.record(z.string(), z.string()).optional(),
   disabled: z.boolean().optional(),
 })
