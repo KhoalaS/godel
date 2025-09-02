@@ -1,7 +1,15 @@
 <script lang="ts" setup>
 import { FunctionRegistry } from '@/types/InputHook'
 import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
-import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
+import {
+  Handle,
+  Position,
+  useNodeConnections,
+  useNodesData,
+  useVueFlow,
+  type GraphNode,
+  type NodeProps,
+} from '@vue-flow/core'
 import { WAutocomplete, WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
@@ -11,20 +19,46 @@ const targetConnections = useNodeConnections({
   handleType: 'source',
 })
 
-function onUpdate(value: string | number | boolean, io: NodeIO) {
-  if (!io.readOnly && props.data.io) {
+function updateSelf(value: string | number | boolean, io: NodeIO) {
+  if (!io.readOnly && props.data.io != undefined) {
+    const hookUpdates: Record<string, NodeIO> = {}
+
+    if (io.hooks) {
+      for (const [hookId, functionId] of Object.entries(io.hooks)) {
+        const func = FunctionRegistry.get(functionId)
+        if (func == undefined) {
+          continue
+        }
+
+        const newValue = func(value)
+
+        if (props.data.io?.[hookId].value == newValue) {
+          continue
+        }
+
+        if (props.data.io) {
+          hookUpdates[hookId] = {
+            ...props.data.io?.[hookId],
+            value: newValue,
+          }
+        }
+      }
+    }
+
     updateNodeData<PipelineNode>(props.id, {
       io: {
         ...props.data.io,
-        [io.id]: { ...props.data.io?.[io.id], value: value },
+        [io.id]: { ...io, value: value },
+        ...hookUpdates,
       },
     })
-
-    if (io.hooks) {
-      hook(value, io.hooks)
-    }
   }
 
+  updateTargetNodes(io.id, value)
+}
+
+function onUpdate(value: string | number | boolean, io: NodeIO) {
+  updateSelf(value, io)
   updateTargetNodes(io.id, value)
 }
 
@@ -65,7 +99,9 @@ function updateTargetNodes(inputId: string, newValue: string | number | boolean)
 }
 
 function hook(input: string | number | boolean, overwrites: Record<string, string>) {
-  for (const [inputId, functionId] of Object.entries(overwrites)) {
+  const hookUpdates: Record<string, NodeIO> = {}
+
+  for (const [hookId, functionId] of Object.entries(overwrites)) {
     const func = FunctionRegistry.get(functionId)
     if (func == undefined) {
       continue
@@ -73,18 +109,32 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
 
     const newValue = func(input)
 
-    if (props.data.io?.[inputId].value == newValue) {
+    if (props.data.io?.[hookId].value == newValue) {
       continue
     }
 
     if (props.data.io) {
+      hookUpdates[hookId] = {
+        ...props.data.io?.[hookId],
+        value: newValue,
+      }
+    }
+  }
+
+  if (props.data.io) {
+    const data = useNodesData<GraphNode<PipelineNode>>(props.id)
+    if (data.value) {
       updateNodeData<PipelineNode>(props.id, {
         io: {
-          ...props.data.io,
-          [inputId]: { ...props.data.io?.[inputId], value: newValue },
+          ...data.value.data.io,
+          ...hookUpdates,
         },
       })
-      updateTargetNodes(inputId, newValue)
+    }
+  }
+  for (const [id, io] of Object.entries(hookUpdates)) {
+    if (io.value != undefined) {
+      updateTargetNodes(id, io.value)
     }
   }
 }
@@ -168,6 +218,7 @@ function onControlClick(ctrl: WindowControls) {
               :type="input.valueType"
               :id="props.data.id + input.id"
             />
+            {{ input.value }}
           </div>
         </div>
       </WindowBody>
