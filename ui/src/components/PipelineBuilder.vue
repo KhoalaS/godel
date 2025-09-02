@@ -40,6 +40,35 @@ onConnect((params) => {
     animated: true,
   }
   addEdges(e)
+
+  const sourceNode = findNode<PipelineNode>(params.source)
+  const targetNode = findNode<PipelineNode>(params.target)
+
+  if (!sourceNode || !targetNode) {
+    return
+  }
+
+  if (
+    params.sourceHandle &&
+    params.targetHandle &&
+    sourceNode.data.io &&
+    targetNode.data.io &&
+    sourceNode.data.io[params.sourceHandle] &&
+    targetNode.data.io[params.targetHandle]
+  ) {
+    const sourceData = sourceNode.data.io[params.sourceHandle].value
+    if (sourceData != undefined) {
+      updateNodeData<PipelineNode>(params.target, {
+        io: {
+          ...targetNode.data.io,
+          [params.targetHandle]: {
+            ...targetNode.data.io[params.targetHandle],
+            value: sourceData,
+          },
+        },
+      })
+    }
+  }
 })
 
 onConnectStart((params) => {

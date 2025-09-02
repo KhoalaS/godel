@@ -1,29 +1,15 @@
 <script lang="ts" setup>
 import { FunctionRegistry } from '@/types/InputHook'
 import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
-import {
-  Handle,
-  Position,
-  useNodeConnections,
-  useNodesData,
-  useVueFlow,
-  type GraphNode,
-  type NodeProps,
-} from '@vue-flow/core'
+import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
 import { WAutocomplete, WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
 const { updateNodeData, removeNodes, findNode } = useVueFlow()
 
-const sourceConnections = useNodeConnections({
-  // type target means all connections where *this* node is the target
-  // that means we go backwards in the graph to find the source of the connection(s)
-  handleType: 'target',
+const targetConnections = useNodeConnections({
+  handleType: 'source',
 })
-
-const sourceData = useNodesData<GraphNode<PipelineNode>>(() =>
-  sourceConnections.value.map((connection) => connection.source),
-)
 
 function onUpdate(value: string | number | boolean, io: NodeIO) {
   if (!io.readOnly && props.data.io) {
@@ -38,37 +24,44 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
       hook(value, io.hooks)
     }
   }
+
+  updateTargetNodes(io.id, value)
 }
 
-function hasIncoming(inputId: string) {
-  const targetConn = sourceConnections.value.find((conn) => {
-    return conn.targetHandle == inputId
-  })
-
-  return Boolean(targetConn)
-}
-
-function getIncomingData(inputId: string) {
-  const targetConn = sourceConnections.value.find((conn) => {
-    return conn.targetHandle == inputId
-  })
-
-  if (targetConn && targetConn.targetHandle) {
-    const node = sourceData.value?.find((node) => {
-      return node.id == targetConn.source
-    })
-    if (node) {
-      const targetNode = findNode<PipelineNode>(targetConn.target)
-      if (targetNode) {
-        if (targetNode.data.io?.[inputId] && targetNode.data.io?.[inputId].hooks) {
-          hook(node.data.io?.[targetConn.sourceHandle!].value!, targetNode.data.io?.[inputId].hooks)
-        }
-      }
-      return node.data.io?.[targetConn.sourceHandle!].value!
+function onValueChange(io: NodeIO) {
+  if (io.value != undefined) {
+    if (io.hooks) {
+      hook(io.value, io.hooks)
     }
+    updateTargetNodes(io.id, io.value)
   }
+}
 
-  return ''
+function updateTargetNodes(inputId: string, newValue: string | number | boolean) {
+  const conns = targetConnections.value.filter((conn) => {
+    return conn.sourceHandle == inputId
+  })
+
+  for (const conn of conns) {
+    if (!conn.targetHandle) {
+      return
+    }
+
+    const targetNode = findNode<PipelineNode>(conn.target)
+    if (!targetNode || !targetNode.data.io) {
+      continue
+    }
+
+    updateNodeData<PipelineNode>(targetNode.id, {
+      io: {
+        ...targetNode.data.io,
+        [conn.targetHandle]: {
+          ...targetNode.data.io[conn.targetHandle],
+          value: newValue,
+        },
+      },
+    })
+  }
 }
 
 function hook(input: string | number | boolean, overwrites: Record<string, string>) {
@@ -91,6 +84,7 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
           [inputId]: { ...props.data.io?.[inputId], value: newValue },
         },
       })
+      updateTargetNodes(inputId, newValue)
     }
   }
 }
@@ -167,18 +161,10 @@ function onControlClick(ctrl: WindowControls) {
               ></WAutocomplete>
             </div>
             <WInput
-              v-else-if="!hasIncoming(input.id)"
-              :initial="input.value"
-              @update="(v) => onUpdate(v, input)"
-              :type="input.valueType"
-              :id="props.data.id + input.id"
-            />
-            <WInput
               v-else
-              :value="getIncomingData(input.id)"
-              :initial="getIncomingData(input.id)"
+              :value="input.value"
               @update="(v) => onUpdate(v, input)"
-              :disabled="true"
+              @value-change="onValueChange(input)"
               :type="input.valueType"
               :id="props.data.id + input.id"
             />
