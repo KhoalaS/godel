@@ -1,15 +1,7 @@
 <script lang="ts" setup>
 import { FunctionRegistry } from '@/types/InputHook'
 import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
-import {
-  Handle,
-  Position,
-  useNodeConnections,
-  useNodesData,
-  useVueFlow,
-  type GraphNode,
-  type NodeProps,
-} from '@vue-flow/core'
+import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
 import { WAutocomplete, WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
@@ -19,7 +11,7 @@ const targetConnections = useNodeConnections({
   handleType: 'source',
 })
 
-function updateSelf(value: string | number | boolean, io: NodeIO) {
+function onUpdate(value: string | number | boolean, io: NodeIO) {
   if (!io.readOnly && props.data.io != undefined) {
     const hookUpdates: Record<string, NodeIO> = {}
 
@@ -52,49 +44,76 @@ function updateSelf(value: string | number | boolean, io: NodeIO) {
         ...hookUpdates,
       },
     })
+
+    const inputs: {
+      inputId: string
+      newValue: string | number | boolean | undefined
+    }[] = [{ inputId: io.id, newValue: value }]
+
+    for (const [id, io] of Object.entries(hookUpdates)) {
+      inputs.push({ inputId: id, newValue: io.value })
+    }
+    updateTargetNodes(inputs)
   }
-
-  updateTargetNodes(io.id, value)
-}
-
-function onUpdate(value: string | number | boolean, io: NodeIO) {
-  updateSelf(value, io)
-  updateTargetNodes(io.id, value)
 }
 
 function onValueChange(io: NodeIO) {
-  if (io.value != undefined) {
-    if (io.hooks) {
-      hook(io.value, io.hooks)
-    }
-    updateTargetNodes(io.id, io.value)
+  updateTargetNodes([
+    {
+      inputId: io.id,
+      newValue: io.value,
+    },
+  ])
+  if (io.value != undefined && io.hooks) {
+    hook(io.value, io.hooks)
   }
 }
 
-function updateTargetNodes(inputId: string, newValue: string | number | boolean) {
-  const conns = targetConnections.value.filter((conn) => {
-    return conn.sourceHandle == inputId
-  })
+function updateTargetNodes(
+  inputs: {
+    inputId: string
+    newValue: string | number | boolean | undefined
+  }[],
+) {
+  // TODO look at the target node and apply all updates at once
+  // Example:
+  // A node updates input A and B, both of these inputs are connected to the target X.
+  // Input A is also connected to target Y.
+  // Alg:
+  // iterate over all inputs I
+  // iterate over all edges E that have I as a source
+  // assign data[E.target] append I
+  // we then know all inputs I that affect a target node N and can apply all updates at once
 
-  for (const conn of conns) {
-    if (!conn.targetHandle) {
-      return
-    }
-
-    const targetNode = findNode<PipelineNode>(conn.target)
-    if (!targetNode || !targetNode.data.io) {
+  for (const { inputId, newValue } of inputs) {
+    if (newValue == undefined) {
       continue
     }
 
-    updateNodeData<PipelineNode>(targetNode.id, {
-      io: {
-        ...targetNode.data.io,
-        [conn.targetHandle]: {
-          ...targetNode.data.io[conn.targetHandle],
-          value: newValue,
-        },
-      },
+    const conns = targetConnections.value.filter((conn) => {
+      return conn.sourceHandle == inputId
     })
+
+    for (const conn of conns) {
+      if (!conn.targetHandle) {
+        return
+      }
+
+      const targetNode = findNode<PipelineNode>(conn.target)
+      if (!targetNode || !targetNode.data.io) {
+        continue
+      }
+
+      updateNodeData<PipelineNode>(targetNode.id, {
+        io: {
+          ...targetNode.data.io,
+          [conn.targetHandle]: {
+            ...targetNode.data.io[conn.targetHandle],
+            value: newValue,
+          },
+        },
+      })
+    }
   }
 }
 
@@ -122,21 +141,22 @@ function hook(input: string | number | boolean, overwrites: Record<string, strin
   }
 
   if (props.data.io) {
-    const data = useNodesData<GraphNode<PipelineNode>>(props.id)
-    if (data.value) {
-      updateNodeData<PipelineNode>(props.id, {
-        io: {
-          ...data.value.data.io,
-          ...hookUpdates,
-        },
-      })
-    }
+    updateNodeData<PipelineNode>(props.id, {
+      io: {
+        ...props.data.io,
+        ...hookUpdates,
+      },
+    })
   }
+
+  const inputs: {
+    inputId: string
+    newValue: string | number | boolean | undefined
+  }[] = []
   for (const [id, io] of Object.entries(hookUpdates)) {
-    if (io.value != undefined) {
-      updateTargetNodes(id, io.value)
-    }
+    inputs.push({ inputId: id, newValue: io.value })
   }
+  updateTargetNodes(inputs)
 }
 
 function onControlClick(ctrl: WindowControls) {
