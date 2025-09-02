@@ -5,11 +5,16 @@ export const FunctionRegistry = new Map<
   (...args: (string | number | boolean)[]) => string | number | boolean
 >()
 
+const slashRegex = /\/*$/
+
 FunctionRegistry.set('basename', (...inputs) => {
-  const input = inputs[0]
+  let input = inputs[0]
   if (typeof input != 'string') {
     return input
   }
+
+  input = input.replace(slashRegex, '')
+
   return input.trim().split('/').pop() ?? input
 })
 
