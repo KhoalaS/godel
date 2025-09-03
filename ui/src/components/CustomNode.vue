@@ -75,15 +75,7 @@ function updateTargetNodes(
     newValue: string | number | boolean | undefined
   }[],
 ) {
-  // TODO look at the target node and apply all updates at once
-  // Example:
-  // A node updates input A and B, both of these inputs are connected to the target X.
-  // Input A is also connected to target Y.
-  // Alg:
-  // iterate over all inputs I
-  // iterate over all edges E that have I as a source
-  // assign data[E.target] append I
-  // we then know all inputs I that affect a target node N and can apply all updates at once
+  const data = new Map<string, Record<string, NodeIO>>()
 
   for (const { inputId, newValue } of inputs) {
     if (newValue == undefined) {
@@ -104,13 +96,28 @@ function updateTargetNodes(
         continue
       }
 
-      updateNodeData<PipelineNode>(targetNode.id, {
+      if (!data.has(conn.target)) {
+        data.set(conn.target, {})
+      }
+
+      data.set(conn.target, {
+        ...data.get(conn.target),
+        [conn.targetHandle]: {
+          ...targetNode.data.io[conn.targetHandle],
+          value: newValue,
+        },
+      })
+    }
+  }
+
+  for (const [nodeId, updates] of data.entries()) {
+    const targetNode = findNode<PipelineNode>(nodeId)
+
+    if (targetNode?.data.io) {
+      updateNodeData<PipelineNode>(nodeId, {
         io: {
           ...targetNode.data.io,
-          [conn.targetHandle]: {
-            ...targetNode.data.io[conn.targetHandle],
-            value: newValue,
-          },
+          ...updates,
         },
       })
     }
