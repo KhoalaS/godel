@@ -32,6 +32,10 @@ func CreateBytesInputNode() Node {
 				Id:        "amount",
 				Label:     "Amount",
 				Required:  true,
+				Value:     10,
+				Hooks: map[string]string{
+					"bytes": "toBytes",
+				},
 			},
 			"unit": {
 				Type:      IOTypeSelection,
@@ -41,6 +45,9 @@ func CreateBytesInputNode() Node {
 				Required:  true,
 				Value:     "MB",
 				Options:   []string{"B", "KB", "MB", "GB"},
+				Hooks: map[string]string{
+					"bytes": "toBytes",
+				},
 			},
 		},
 	}

@@ -12,6 +12,7 @@ const targetConnections = useNodeConnections({
 })
 
 function onUpdate(value: string | number | boolean, io: NodeIO) {
+  console.log('CustomNode:onUpdate', io.id)
   if (!io.readOnly && props.data.io != undefined) {
     const hookUpdates: Record<string, NodeIO> = {}
 
@@ -58,6 +59,8 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
 }
 
 function onValueChange(io: NodeIO) {
+  console.log('CustomNode:onValueChange', io.id)
+
   updateTargetNodes([
     {
       inputId: io.id,
@@ -75,6 +78,8 @@ function updateTargetNodes(
     newValue: string | number | boolean | undefined
   }[],
 ) {
+  console.log('CustomNode:updateTargetNodes')
+
   const data = new Map<string, Record<string, NodeIO>>()
 
   for (const { inputId, newValue } of inputs) {
@@ -125,6 +130,8 @@ function updateTargetNodes(
 }
 
 function hook(input: string | number | boolean, overwrites: Record<string, string>) {
+  console.log('CustomNode:hook', input)
+
   const hookUpdates: Record<string, NodeIO> = {}
 
   for (const [hookId, functionId] of Object.entries(overwrites)) {
@@ -226,7 +233,7 @@ function onControlClick(ctrl: WindowControls) {
             </div>
             <div v-else-if="input.type == 'selection'">
               <WAutocomplete
-                @update="(value) => onUpdate(value.name, input)"
+                @update:model-value="(value) => onUpdate(value.name, input)"
                 :initial="{
                   name: String(input.value),
                   id: String(input.value),
