@@ -26,7 +26,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var upgrader = websocket.Upgrader{}
+// var upgrader = websocket.Upgrader{}
+// for debugging
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 var jobs = make(chan *types.DownloadJob, 12)
 var comm = make(chan pipeline.PipelineMessage, 96)

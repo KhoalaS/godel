@@ -10,9 +10,9 @@ export const usePipelineStore = defineStore('pipeline', () => {
   const registeredNodes: Ref<PipelineNode[]> = ref([])
   const pipelines = new Map<string, unknown>()
 
-  async function init() {
+  async function init(messageCallback: (message: PipelineMessage) => void) {
     try {
-      initWs()
+      await initWs(messageCallback)
       const response = await fetch(`http://${baseUrl}/nodes`)
       if (response.status != 200) {
         return
@@ -39,24 +39,28 @@ export const usePipelineStore = defineStore('pipeline', () => {
     }
   }
 
-  async function initWs() {
-    const socket = new WebSocket(`ws://${baseUrl}/updates/pipeline`)
-    // Connection opened
-    socket.addEventListener('open', () => {
-      console.log('Connection opened')
-    })
+  async function initWs(messageCallback: (message: PipelineMessage) => void) {
+    try {
+      const socket = new WebSocket(`ws://${baseUrl}/updates/pipeline`)
+      // Connection opened
+      socket.addEventListener('open', () => {
+        console.log('Connection opened')
+      })
 
-    // Listen for messages
-    socket.addEventListener('message', (event) => {
-      try {
-        const messageData = JSON.parse(event.data)
-        const message = PipelineMessage.parse(messageData)
+      // Listen for messages
+      socket.addEventListener('message', (event) => {
+        try {
+          const messageData = JSON.parse(event.data)
+          const message = PipelineMessage.parse(messageData)
 
-        console.log(message)
-      } catch (e: unknown) {
-        console.warn(e)
-      }
-    })
+          messageCallback(message)
+        } catch (e: unknown) {
+          console.warn(e)
+        }
+      })
+    } catch (e: unknown) {
+      console.warn('could not open websocket connection', e)
+    }
   }
 
   const getCategorizedNodes = computed(() => {

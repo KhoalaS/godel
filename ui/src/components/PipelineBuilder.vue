@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import {
   useVueFlow,
   VueFlow,
   type Edge,
   type FlowExportObject,
   type GraphNode,
-  type Node,
 } from '@vue-flow/core'
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
 import type { NodeIO, PipelineNode } from '@/types/Node'
+import type { PipelineMessage } from '@/types/PipelineMessage'
 
 const pipelineStore = usePipelineStore()
 const {
@@ -26,18 +26,57 @@ const {
   updateNodeData,
   toObject,
   fromObject,
+  edges,
 } = useVueFlow()
 
 // these components are only shown as examples of how to use a custom node or edge
 // you can find many examples of how to create these custom components in the examples page of the docs
 
-// these are our nodes
-const _nodes = ref<Node<PipelineNode>[]>([])
-
 // these are our edges
-const edges = ref<Edge[]>([])
+const messageCallback = (message: PipelineMessage) => {
+  if (message.type == 'status') {
+    switch (message.data.status) {
+      case 'success':
+        edges.value.forEach((e) => {
+          if (e.source == message.nodeId) {
+            e.animated = false
+            e.label = undefined
+          }
+        })
+        break
+      case 'running':
+        // set edge animations
+        edges.value.forEach((e) => {
+          if (e.source == message.nodeId) {
+            e.animated = true
+          }
+        })
+        break
+      case 'failed':
+        edges.value.forEach((e) => {
+          if (e.source == message.nodeId) {
+            e.animated = false
+          }
+        })
+        break
+    }
+  } else if (message.type == 'progress') {
+    edges.value.forEach((e) => {
+      if (e.source == message.nodeId) {
+        e.label = message.data.progress?.toFixed(2)
+      }
+    })
+  } else if (message.type == 'error') {
+    console.warn(message.data.error)
+    edges.value.forEach((e) => {
+      if (e.source == message.nodeId) {
+        e.animated = false
+      }
+    })
+  }
+}
 onMounted(async () => {
-  await pipelineStore.init()
+  await pipelineStore.init(messageCallback)
 })
 
 onConnect((params) => {
@@ -45,7 +84,7 @@ onConnect((params) => {
   const e: Edge = {
     ...params,
     id: crypto.randomUUID(),
-    animated: true,
+    animated: false,
   }
   addEdges(e)
 
@@ -192,14 +231,11 @@ defineExpose({
       </div>
     </div>
     <div style="flex: 1; background-color: white">
-      <VueFlow @drop="onDrop" @dragover="onDragOver" :nodes="_nodes" :edges="edges">
+      <VueFlow @drop="onDrop" @dragover="onDragOver">
         <Background :size="1.6"></Background>
         <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
         <template #node-custom="nodeProps">
           <CustomNode v-bind="nodeProps" />
-        </template>
-        <template #node-test="nodeProps">
-          <TestNode v-bind="nodeProps"></TestNode>
         </template>
         <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
       </VueFlow>

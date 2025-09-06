@@ -80,8 +80,6 @@ const (
 )
 
 func (p *Pipeline) Run(ctx context.Context) error {
-	defer close(p.Comm)
-
 	ready := findStartNodes(p.Graph)
 	done := map[string]bool{}
 
@@ -90,30 +88,16 @@ func (p *Pipeline) Run(ctx context.Context) error {
 		ready = ready[1:]
 
 		ApplyInputs(p.Graph, node)
+
+		BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusRunning))
+
 		if err := node.Run(ctx, *node, p.Comm, p.Id, node.Id); err != nil {
-			p.Comm <- PipelineMessage{
-				PipelineId: p.Id,
-				NodeId:     node.Id,
-				NodeType:   node.Type,
-				Type:       StatusMessage,
-				Data: MessageData{
-					Status: StatusFailed,
-					Error:  err.Error(),
-				},
-			}
+			BroadCastUpdate(NewErrorMessage(p.Id, node.Id, err))
 			return err
 		}
 		done[node.Id] = true
 
-		p.Comm <- PipelineMessage{
-			PipelineId: p.Id,
-			NodeId:     node.Id,
-			NodeType:   node.Type,
-			Type:       StatusMessage,
-			Data: MessageData{
-				Status: StatusSuccess,
-			},
-		}
+		BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusSuccess))
 
 		for _, next := range p.Graph.Outgoing[node.Id] {
 			if allDepsDone(next, done, p.Graph.Incoming) {
