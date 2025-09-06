@@ -36,6 +36,9 @@ func CreateBytesInputNode() Node {
 				Hooks: map[string]string{
 					"bytes": "toBytes",
 				},
+				HookMapping: map[string]string{
+					"bytes": "amount",
+				},
 			},
 			"unit": {
 				Type:      IOTypeSelection,
@@ -47,6 +50,9 @@ func CreateBytesInputNode() Node {
 				Options:   []string{"B", "KB", "MB", "GB"},
 				Hooks: map[string]string{
 					"bytes": "toBytes",
+				},
+				HookMapping: map[string]string{
+					"bytes": "unit",
 				},
 			},
 		},

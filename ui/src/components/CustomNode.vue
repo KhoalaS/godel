@@ -23,7 +23,14 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
           continue
         }
 
-        const newValue = func(value)
+        const hookValues: Record<string, unknown> = {}
+        for (const _io of Object.values(props.data.io ?? {})) {
+          if (_io.hookMapping?.[hookId] != undefined) {
+            hookValues[_io.hookMapping[hookId]] = _io.id == io.id ? value : _io.value
+          }
+        }
+
+        const newValue = func(hookValues)
 
         if (props.data.io?.[hookId].value == newValue) {
           continue
@@ -68,7 +75,7 @@ function onValueChange(io: NodeIO) {
     },
   ])
   if (io.value != undefined && io.hooks) {
-    hook(io.value, io.hooks)
+    hook(io)
   }
 }
 
@@ -129,18 +136,25 @@ function updateTargetNodes(
   }
 }
 
-function hook(input: string | number | boolean, overwrites: Record<string, string>) {
-  console.log('CustomNode:hook', input)
+function hook(io: NodeIO) {
+  console.log('CustomNode:hook', io.value)
 
   const hookUpdates: Record<string, NodeIO> = {}
 
-  for (const [hookId, functionId] of Object.entries(overwrites)) {
+  for (const [hookId, functionId] of Object.entries(io.hooks ?? {})) {
     const func = FunctionRegistry.get(functionId)
     if (func == undefined) {
       continue
     }
 
-    const newValue = func(input)
+    const hookValues: Record<string, unknown> = {}
+    for (const io of Object.values(props.data.io ?? {})) {
+      if (io.hookMapping?.[hookId] != undefined) {
+        hookValues[io.hookMapping[hookId]] = io.value
+      }
+    }
+
+    const newValue = func(hookValues)
 
     if (props.data.io?.[hookId].value == newValue) {
       continue

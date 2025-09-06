@@ -2,20 +2,20 @@ export type HookFunction = (inputId: string) => void
 
 export const FunctionRegistry = new Map<
   string,
-  (...args: (string | number | boolean)[]) => string | number | boolean
+  (arg: Record<string, unknown>) => string | number | boolean
 >()
 
 const slashRegex = /\/*$/
 
-FunctionRegistry.set('basename', (...inputs) => {
-  let input = inputs[0]
-  if (typeof input != 'string') {
-    return input
+FunctionRegistry.set('basename', (arg) => {
+  const input = arg['path']
+  if (input == undefined || typeof input !== 'string') {
+    return ''
   }
 
-  input = input.replace(slashRegex, '')
+  const _input = input.replace(slashRegex, '')
 
-  return input.trim().split('/').pop() ?? input
+  return _input.trim().split('/').pop() ?? _input
 })
 
 const ByteUnits: Record<string, number> = {
@@ -25,7 +25,23 @@ const ByteUnits: Record<string, number> = {
   GB: 1024 * 1024 * 1024,
 }
 
-FunctionRegistry.set('toBytes', (...inputs) => {
+FunctionRegistry.set('toBytes', (arg) => {
   // TODO
+  const amount = arg['amount']
+  const unit = arg['unit']
+
+  if (
+    unit == undefined ||
+    amount == undefined ||
+    typeof unit !== 'string' ||
+    typeof amount !== 'number'
+  ) {
+    return NaN
+  }
+
+  if (unit in ByteUnits) {
+    return ByteUnits[unit] * amount
+  }
+
   return NaN
 })

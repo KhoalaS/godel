@@ -25,15 +25,16 @@ const (
 )
 
 type NodeIO struct {
-	Id        string            `json:"id"`
-	ValueType ValueType         `json:"valueType"`
-	Label     string            `json:"label,omitempty"`
-	Required  bool              `json:"required"`
-	ReadOnly  bool              `json:"readOnly"`
-	Value     any               `json:"value,omitempty"`
-	Options   []string          `json:"options,omitempty"` // for enums
-	Type      IOType            `json:"type"`
-	Hooks     map[string]string `json:"hooks,omitempty"`
+	Id          string            `json:"id"`
+	ValueType   ValueType         `json:"valueType"`
+	Label       string            `json:"label,omitempty"`
+	Required    bool              `json:"required"`
+	ReadOnly    bool              `json:"readOnly"`
+	Value       any               `json:"value,omitempty"`
+	Options     []string          `json:"options,omitempty"` // for enums
+	Type        IOType            `json:"type"`
+	Hooks       map[string]string `json:"hooks,omitempty"`
+	HookMapping map[string]string `json:"hookMapping,omitempty"`
 }
 
 type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) error

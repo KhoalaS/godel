@@ -11,6 +11,7 @@ export const NodeIO = z.object({
   type: z.enum(['input', 'output', 'passthrough', 'generated', 'connected_only', 'selection']),
   hooks: z.record(z.string(), z.string()).optional(),
   disabled: z.boolean().optional(),
+  hookMapping: z.record(z.string(), z.string()).optional(),
 })
 
 export const PipelineNode = z.object({

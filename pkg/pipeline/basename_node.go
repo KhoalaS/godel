@@ -18,6 +18,9 @@ func CreateBasenameNode() Node {
 				Hooks: map[string]string{
 					"basename": "basename",
 				},
+				HookMapping: map[string]string{
+					"basename": "path",
+				},
 			},
 			"basename": {
 				Type:      IOTypeGenerated,
