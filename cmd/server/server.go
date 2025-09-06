@@ -97,7 +97,7 @@ func main() {
 	pipeline.NodeRegistry["bytes-input"] = pipeline.CreateBytesInputNode()
 	pipeline.NodeRegistry["directory-input"] = pipeline.CreateDirectoryInputNode()
 
-	for i := range 4 {
+	for i := range *numWorkers {
 		wg.Add(1)
 		go pipeline.PipelineWorker(ctx, &wg, i, pipelines, &client)
 	}
