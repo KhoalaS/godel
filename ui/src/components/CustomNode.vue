@@ -2,7 +2,14 @@
 import { FunctionRegistry } from '@/types/InputHook'
 import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
 import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
-import { WAutocomplete, WindowBody, WindowComponent, WInput, type WindowControls } from 'vue-98'
+import {
+  WAutocomplete,
+  WButton,
+  WindowBody,
+  WindowComponent,
+  WInput,
+  type WindowControls,
+} from 'vue-98'
 const props = defineProps<NodeProps<PipelineNode>>()
 
 const { updateNodeData, removeNodes, findNode } = useVueFlow()
@@ -258,6 +265,18 @@ function onControlClick(ctrl: WindowControls) {
                   })
                 "
               ></WAutocomplete>
+            </div>
+            <div v-else-if="input.valueType == 'directory' && input.type === 'output'">
+              <div class="flex gap-1">
+                <WInput
+                  :value="input.value"
+                  @update="(v) => onUpdate(v, input)"
+                  @value-change="onValueChange(input)"
+                  :id="props.data.id + input.id"
+                >
+                </WInput>
+                <WButton>TODO</WButton>
+              </div>
             </div>
             <WInput
               v-else

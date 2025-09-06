@@ -18,7 +18,7 @@ func CreateDownloadNode() Node {
 				Type:      IOTypeInput,
 				Id:        "limit",
 				ValueType: ValueTypeNumber,
-				Label:     "Limit",
+				Label:     "Limit (Bytes/s)",
 				Required:  false,
 			},
 			"job": {

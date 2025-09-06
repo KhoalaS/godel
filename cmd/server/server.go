@@ -99,6 +99,7 @@ func main() {
 	pipeline.NodeRegistry["downloader"] = pipeline.CreateDownloaderNode()
 	pipeline.NodeRegistry["basename"] = pipeline.CreateBasenameNode()
 	pipeline.NodeRegistry["bytes-input"] = pipeline.CreateBytesInputNode()
+	pipeline.NodeRegistry["directory-input"] = pipeline.CreateDirectoryInputNode()
 
 	for i := range 4 {
 		wg.Add(1)
