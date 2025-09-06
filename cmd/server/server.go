@@ -19,7 +19,6 @@ import (
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
-	"github.com/KhoalaS/godel/pkg/utils/transformer"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -87,13 +86,6 @@ func main() {
 
 	loadConfig()
 
-	registries.TransformerRegistry.Store("real-debrid", transformer.RealDebridTransformer)
-	registries.TransformerRegistry.Store("reddit", transformer.RedditTransformer)
-	registries.TransformerRegistry.Store("gofile", transformer.GofileTransformer)
-	registries.TransformerRegistry.Store("linux_mount", transformer.LinuxMountTransformer)
-	registries.TransformerRegistry.Store("pixeldrain", transformer.PixeldrainTransformer)
-	registries.TransformerRegistry.Store("jpgfish", transformer.JpgfishTransformer)
-
 	pipeline.NodeRegistry["int-input"] = pipeline.CreateIntInputNode()
 	pipeline.NodeRegistry["download"] = pipeline.CreateDownloadNode()
 	pipeline.NodeRegistry["downloader"] = pipeline.CreateDownloaderNode()
@@ -118,7 +110,6 @@ func main() {
 	mux.HandleFunc("POST /cancel", handleCancel)
 	mux.HandleFunc("POST /pause", handlePause)
 	mux.HandleFunc("GET /configs", handleConfigs)
-	mux.HandleFunc("GET /transformers", handleTransformers)
 	mux.HandleFunc("GET /jobs", handleJobs)
 	mux.HandleFunc("GET /nodes", handleNodes)
 	mux.HandleFunc("POST /pipeline/start", handleStartPipeline)
@@ -291,25 +282,6 @@ func handleConfigs(w http.ResponseWriter, r *http.Request) {
 		responseData, _ := json.Marshal(types.ErrorResponse{
 			Error: utils.INTERNAL_ERROR_MESSAGE,
 		})
-
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(responseData)
-		return
-	}
-
-	w.Write(data)
-}
-
-func handleTransformers(w http.ResponseWriter, r *http.Request) {
-	transformers := registries.TransformerRegistry.Keys()
-
-	data, err := json.Marshal(transformers)
-	if err != nil {
-		responseData, _ := json.Marshal(types.ErrorResponse{
-			Error: utils.INTERNAL_ERROR_MESSAGE,
-		})
-
-		log.Error().Err(err).Send()
 
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(responseData)
