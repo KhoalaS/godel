@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -82,27 +83,52 @@ const (
 func (p *Pipeline) Run(ctx context.Context) error {
 	ready := findStartNodes(p.Graph)
 	done := map[string]bool{}
+	errChan := make(chan error, len(p.Graph.Nodes))
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	for len(ready) > 0 {
-		node := ready[0]
-		ready = ready[1:]
+		for _, node := range ready {
+			wg.Add(1)
+			go func(node *Node) {
+				defer wg.Done()
+				ApplyInputs(p.Graph, node)
+				BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusRunning))
 
-		ApplyInputs(p.Graph, node)
+				if err := node.Run(ctx, *node, p.Comm, p.Id, node.Id); err != nil {
+					BroadCastUpdate(NewErrorMessage(p.Id, node.Id, err))
+					errChan <- err
+					return
+				}
 
-		BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusRunning))
+				mu.Lock()
+				done[node.Id] = true
+				mu.Unlock()
 
-		if err := node.Run(ctx, *node, p.Comm, p.Id, node.Id); err != nil {
-			BroadCastUpdate(NewErrorMessage(p.Id, node.Id, err))
-			return err
+				BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusSuccess))
+			}(node)
 		}
-		done[node.Id] = true
 
-		BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusSuccess))
+		wg.Wait()
 
-		for _, next := range p.Graph.Outgoing[node.Id] {
-			if allDepsDone(next, done, p.Graph.Incoming) {
-				ready = append(ready, next)
+		nextReady := []*Node{}
+
+		for _, node := range ready {
+			for _, next := range p.Graph.Outgoing[node.Id] {
+				mu.Lock()
+				if allDepsDone(next, done, p.Graph.Incoming) {
+					nextReady = append(nextReady, next)
+				}
+				mu.Unlock()
 			}
+		}
+
+		ready = nextReady
+
+		select {
+		case err := <-errChan:
+			return err
+		default:
 		}
 	}
 	return nil
