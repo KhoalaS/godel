@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useVueFlow, VueFlow, type Edge, type GraphNode, type Node } from '@vue-flow/core'
+import {
+  useVueFlow,
+  VueFlow,
+  type Edge,
+  type FlowExportObject,
+  type GraphNode,
+  type Node,
+} from '@vue-flow/core'
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
@@ -18,6 +25,7 @@ const {
   nodes,
   updateNodeData,
   toObject,
+  fromObject,
 } = useVueFlow()
 
 // these components are only shown as examples of how to use a custom node or edge
@@ -142,13 +150,23 @@ function onDrop(event: DragEvent) {
   }
 }
 
-function saveGraph() {
+function startPipeline() {
   const graph = toObject()
   pipelineStore.startPipeline(graph)
 }
 
+function getPipelineObject() {
+  return toObject()
+}
+
+function loadPipeline(obj: FlowExportObject) {
+  return fromObject(obj)
+}
+
 defineExpose({
-  saveGraph,
+  saveGraph: startPipeline,
+  getPipelineObject,
+  loadPipeline,
 })
 </script>
 
