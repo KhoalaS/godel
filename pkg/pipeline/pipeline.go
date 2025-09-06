@@ -31,8 +31,8 @@ type PipelineMessage struct {
 }
 
 type MessageData struct {
-	Error    string     `json:"error"`
-	Progress float64    `json:"progress"`
+	Error    string     `json:"error,omitempty"`
+	Progress float64    `json:"progress,omitempty"`
 	Status   NodeStatus `json:"status"`
 }
 

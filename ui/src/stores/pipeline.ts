@@ -1,4 +1,5 @@
 import { PipelineNode } from '@/types/Node'
+import { PipelineMessage } from '@/types/PipelineMessage'
 import type { FlowExportObject } from '@vue-flow/core'
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
@@ -11,6 +12,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
 
   async function init() {
     try {
+      initWs()
       const response = await fetch(`http://${baseUrl}/nodes`)
       if (response.status != 200) {
         return
@@ -35,6 +37,26 @@ export const usePipelineStore = defineStore('pipeline', () => {
     } catch (e: unknown) {
       console.log(e)
     }
+  }
+
+  async function initWs() {
+    const socket = new WebSocket(`ws://${baseUrl}/updates/pipeline`)
+    // Connection opened
+    socket.addEventListener('open', () => {
+      console.log('Connection opened')
+    })
+
+    // Listen for messages
+    socket.addEventListener('message', (event) => {
+      try {
+        const messageData = JSON.parse(event.data)
+        const message = PipelineMessage.parse(messageData)
+
+        console.log(message)
+      } catch (e: unknown) {
+        console.warn(e)
+      }
+    })
   }
 
   const getCategorizedNodes = computed(() => {
