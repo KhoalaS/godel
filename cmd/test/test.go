@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"sync"
 
-	"github.com/KhoalaS/godel"
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -33,7 +32,7 @@ func main() {
 
 	for i := range 4 {
 		wg.Add(1)
-		go godel.PipelineWorker(ctx, &wg, i, pipelines, &client)
+		go pipeline.PipelineWorker(ctx, &wg, i, pipelines, &client)
 	}
 
 	intInputNode := pipeline.CreateIntInputNode()

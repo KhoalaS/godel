@@ -2,9 +2,11 @@ package pipeline
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type Pipeline struct {
@@ -81,56 +83,60 @@ const (
 )
 
 func (p *Pipeline) Run(ctx context.Context) error {
-	ready := findStartNodes(p.Graph)
+	if HasCycle(p.Graph) {
+		return errors.New("graph has a cycle")
+	}
+
 	done := map[string]bool{}
-	errChan := make(chan error, len(p.Graph.Nodes))
+	errChan := make(chan NodeWorkerError, 1)
 	var wg sync.WaitGroup
-	var mu sync.Mutex
 
-	for len(ready) > 0 {
-		for _, node := range ready {
-			wg.Add(1)
-			go func(node *Node) {
-				defer wg.Done()
-				ApplyInputs(p.Graph, node)
-				BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusRunning))
+	nodes := make(chan *Node, len(p.Graph.Nodes))
+	doneChan := make(chan string, len(p.Graph.Nodes))
 
-				if err := node.Run(ctx, *node, p.Comm, p.Id, node.Id); err != nil {
-					BroadCastUpdate(NewErrorMessage(p.Id, node.Id, err))
-					errChan <- err
-					return
-				}
+	// context to allow canelling the nodes in the pool
+	_ctx, cancel := context.WithCancel(ctx)
 
-				mu.Lock()
-				done[node.Id] = true
-				mu.Unlock()
+	defer func() {
+		cancel()
 
-				BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusSuccess))
-			}(node)
-		}
+		close(nodes)
 
+		log.Info().Msg("Waiting for node workers to shutdown")
 		wg.Wait()
+	}()
 
-		nextReady := []*Node{}
+	for i := range 4 {
+		wg.Add(1)
+		go NodeWorker(_ctx, &wg, i, p, nodes, doneChan, errChan)
+	}
 
-		for _, node := range ready {
-			for _, next := range p.Graph.Outgoing[node.Id] {
-				mu.Lock()
-				if allDepsDone(next, done, p.Graph.Incoming) {
-					nextReady = append(nextReady, next)
-				}
-				mu.Unlock()
-			}
-		}
+	for _, node := range findStartNodes(p.Graph) {
+		BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusRunning))
+		nodes <- node
+	}
 
-		ready = nextReady
-
+	for len(done) < len(p.Graph.Nodes) {
 		select {
+		case id := <-doneChan:
+			done[id] = true
+
+			BroadCastUpdate(NewStatusMessage(p.Id, id, StatusSuccess))
+			for _, next := range p.Graph.Outgoing[id] {
+				if allDepsDone(next, done, p.Graph.Incoming) {
+					BroadCastUpdate(NewStatusMessage(p.Id, next.Id, StatusRunning))
+					nodes <- next
+				}
+			}
 		case err := <-errChan:
-			return err
-		default:
+			log.Error().Err(err.Error).Send()
+			BroadCastUpdate(NewErrorMessage(p.Id, err.NodeId, err.Error))
+			return err.Error
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
+
 	return nil
 }
 

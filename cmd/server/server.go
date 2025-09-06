@@ -99,7 +99,7 @@ func main() {
 
 	for i := range 4 {
 		wg.Add(1)
-		go godel.PipelineWorker(ctx, &wg, i, pipelines, &client)
+		go pipeline.PipelineWorker(ctx, &wg, i, pipelines, &client)
 	}
 
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")

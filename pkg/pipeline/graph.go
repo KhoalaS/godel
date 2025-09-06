@@ -33,3 +33,36 @@ func ApplyInputs(graph *Graph, node *Node) {
 		node.Io[e.TargetHandle].Value = graph.Nodes[e.Source].Io[e.SourceHandle].Value
 	}
 }
+
+func HasCycle(g *Graph) bool {
+	inDegree := map[string]int{}
+
+	for id := range g.Nodes {
+		inDegree[id] = len(g.Incoming[id])
+	}
+
+	q := []string{}
+
+	done := 0
+
+	for id, degree := range inDegree {
+		if degree == 0 {
+			q = append(q, id)
+		}
+	}
+
+	for len(q) > 0 {
+		n := q[0]
+		q = q[1:]
+		done++
+
+		for _, out := range g.Outgoing[n] {
+			inDegree[out.Id]--
+			if inDegree[out.Id] == 0 {
+				q = append(q, out.Id)
+			}
+		}
+	}
+
+	return done != len(g.Nodes)
+}
