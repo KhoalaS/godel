@@ -114,7 +114,7 @@ func main() {
 	mux.HandleFunc("GET /nodes", handleNodes)
 	mux.HandleFunc("POST /pipeline/start", handleStartPipeline)
 
-	mux.HandleFunc("/updates/jobinfo", handleJobinfo)
+	mux.HandleFunc("/updates/pipeline", handlePipelineMessage)
 
 	server := &http.Server{
 		Addr:    ":9095",
@@ -390,7 +390,7 @@ func loadConfig() {
 	}
 }
 
-func handleJobinfo(w http.ResponseWriter, r *http.Request) {
+func handlePipelineMessage(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Err(err).Msg("WS upgrade")
