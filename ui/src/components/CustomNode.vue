@@ -226,6 +226,7 @@ function onControlClick(ctrl: WindowControls) {
             </div>
             <div v-else-if="input.type == 'selection'">
               <WAutocomplete
+                @update="(value) => onUpdate(value.name, input)"
                 :initial="{
                   name: String(input.value),
                   id: String(input.value),
@@ -245,7 +246,6 @@ function onControlClick(ctrl: WindowControls) {
               :type="input.valueType"
               :id="props.data.id + input.id"
             />
-            {{ input.value }}
           </div>
         </div>
       </WindowBody>
