@@ -51,7 +51,7 @@ func CreateDownloadNode() Node {
 func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error {
 	client := http.Client{}
 
-	job := (node.Io["job"].Value).(*types.DownloadJob)
+	job := (node.Io["job"].Value).(*types.DownloadJob).Clone()
 
 	if node.Io["limit"] != nil && node.Io["limit"].Value != nil {
 		switch v := node.Io["limit"].Value.(type) {
@@ -71,6 +71,6 @@ func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessag
 	job.DestPath = (node.Io["output_dir"].Value).(string)
 	job.Filename = (node.Io["filename"].Value).(string)
 
-	err := Download(ctx, &client, job, pipelineId, nodeId)
+	err := Download(ctx, &client, &job, pipelineId, nodeId)
 	return err
 }

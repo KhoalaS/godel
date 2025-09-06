@@ -54,15 +54,20 @@ func NewDownloadJob() *DownloadJob {
 	return &job
 }
 
-func (j *DownloadJob) Clone() *DownloadJob {
+func (j *DownloadJob) Clone() DownloadJob {
 	copy := *j
-	copy.Urls = []string{}
-	copy.Urls = append(copy.Urls, j.Urls...)
-
+	copy.Urls = append([]string{}, j.Urls...)
 	copy.Headers = make(map[string]string)
 	maps.Copy(copy.Headers, j.Headers)
 
-	return &copy
+	copy.CancelCh = make(chan struct{})
+	copy.PauseCh = make(chan struct{})
+
+	var status atomic.Value
+	status.Store(j.Status.Load())
+	copy.Status = status
+
+	return copy
 }
 
 type DownloadState string
