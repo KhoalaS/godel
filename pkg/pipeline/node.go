@@ -37,7 +37,7 @@ type NodeIO struct {
 	HookMapping map[string]string `json:"hookMapping,omitempty"`
 }
 
-type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage) error
+type NodeFunc func(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error
 
 type ValueType string
 

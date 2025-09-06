@@ -1,4 +1,4 @@
-package utils
+package pipeline
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
@@ -25,11 +26,11 @@ import (
 
 var cdRegex = regexp.MustCompile(`filename="(.+?)"`)
 
-func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, headers map[string]string) error {
+func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipelineId string, nodeId string) error {
 	if job.IsParent {
 		log.Debug().Str("id", job.Id).Msg("Added bulk download")
 		job.Status.Store(types.DOWNLOADING)
-		BroadCastUpdate(job)
+		//BroadCastUpdate(job)
 		return nil
 	}
 
@@ -147,7 +148,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	}
 
 	bytesRead := job.BytesDownloaded
-	buf := make([]byte, CHUNK_SIZE)
+	buf := make([]byte, utils.CHUNK_SIZE)
 	lastBytesRead := job.BytesDownloaded
 
 	ticker := time.NewTicker(time.Second)
@@ -179,7 +180,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()
-				BroadCastUpdate(job)
+				BroadCastUpdate(NewProgressMessage(pipelineId, nodeId, float64(bytesRead)/float64(contentLengthInt)))
 			}
 		}
 	}()
@@ -188,10 +189,10 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 	if job.Limit > 0 {
 		limit := rate.NewLimiter(rate.Limit(job.Limit), 2*job.Limit)
-		reader = &RateLimitReader{
-			limiter: limit,
-			reader:  response.Body,
-			ctx:     ctx,
+		reader = &utils.RateLimitReader{
+			Limiter: limit,
+			Reader:  response.Body,
+			Ctx:     ctx,
 		}
 	} else {
 		reader = response.Body
@@ -202,7 +203,6 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Start downloading")
 
 	defer close(done)
-	defer BroadCastUpdate(job)
 	defer updateParentJob(job)
 
 	for {
@@ -278,11 +278,11 @@ func updateParentJob(job *types.DownloadJob) {
 	}
 }
 
-func BroadCastUpdate(job *types.DownloadJob) {
-	clients := registries.ClientRegistry.All()
+func BroadCastUpdate(message PipelineMessage) {
+	clients := ClientRegistry.All()
 	for _, client := range clients {
 		log.Info().Msg("broadcasting to client")
-		client.Send <- job
+		client.Send <- message
 	}
 }
 

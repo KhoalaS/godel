@@ -1,14 +1,29 @@
-package utils
+package pipeline
 
 import (
 	"context"
 	"net/http"
+	"net/url"
+	"path"
 	"time"
 
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
+
+func InferFilename(_url string) (string, error) {
+	parsedUrl, err := url.Parse(_url)
+	if err != nil {
+		return "", err
+	}
+	name := path.Base(parsedUrl.Path)
+	if name == "" {
+		name = uuid.NewString()
+	}
+	return name, nil
+}
 
 func DownloadBulk(ctx context.Context, client *http.Client, parent *types.DownloadJob, jobs chan *types.DownloadJob) {
 

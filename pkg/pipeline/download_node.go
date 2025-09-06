@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/KhoalaS/godel/pkg/types"
-	"github.com/KhoalaS/godel/pkg/utils"
 )
 
 func CreateDownloadNode() Node {
@@ -49,8 +48,9 @@ func CreateDownloadNode() Node {
 	}
 }
 
-func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage) error {
+func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error {
 	client := http.Client{}
+	BroadCastUpdate(NewStatusMessage(pipelineId, nodeId, StatusRunning))
 
 	job := (node.Io["job"].Value).(*types.DownloadJob)
 
@@ -72,6 +72,11 @@ func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessag
 	job.DestPath = (node.Io["output_dir"].Value).(string)
 	job.Filename = (node.Io["filename"].Value).(string)
 
-	err := utils.Download(ctx, &client, job, make(map[string]string))
+	err := Download(ctx, &client, job, pipelineId, nodeId)
+	if err != nil {
+		BroadCastUpdate(NewErrorMessage(pipelineId, nodeId, err))
+	} else {
+		BroadCastUpdate(NewStatusMessage(pipelineId, nodeId, StatusSuccess))
+	}
 	return err
 }

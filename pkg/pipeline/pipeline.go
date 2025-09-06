@@ -25,9 +25,44 @@ func NewPipeline(g *Graph, comm chan PipelineMessage) *Pipeline {
 type PipelineMessage struct {
 	PipelineId string      `json:"pipelineId"`
 	NodeId     string      `json:"nodeId"`
-	NodeType   string      `json:"nodeType"`
+	NodeType   string      `json:"nodeType,omitempty"`
 	Type       MessageType `json:"type"`
 	Data       MessageData `json:"data"`
+}
+
+func NewErrorMessage(pId string, nodeId string, err error) PipelineMessage {
+	return PipelineMessage{
+		PipelineId: pId,
+		NodeId:     nodeId,
+		Type:       ErrorMessage,
+		Data: MessageData{
+			Error:  err.Error(),
+			Status: StatusFailed,
+		},
+	}
+}
+
+func NewProgressMessage(pId string, nodeId string, progress float64) PipelineMessage {
+	return PipelineMessage{
+		PipelineId: pId,
+		NodeId:     nodeId,
+		Type:       ProgressMessage,
+		Data: MessageData{
+			Status:   StatusRunning,
+			Progress: progress,
+		},
+	}
+}
+
+func NewStatusMessage(pId string, nodeId string, status NodeStatus) PipelineMessage {
+	return PipelineMessage{
+		PipelineId: pId,
+		NodeId:     nodeId,
+		Type:       StatusMessage,
+		Data: MessageData{
+			Status: status,
+		},
+	}
 }
 
 type MessageData struct {
@@ -55,7 +90,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 		ready = ready[1:]
 
 		ApplyInputs(p.Graph, node)
-		if err := node.Run(ctx, *node, p.Comm); err != nil {
+		if err := node.Run(ctx, *node, p.Comm, p.Id, node.Id); err != nil {
 			p.Comm <- PipelineMessage{
 				PipelineId: p.Id,
 				NodeId:     node.Id,

@@ -23,6 +23,6 @@ func CreateDirectoryInputNode() Node {
 	}
 }
 
-func DirectoryInputNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage) error {
+func DirectoryInputNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error {
 	return nil
 }

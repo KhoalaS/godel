@@ -84,8 +84,6 @@ func main() {
 
 	client := http.Client{}
 
-	loadConfig()
-
 	pipeline.NodeRegistry["int-input"] = pipeline.CreateIntInputNode()
 	pipeline.NodeRegistry["download"] = pipeline.CreateDownloadNode()
 	pipeline.NodeRegistry["downloader"] = pipeline.CreateDownloaderNode()
@@ -109,7 +107,6 @@ func main() {
 	mux.HandleFunc("POST /add", handleAdd)
 	mux.HandleFunc("POST /cancel", handleCancel)
 	mux.HandleFunc("POST /pause", handlePause)
-	mux.HandleFunc("GET /configs", handleConfigs)
 	mux.HandleFunc("GET /jobs", handleJobs)
 	mux.HandleFunc("GET /nodes", handleNodes)
 	mux.HandleFunc("POST /pipeline/start", handleStartPipeline)
@@ -175,12 +172,6 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	job.Status.Store(types.IDLE)
 	if job.Headers == nil {
 		job.Headers = map[string]string{}
-	}
-
-	if job.ConfigId != "" {
-		if config, exist := registries.ConfigRegistry.Load(job.ConfigId); exist {
-			utils.ApplyConfig(&job, *config)
-		}
 	}
 
 	if len(job.Transformer) > 0 {
@@ -271,26 +262,6 @@ func handlePause(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleConfigs(w http.ResponseWriter, r *http.Request) {
-	configArray := []*types.DownloadConfig{}
-	for _, config := range registries.ConfigRegistry.All() {
-		configArray = append(configArray, config)
-	}
-
-	data, err := json.Marshal(configArray)
-	if err != nil {
-		responseData, _ := json.Marshal(types.ErrorResponse{
-			Error: utils.INTERNAL_ERROR_MESSAGE,
-		})
-
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(responseData)
-		return
-	}
-
-	w.Write(data)
-}
-
 func handleJobs(w http.ResponseWriter, r *http.Request) {
 	jobs := registries.JobRegistry.All()
 
@@ -368,28 +339,6 @@ func corsMiddleWare(next http.Handler) http.Handler {
 	})
 }
 
-func loadConfig() {
-	configFile, err := os.Open("./configs.json")
-
-	if err == nil {
-		configData, err := io.ReadAll(configFile)
-		if err != nil {
-			log.Fatal().Msg("Could not load configs.json file")
-		}
-
-		var configArray []types.DownloadConfig
-		err = json.Unmarshal(configData, &configArray)
-		if err != nil {
-			log.Warn().Msg("Could not unmarshal configs.json")
-		} else {
-			for _, config := range configArray {
-				registries.ConfigRegistry.Store(config.Id, &config)
-			}
-		}
-		configFile.Close()
-	}
-}
-
 func handlePipelineMessage(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -397,18 +346,18 @@ func handlePipelineMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &types.Client{Conn: c, Send: make(chan *types.DownloadJob, 4)}
+	client := &pipeline.Client{Conn: c, Send: make(chan pipeline.PipelineMessage, 12)}
 	clientId := uuid.NewString()
-	registries.ClientRegistry.Store(clientId, client)
+	pipeline.ClientRegistry.Store(clientId, client)
 
 	defer c.Close()
-	defer registries.ClientRegistry.Delete(clientId)
+	defer pipeline.ClientRegistry.Delete(clientId)
 	for {
-		job := <-client.Send
+		msg := <-client.Send
 
-		err = c.WriteJSON(job)
+		err = c.WriteJSON(msg)
 		if err != nil {
-			log.Err(err).Str("id", job.Id).Msg("WS write")
+			log.Err(err).Str("pipelineId", msg.PipelineId).Str("nodeId", msg.NodeId).Msg("WS write")
 			break
 		}
 	}

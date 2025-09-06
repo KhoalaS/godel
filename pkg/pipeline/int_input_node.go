@@ -23,6 +23,6 @@ func CreateIntInputNode() Node {
 	}
 }
 
-func IntInputNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage) error {
+func IntInputNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error {
 	return nil
 }

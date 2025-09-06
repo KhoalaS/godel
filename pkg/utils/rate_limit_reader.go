@@ -8,18 +8,18 @@ import (
 )
 
 type RateLimitReader struct {
-	reader  io.Reader
-	ctx     context.Context
-	limiter *rate.Limiter
+	Reader  io.Reader
+	Ctx     context.Context
+	Limiter *rate.Limiter
 }
 
 func (r *RateLimitReader) Read(p []byte) (int, error) {
 	n := len(p)
 
-	err := r.limiter.WaitN(r.ctx, n)
+	err := r.Limiter.WaitN(r.Ctx, n)
 	if err != nil {
 		return 0, err
 	}
 
-	return r.reader.Read(p)
+	return r.Reader.Read(p)
 }

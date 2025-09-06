@@ -1,4 +1,4 @@
-package utils
+package pipeline
 
 import (
 	"context"
@@ -53,7 +53,7 @@ func downloadWorker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan
 			}
 
 			log.Debug().Int("id", id).Msg("Downloading using worker")
-			err := Download(ctx, client, job, nil)
+			err := Download(ctx, client, job, "1", "1")
 			if err != nil {
 				log.Err(err).Str("status", string(job.Status.Load().(types.DownloadState))).Str("filename", job.Filename).Str("id", job.Id).Msg("error during download")
 			}
