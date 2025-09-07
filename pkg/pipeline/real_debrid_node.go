@@ -41,7 +41,7 @@ func RealdebridNodeFunc(ctx context.Context, node Node, pipelineId string, nodeI
 		return err
 	}
 
-	node.Io["job"].Value = rdJob
+	node.Io["job"].Value = &rdJob
 
 	return nil
 }

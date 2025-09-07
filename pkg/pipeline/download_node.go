@@ -68,8 +68,13 @@ func DownloadNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId 
 		}
 	}
 
-	job.DestPath = (node.Io["output_dir"].Value).(string)
-	job.Filename = (node.Io["filename"].Value).(string)
+	if job.DestPath == "" {
+		job.DestPath = (node.Io["output_dir"].Value).(string)
+	}
+
+	if job.Filename == "" {
+		job.Filename = (node.Io["filename"].Value).(string)
+	}
 
 	err := Download(ctx, &client, &job, pipelineId, nodeId)
 	return err
