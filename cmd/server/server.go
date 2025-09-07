@@ -96,6 +96,7 @@ func main() {
 	pipeline.NodeRegistry["basename"] = pipeline.CreateBasenameNode()
 	pipeline.NodeRegistry["bytes-input"] = pipeline.CreateBytesInputNode()
 	pipeline.NodeRegistry["directory-input"] = pipeline.CreateDirectoryInputNode()
+	pipeline.NodeRegistry["rd-downloader"] = pipeline.CreateRealdebridNode()
 
 	for i := range *numWorkers {
 		wg.Add(1)

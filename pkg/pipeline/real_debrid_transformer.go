@@ -1,4 +1,4 @@
-package transformer
+package pipeline
 
 import (
 	"encoding/json"
@@ -27,26 +27,28 @@ var endpoints = map[Endpoint]types.Tuple[string, int]{
 	AddMagnet:      {A: http.MethodPost, B: http.StatusCreated},
 }
 
-func RealDebridTransformer(job *types.DownloadJob) error {
+func RealDebridTransformer(job *types.DownloadJob) (types.DownloadJob, error) {
+	next := job.Clone()
+
 	params := map[string]string{
-		"link": job.Url,
+		"link": next.Url,
 	}
-	if job.Password != "" {
-		params["password"] = job.Password
+	if next.Password != "" {
+		params["password"] = next.Password
 	}
 
 	data, err := makeRealDebridRequest[UnrestrictResponse](UnrestrictLink, params)
 
 	if err != nil {
-		return err
+		return next ,err
 	}
 
-	if job.Filename == "" && data.Filename != "" {
-		job.Filename = data.Filename
+	if next.Filename == "" && data.Filename != "" {
+		next.Filename = data.Filename
 	}
-	job.Url = data.Download
+	next.Url = data.Download
 
-	return nil
+	return next, nil
 }
 
 func RealDebridMagnetTransformer(job *types.DownloadJob) error {
