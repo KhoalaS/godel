@@ -2,6 +2,7 @@
 import { FunctionRegistry } from '@/types/InputHook'
 import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
 import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
+import { computed } from 'vue'
 import {
   WAutocomplete,
   WButton,
@@ -199,12 +200,19 @@ function onControlClick(ctrl: WindowControls) {
     removeNodes(props.id)
   }
 }
+
+const _title = computed(() => {
+  if (props.data.status == 'running' && props.data.progress) {
+    return `${props.data.name} ${Math.floor(props.data.progress * 100)}%`
+  }
+  return props.data.name
+})
 </script>
 
 <template>
   <WindowComponent
     @click:control="onControlClick"
-    :title="data.name"
+    :title="_title"
     class="w-64 p-3"
     :controls="['Close']"
   >

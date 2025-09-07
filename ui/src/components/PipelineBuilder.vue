@@ -36,12 +36,15 @@ const {
 // these are our edges
 const messageCallback = (message: PipelineMessage) => {
   if (message.type == 'status') {
+    updateNodeData<PipelineNode>(message.nodeId, {
+      status: message.data.status,
+      progress: undefined,
+    })
     switch (message.data.status) {
       case 'success':
         edges.value.forEach((e) => {
           if (e.source == message.nodeId) {
             e.animated = false
-            e.label = undefined
           }
         })
         break
@@ -62,13 +65,17 @@ const messageCallback = (message: PipelineMessage) => {
         break
     }
   } else if (message.type == 'progress') {
-    edges.value.forEach((e) => {
-      if (e.source == message.nodeId) {
-        e.label = message.data.progress?.toFixed(2)
-      }
+    updateNodeData<PipelineNode>(message.nodeId, {
+      progress: message.data.progress,
+      status: message.data.status,
     })
   } else if (message.type == 'error') {
     console.warn(message.data.error)
+    updateNodeData<PipelineNode>(message.nodeId, {
+      status: message.data.status,
+      error: message.data.error,
+      progress: undefined,
+    })
     edges.value.forEach((e) => {
       if (e.source == message.nodeId) {
         e.animated = false
