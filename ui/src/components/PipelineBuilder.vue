@@ -10,8 +10,9 @@ import {
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
-import type { NodeIO, PipelineNode } from '@/types/Node'
+import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
 import type { PipelineMessage } from '@/types/PipelineMessage'
+import CustomEdge from './CustomEdge.vue'
 
 const pipelineStore = usePipelineStore()
 const {
@@ -81,15 +82,22 @@ onMounted(async () => {
 
 onConnect((params) => {
   console.log(params)
+
+  const sourceNode = findNode<PipelineNode>(params.source)
+  const targetNode = findNode<PipelineNode>(params.target)
+
+  const targetHandleType = targetNode?.data.io?.[params.targetHandle ?? ''].valueType
+
   const e: Edge = {
     ...params,
     id: crypto.randomUUID(),
     animated: false,
+    type: 'custom',
+    style: {
+      stroke: targetHandleType ? HandleColors[targetHandleType] : undefined,
+    },
   }
   addEdges(e)
-
-  const sourceNode = findNode<PipelineNode>(params.source)
-  const targetNode = findNode<PipelineNode>(params.target)
 
   if (!sourceNode || !targetNode) {
     return
@@ -238,6 +246,9 @@ defineExpose({
           <CustomNode v-bind="nodeProps" />
         </template>
         <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
+        <template #edge-custom="customEdgeProps">
+          <CustomEdge v-bind="customEdgeProps" />
+        </template>
       </VueFlow>
     </div>
   </div>
