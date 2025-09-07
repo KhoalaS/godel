@@ -48,7 +48,7 @@ func CreateDownloadNode() Node {
 	}
 }
 
-func DownloadNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error {
+func DownloadNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
 	client := http.Client{}
 
 	job := (node.Io["job"].Value).(*types.DownloadJob).Clone()

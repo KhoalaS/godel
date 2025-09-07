@@ -1,3 +1,5 @@
+import z from 'zod'
+
 export type HookFunction = (inputId: string) => void
 
 export const FunctionRegistry = new Map<
@@ -44,4 +46,19 @@ FunctionRegistry.set('toBytes', (arg) => {
   }
 
   return NaN
+})
+
+FunctionRegistry.set('suffix', (arg) => {
+  try {
+    const suffixArg = z.parse(SuffixFuncArg, arg)
+
+    return suffixArg.input + suffixArg.suffix
+  } catch (e: unknown) {
+    return ''
+  }
+})
+
+const SuffixFuncArg = z.object({
+  input: z.string().optional().default(''),
+  suffix: z.string().optional().default(''),
 })

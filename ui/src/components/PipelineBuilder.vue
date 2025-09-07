@@ -88,8 +88,6 @@ onMounted(async () => {
 })
 
 onConnect((params) => {
-  console.log(params)
-
   const sourceNode = findNode<PipelineNode>(params.source)
   const targetNode = findNode<PipelineNode>(params.target)
 
@@ -153,8 +151,6 @@ onConnectStart((params) => {
       }
     }
 
-    console.log(newIo)
-
     updateNodeData(node.id, {
       io: newIo,
     })
@@ -171,8 +167,6 @@ onConnectEnd(() => {
         disabled: false,
       }
     }
-
-    console.log(newIo)
 
     updateNodeData(node.id, {
       io: newIo,
@@ -226,7 +220,7 @@ defineExpose({
 
 <template>
   <div class="p-[1px]" style="height: 800px; width: 1600px; display: flex">
-    <div class="m-2">
+    <div class="m-2 overflow-x-hidden overflow-y-auto pr-4">
       <div
         :key="category"
         class="mb-8"

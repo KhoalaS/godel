@@ -32,7 +32,7 @@ func CreateRealdebridNode() Node {
 	}
 }
 
-func RealdebridNodeFunc(ctx context.Context, node Node, comm chan<- PipelineMessage, pipelineId string, nodeId string) error {
+func RealdebridNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
 	job := types.NewDownloadJob()
 	job.Url = (node.Io["url"].Value).(string)
 

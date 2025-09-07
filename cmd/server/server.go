@@ -97,6 +97,7 @@ func main() {
 	pipeline.NodeRegistry["bytes-input"] = pipeline.CreateBytesInputNode()
 	pipeline.NodeRegistry["directory-input"] = pipeline.CreateDirectoryInputNode()
 	pipeline.NodeRegistry["rd-downloader"] = pipeline.CreateRealdebridNode()
+	pipeline.NodeRegistry["suffix"] = pipeline.CreateSuffixNode()
 
 	for i := range *numWorkers {
 		wg.Add(1)

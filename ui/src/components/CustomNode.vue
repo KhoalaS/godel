@@ -259,6 +259,14 @@ const _title = computed(() => {
             <div class="text-xs text-right" v-if="input.type == 'generated'">{{ input.label }}</div>
             <div class="text-xs text-left" v-else-if="input.type == 'connected_only'">
               {{ input.label }}
+              <WInput
+                style="display: none"
+                :value="input.value"
+                @update="(v) => onUpdate(v, input)"
+                @value-change="onValueChange(input)"
+                :type="input.valueType"
+                :id="props.data.id + input.id"
+              />
             </div>
             <div v-else-if="input.type == 'selection'">
               <WAutocomplete

@@ -31,7 +31,7 @@ func NodeWorker(ctx context.Context, wg *sync.WaitGroup, id int, pipeline *Pipel
 			log.Debug().Int("id", id).Msg("Executing node using worker")
 
 			ApplyInputs(pipeline.Graph, node)
-			err := node.Run(ctx, *node, pipeline.Comm, pipeline.Id, node.Id)
+			err := node.Run(ctx, *node, pipeline.Id, node.Id)
 			if err != nil {
 				log.Err(err).Send()
 				errChan <- NodeWorkerError{
