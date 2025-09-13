@@ -10,8 +10,8 @@ import {
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
-import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
-import type { PipelineMessage } from '@/types/PipelineMessage'
+import { HandleColors, type NodeIO, type PipelineNode } from '@/models/Node'
+import type { PipelineMessage } from '@/models/PipelineMessage'
 import CustomEdge from './CustomEdge.vue'
 
 const pipelineStore = usePipelineStore()

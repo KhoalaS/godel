@@ -3,6 +3,9 @@ import { onMounted, useTemplateRef } from 'vue'
 import { WButton, WindowBody, WindowComponent } from 'vue-98'
 import PipelineBuilder from './components/PipelineBuilder.vue'
 
+/**
+ * Augment Window interface, adding showOpenFilePicker function.
+ */
 declare global {
   interface Window {
     showOpenFilePicker: (arg: {
@@ -25,10 +28,16 @@ const pickerOpts = {
   multiple: false,
 }
 
+/**
+ * Starts the current pipeline.
+ */
 function startPipeline() {
   pipelineBuilder.value?.saveGraph()
 }
 
+/**
+ * Saves the current pipeline to a JSON file.
+ */
 function savePipeline() {
   const data = pipelineBuilder.value?.getPipelineObject()
   if (!data) {
@@ -43,6 +52,9 @@ function savePipeline() {
   link.click()
 }
 
+/**
+ * Loads a saved pipeline from a JSON file.
+ */
 async function loadPipeline() {
   const [fileHandle]: FileSystemFileHandle[] = await window.showOpenFilePicker(pickerOpts)
   if (fileHandle == undefined) {

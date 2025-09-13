@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { FunctionRegistry } from '@/types/InputHook'
-import { HandleColors, type NodeIO, type PipelineNode } from '@/types/Node'
+import { FunctionRegistry } from '@/registries/InputHook'
+import { HandleColors, type NodeIO, type PipelineNode } from '@/models/Node'
 import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
 import { computed } from 'vue'
 import {
@@ -21,56 +21,58 @@ const targetConnections = useNodeConnections({
 
 function onUpdate(value: string | number | boolean, io: NodeIO) {
   console.log('CustomNode:onUpdate', io.id)
-  if (!io.readOnly && props.data.io != undefined) {
-    const hookUpdates: Record<string, NodeIO> = {}
+  if (io.readOnly || props.data.io == null) {
+    return
+  }
 
-    if (io.hooks) {
-      for (const [hookId, functionId] of Object.entries(io.hooks)) {
-        const func = FunctionRegistry.get(functionId)
-        if (func == undefined) {
-          continue
+  const hookUpdates: Record<string, NodeIO> = {}
+
+  if (io.hooks) {
+    for (const [hookId, functionId] of Object.entries(io.hooks)) {
+      const func = FunctionRegistry.get(functionId)
+      if (func == undefined) {
+        continue
+      }
+
+      const hookValues: Record<string, unknown> = {}
+      for (const _io of Object.values(props.data.io ?? {})) {
+        if (_io.hookMapping?.[hookId] != undefined) {
+          hookValues[_io.hookMapping[hookId]] = _io.id == io.id ? value : _io.value
         }
+      }
 
-        const hookValues: Record<string, unknown> = {}
-        for (const _io of Object.values(props.data.io ?? {})) {
-          if (_io.hookMapping?.[hookId] != undefined) {
-            hookValues[_io.hookMapping[hookId]] = _io.id == io.id ? value : _io.value
-          }
-        }
+      const newValue = func(hookValues)
 
-        const newValue = func(hookValues)
+      if (props.data.io?.[hookId].value == newValue) {
+        continue
+      }
 
-        if (props.data.io?.[hookId].value == newValue) {
-          continue
-        }
-
-        if (props.data.io) {
-          hookUpdates[hookId] = {
-            ...props.data.io?.[hookId],
-            value: newValue,
-          }
+      if (props.data.io) {
+        hookUpdates[hookId] = {
+          ...props.data.io?.[hookId],
+          value: newValue,
         }
       }
     }
-
-    updateNodeData<PipelineNode>(props.id, {
-      io: {
-        ...props.data.io,
-        [io.id]: { ...io, value: value },
-        ...hookUpdates,
-      },
-    })
-
-    const inputs: {
-      inputId: string
-      newValue: string | number | boolean | undefined
-    }[] = [{ inputId: io.id, newValue: value }]
-
-    for (const [id, io] of Object.entries(hookUpdates)) {
-      inputs.push({ inputId: id, newValue: io.value })
-    }
-    updateTargetNodes(inputs)
   }
+
+  updateNodeData<PipelineNode>(props.id, {
+    io: {
+      ...props.data.io,
+      [io.id]: { ...io, value: value },
+      ...hookUpdates,
+    },
+  })
+
+  const inputs: {
+    inputId: string
+    newValue: string | number | boolean | undefined
+  }[] = [{ inputId: io.id, newValue: value }]
+
+  for (const [id, io] of Object.entries(hookUpdates)) {
+    inputs.push({ inputId: id, newValue: io.value })
+  }
+  updateTargetNodes(inputs)
 }
 
 function onValueChange(io: NodeIO) {

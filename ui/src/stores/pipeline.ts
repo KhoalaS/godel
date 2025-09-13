@@ -1,5 +1,5 @@
-import { PipelineNode } from '@/types/Node'
-import { PipelineMessage } from '@/types/PipelineMessage'
+import { PipelineNode } from '@/models/Node'
+import { PipelineMessage } from '@/models/PipelineMessage'
 import type { FlowExportObject } from '@vue-flow/core'
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
@@ -21,7 +21,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
       const data = await response.json()
       registeredNodes.value = z.parse(z.array(PipelineNode), data)
     } catch (e: unknown) {
-      console.log(e)
+      console.warn('error initializing pipeline store', e)
     }
   }
 
@@ -45,6 +45,10 @@ export const usePipelineStore = defineStore('pipeline', () => {
       // Connection opened
       socket.addEventListener('open', () => {
         console.log('Connection opened')
+      })
+
+      socket.addEventListener('error', (event) => {
+        console.warn('WebSocket error', event)
       })
 
       // Listen for messages
