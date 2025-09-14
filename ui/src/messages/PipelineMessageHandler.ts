@@ -1,4 +1,4 @@
-import type { PipelineMessage } from '@/models/PipelineMessage'
+import type { PipelineMessage } from '@/models/messages/PipelineMessage'
 import type { IMessageHandler } from './IMessageHandler'
 import type { VueFlowStore } from '@vue-flow/core'
 import type { PipelineNode } from '@/models/Node'

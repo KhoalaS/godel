@@ -1,7 +1,7 @@
 import type { IMessageHandler } from '@/messages/IMessageHandler'
 import { PipelineMessageHandler } from '@/messages/PipelineMessageHandler'
 import { HandleColors, NodeIO, PipelineNode } from '@/models/Node'
-import { PipelineMessage } from '@/models/PipelineMessage'
+import { PipelineMessage } from '@/models/messages/PipelineMessage'
 import { useVueFlow, type Edge, type FlowExportObject, type GraphNode } from '@vue-flow/core'
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
