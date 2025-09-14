@@ -10,7 +10,7 @@ declare global {
   interface Window {
     showOpenFilePicker: (arg: {
       types: { description: string; accept: Record<string, string[]> }[]
-    }) => FileSystemFileHandle[]
+    }) => Promise<FileSystemFileHandle[]>
   }
 }
 
