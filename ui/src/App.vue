@@ -3,18 +3,6 @@ import { onMounted, useTemplateRef } from 'vue'
 import { WButton, WindowBody, WindowComponent } from 'vue-98'
 import PipelineBuilder from './components/PipelineBuilder.vue'
 
-/**
- * Augment Window interface, adding showOpenFilePicker function.
- */
-declare global {
-  interface Window {
-    showOpenFilePicker: (arg: {
-      types: { description: string; accept: Record<string, string[]> }[]
-    }) => Promise<FileSystemFileHandle[]>
-  }
-}
-
-const pipelineBuilder = useTemplateRef('pipelineBuilder')
 const pickerOpts = {
   types: [
     {
