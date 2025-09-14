@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { FunctionRegistry } from '@/registries/InputHook'
 import { HandleColors, type NodeIO, type PipelineNode } from '@/models/Node'
-import { Handle, Position, useNodeConnections, useVueFlow, type NodeProps } from '@vue-flow/core'
+import { Handle, Position, useNodeConnections, type NodeProps } from '@vue-flow/core'
 import { computed } from 'vue'
 import {
   WAutocomplete,
@@ -11,9 +11,11 @@ import {
   WInput,
   type WindowControls,
 } from 'vue-98'
+import { usePipelineStore } from '@/stores/pipeline'
 const props = defineProps<NodeProps<PipelineNode>>()
 
-const { updateNodeData, removeNodes, findNode } = useVueFlow()
+const store = usePipelineStore()
+const vueFlow = store.vueFlow
 
 const targetConnections = useNodeConnections({
   handleType: 'source',
@@ -56,7 +58,7 @@ function onUpdate(value: string | number | boolean, io: NodeIO) {
     }
   }
 
-  updateNodeData<PipelineNode>(props.id, {
+  vueFlow.updateNodeData<PipelineNode>(props.id, {
     io: {
       ...props.data.io,
       [io.id]: { ...io, value: value },
@@ -113,7 +115,7 @@ function updateTargetNodes(
         return
       }
 
-      const targetNode = findNode<PipelineNode>(conn.target)
+      const targetNode = vueFlow.findNode<PipelineNode>(conn.target)
       if (!targetNode || !targetNode.data.io) {
         continue
       }
@@ -133,10 +135,10 @@ function updateTargetNodes(
   }
 
   for (const [nodeId, updates] of data.entries()) {
-    const targetNode = findNode<PipelineNode>(nodeId)
+    const targetNode = vueFlow.findNode<PipelineNode>(nodeId)
 
     if (targetNode?.data.io) {
-      updateNodeData<PipelineNode>(nodeId, {
+      vueFlow.updateNodeData<PipelineNode>(nodeId, {
         io: {
           ...targetNode.data.io,
           ...updates,
@@ -179,7 +181,7 @@ function hook(io: NodeIO) {
   }
 
   if (props.data.io) {
-    updateNodeData<PipelineNode>(props.id, {
+    vueFlow.updateNodeData<PipelineNode>(props.id, {
       io: {
         ...props.data.io,
         ...hookUpdates,
@@ -199,7 +201,7 @@ function hook(io: NodeIO) {
 
 function onControlClick(ctrl: WindowControls) {
   if (ctrl == 'Close') {
-    removeNodes(props.id)
+    vueFlow.removeNodes(props.id)
   }
 }
 

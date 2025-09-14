@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  getBezierPath,
-  useVueFlow,
-  type EdgeProps,
-} from '@vue-flow/core'
+import { usePipelineStore } from '@/stores/pipeline'
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@vue-flow/core'
 import { computed, ref } from 'vue'
 import { WindowButton } from 'vue-98'
 
 const props = defineProps<EdgeProps>()
-const { removeEdges } = useVueFlow()
+const { vueFlow } = usePipelineStore()
 
 const path = computed(() => getBezierPath(props))
 const hovered = ref(false)
@@ -39,7 +34,7 @@ const hovered = ref(false)
           style="pointer-events: all"
           class="duration-100"
           v-show="hovered"
-          @click="removeEdges(id)"
+          @click="vueFlow.removeEdges(id)"
           type="Close"
         ></WindowButton>
       </div>
