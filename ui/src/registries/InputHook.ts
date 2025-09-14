@@ -1,16 +1,6 @@
-/**
- * InputHooks are small functions that run when the value of an input X changes. During definition of a node
- * an input can declare itself as a hook paramter for a specific function.
- *
- * E.g. an input called "Url" can say that it wants to take on the role of the "path" parameter of the "Pathname" hook function.
- */
-
-export type HookFunction = (inputId: string) => void
+import type { HookFunction } from '@/inputhooks/HookFunction'
 
 /**
  * Registry to store hook functions.
  */
-export const FunctionRegistry = new Map<
-  string,
-  (arg: Record<string, unknown>) => string | number | boolean
->()
+export const FunctionRegistry = new Map<string, HookFunction>()
