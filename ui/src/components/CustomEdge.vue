@@ -29,10 +29,9 @@ function onRemoveEdge(id: string) {
         @mouseenter="hovered = true"
         @mouseleave="hovered = false"
         :style="{
-          position: 'absolute',
           transform: `translate(-50%, -50%) translate(${path[1]}px,${path[2]}px)`,
         }"
-        class="nodrag nopan"
+        class="absolute nodrag nopan"
       >
         <WindowButton
           style="pointer-events: all"

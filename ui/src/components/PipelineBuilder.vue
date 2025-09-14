@@ -43,10 +43,9 @@ function onDrop(event: DragEvent) {
       >
         <p>{{ category }}</p>
         <div
-          class="node w-32 text-center p-3 mb-2"
+          class="node w-32 text-center p-3 mb-2 cursor-grab"
           draggable="true"
           @dragstart="(e) => e.dataTransfer?.setData('application/vueflow', node.type)"
-          style="cursor: grab"
           :key="node.type"
           v-for="node in nodes"
         >
@@ -54,7 +53,7 @@ function onDrop(event: DragEvent) {
         </div>
       </div>
     </div>
-    <div style="flex: 1; background-color: white">
+    <div class="flex-1 bg-white">
       <VueFlow @drop="onDrop" @dragover="onDragOver">
         <Background :size="1.6"></Background>
         <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
