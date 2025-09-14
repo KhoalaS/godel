@@ -1,34 +1,21 @@
+import type { IMessageHandler } from '@/messages/IMessageHandler'
+import { PipelineMessageHandler } from '@/messages/PipelineMessageHandler'
 import { HandleColors, NodeIO, PipelineNode } from '@/models/Node'
 import { PipelineMessage } from '@/models/PipelineMessage'
 import { useVueFlow, type Edge, type FlowExportObject, type GraphNode } from '@vue-flow/core'
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
 import z from 'zod'
-/**
- * {
-  addNodes,
-  onConnect,
-  addEdges,
-  screenToFlowCoordinate,
-  onConnectStart,
-  onConnectEnd,
-  findNode,
-  nodes,
-  updateNodeData,
-  toObject,
-  fromObject,
-  edges,
-}
- */
+
 export const usePipelineStore = defineStore('pipeline', () => {
   const vueFlow = useVueFlow()
   const baseUrl = 'localhost:9095'
   const registeredNodes: Ref<PipelineNode[]> = ref([])
-  const pipelines = new Map<string, unknown>()
+  const msgHandler: IMessageHandler<PipelineMessage> = new PipelineMessageHandler(vueFlow)
 
-  async function init(messageCallback: (message: PipelineMessage) => void) {
+  async function init() {
     try {
-      await initWs(messageCallback)
+      await initWs()
       const response = await fetch(`http://${baseUrl}/nodes`)
       if (response.status != 200) {
         return
@@ -55,7 +42,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
     }
   }
 
-  async function initWs(messageCallback: (message: PipelineMessage) => void) {
+  async function initWs() {
     try {
       const socket = new WebSocket(`ws://${baseUrl}/updates/pipeline`)
       // Connection opened
@@ -73,7 +60,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
           const messageData = JSON.parse(event.data)
           const message = PipelineMessage.parse(messageData)
 
-          messageCallback(message)
+          msgHandler.onMessage(message)
         } catch (e: unknown) {
           console.warn(e)
         }

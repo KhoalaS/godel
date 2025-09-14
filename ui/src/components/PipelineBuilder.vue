@@ -4,68 +4,13 @@ import { VueFlow, type FlowExportObject } from '@vue-flow/core'
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
-import { type PipelineNode } from '@/models/Node'
-import type { PipelineMessage } from '@/models/PipelineMessage'
 import CustomEdge from './CustomEdge.vue'
 
 const store = usePipelineStore()
 const vueFlow = store.vueFlow
 
-// these components are only shown as examples of how to use a custom node or edge
-// you can find many examples of how to create these custom components in the examples page of the docs
-
-// these are our edges
-const messageCallback = (message: PipelineMessage) => {
-  if (message.type == 'status') {
-    vueFlow.updateNodeData<PipelineNode>(message.nodeId, {
-      status: message.data.status,
-      progress: undefined,
-    })
-    switch (message.data.status) {
-      case 'success':
-        vueFlow.edges.forEach((e) => {
-          if (e.source == message.nodeId) {
-            e.animated = false
-          }
-        })
-        break
-      case 'running':
-        // set edge animations
-        vueFlow.edges.forEach((e) => {
-          if (e.source == message.nodeId) {
-            e.animated = true
-          }
-        })
-        break
-      case 'failed':
-        vueFlow.edges.forEach((e) => {
-          if (e.source == message.nodeId) {
-            e.animated = false
-          }
-        })
-        break
-    }
-  } else if (message.type == 'progress') {
-    vueFlow.updateNodeData<PipelineNode>(message.nodeId, {
-      progress: message.data.progress,
-      status: message.data.status,
-    })
-  } else if (message.type == 'error') {
-    console.warn(message.data.error)
-    vueFlow.updateNodeData<PipelineNode>(message.nodeId, {
-      status: message.data.status,
-      error: message.data.error,
-      progress: undefined,
-    })
-    vueFlow.edges.forEach((e) => {
-      if (e.source == message.nodeId) {
-        e.animated = false
-      }
-    })
-  }
-}
 onMounted(async () => {
-  await store.init(messageCallback)
+  await store.init()
 })
 
 function onDragOver(event: DragEvent) {
