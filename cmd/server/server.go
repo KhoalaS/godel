@@ -152,8 +152,7 @@ func main() {
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	data, err := godel.EmbeddedFiles.ReadFile("ui/dist/index.html")
 	if err != nil {
-		log.Err(err).Send()
-		http.Error(w, "could not read index.html", http.StatusInternalServerError)
+		InternalErrorHandler(w, err)
 		return
 	}
 
@@ -275,12 +274,7 @@ func handleJobs(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(jobs)
 	if err != nil {
-		responseData, _ := json.Marshal(types.ErrorResponse{
-			Error: utils.INTERNAL_ERROR_MESSAGE,
-		})
-
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(responseData)
+		InternalErrorHandler(w, err)
 		return
 	}
 
@@ -296,12 +290,7 @@ func handleNodes(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(nodes)
 	if err != nil {
-		responseData, _ := json.Marshal(types.ErrorResponse{
-			Error: utils.INTERNAL_ERROR_MESSAGE,
-		})
-
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(responseData)
+		InternalErrorHandler(w, err)
 		return
 	}
 
@@ -315,29 +304,31 @@ func handleStartPipeline(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err != nil {
-		responseData, _ := json.Marshal(types.ErrorResponse{
-			Error: utils.INTERNAL_ERROR_MESSAGE,
-		})
-
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(responseData)
+		InternalErrorHandler(w, err)
 		return
 	}
 
 	err = json.Unmarshal(data, &gv)
 	if err != nil {
-		responseData, _ := json.Marshal(types.ErrorResponse{
-			Error: utils.INTERNAL_ERROR_MESSAGE,
-		})
-
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(responseData)
+		InternalErrorHandler(w, err)
 		return
 	}
 
 	g := gv.ToPipelineGraph(pipeline.NodeRegistry)
 	p := pipeline.NewPipeline(g, comm)
 	pipelines <- p
+
+	responseData := types.StartPipelineResponse{
+		PipelineId: p.Id,
+	}
+
+	responseBytes, err := json.Marshal(responseData)
+	if err != nil {
+		InternalErrorHandler(w, err)
+		return
+	}
+
+	w.Write(responseBytes)
 }
 
 func corsMiddleWare(next http.Handler) http.Handler {
@@ -350,7 +341,7 @@ func corsMiddleWare(next http.Handler) http.Handler {
 func handlePipelineMessage(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Err(err).Msg("WS upgrade")
+		InternalErrorHandler(w, err)
 		return
 	}
 
@@ -369,4 +360,9 @@ func handlePipelineMessage(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+}
+
+func InternalErrorHandler(w http.ResponseWriter, err error) {
+	log.Error().Err(err).Msg("Internal server error")
+	http.Error(w, utils.INTERNAL_ERROR_MESSAGE, http.StatusInternalServerError)
 }
