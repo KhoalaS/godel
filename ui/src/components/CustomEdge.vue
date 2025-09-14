@@ -9,6 +9,10 @@ const { vueFlow } = usePipelineStore()
 
 const path = computed(() => getBezierPath(props))
 const hovered = ref(false)
+
+function onRemoveEdge(id: string) {
+  vueFlow.removeEdges(id)
+}
 </script>
 <template>
   <g @mouseenter="hovered = true" @mouseleave="hovered = false">
@@ -34,7 +38,7 @@ const hovered = ref(false)
           style="pointer-events: all"
           class="duration-100"
           v-show="hovered"
-          @click="vueFlow.removeEdges(id)"
+          @click="onRemoveEdge(id)"
           type="Close"
         ></WindowButton>
       </div>

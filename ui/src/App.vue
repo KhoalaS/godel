@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, useTemplateRef } from 'vue'
+import { onMounted } from 'vue'
 import { WButton, WindowBody, WindowComponent } from 'vue-98'
 import PipelineBuilder from './components/PipelineBuilder.vue'
+import { usePipelineStore } from './stores/pipeline'
 
 const pickerOpts = {
   types: [
@@ -16,21 +17,20 @@ const pickerOpts = {
   multiple: false,
 }
 
+const store = usePipelineStore()
+
 /**
  * Starts the current pipeline.
  */
 function startPipeline() {
-  pipelineBuilder.value?.saveGraph()
+  store.startPipeline()
 }
 
 /**
  * Saves the current pipeline to a JSON file.
  */
 function savePipeline() {
-  const data = pipelineBuilder.value?.getPipelineObject()
-  if (!data) {
-    return
-  }
+  const data = store.getPipelineObject()
 
   const blobData = new Blob([JSON.stringify(data)], { type: 'application/json' })
   const url = URL.createObjectURL(blobData)
@@ -52,10 +52,12 @@ async function loadPipeline() {
   const text = await (await fileHandle.getFile()).text()
   const graph = JSON.parse(text)
 
-  pipelineBuilder.value?.loadPipeline(graph)
+  store.loadPipeline(graph)
 }
 
-onMounted(async () => {})
+onMounted(() => {
+  store.init()
+})
 </script>
 
 <template>

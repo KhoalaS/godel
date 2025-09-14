@@ -12,6 +12,9 @@ import {
   type WindowControls,
 } from 'vue-98'
 import { usePipelineStore } from '@/stores/pipeline'
+
+// TODO split different cases for input components in sub-components
+
 const props = defineProps<NodeProps<PipelineNode>>()
 
 const store = usePipelineStore()

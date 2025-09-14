@@ -28,20 +28,6 @@ export const usePipelineStore = defineStore('pipeline', () => {
     }
   }
 
-  async function startPipeline(graph: FlowExportObject) {
-    try {
-      const response = await fetch(`http://${baseUrl}/pipeline/start`, {
-        method: 'POST',
-        body: JSON.stringify(graph),
-      })
-      if (response.status != 200) {
-        return
-      }
-    } catch (e: unknown) {
-      console.log(e)
-    }
-  }
-
   async function initWs() {
     try {
       const socket = new WebSocket(`ws://${baseUrl}/updates/pipeline`)
@@ -68,6 +54,30 @@ export const usePipelineStore = defineStore('pipeline', () => {
     } catch (e: unknown) {
       console.warn('could not open websocket connection', e)
     }
+  }
+
+  async function startPipeline() {
+    const graph: FlowExportObject = vueFlow.toObject()
+
+    try {
+      const response = await fetch(`http://${baseUrl}/pipeline/start`, {
+        method: 'POST',
+        body: JSON.stringify(graph),
+      })
+      if (response.status != 200) {
+        return
+      }
+    } catch (e: unknown) {
+      console.log(e)
+    }
+  }
+
+  function getPipelineObject() {
+    return vueFlow.toObject()
+  }
+
+  function loadPipeline(obj: FlowExportObject) {
+    return vueFlow.fromObject(obj)
   }
 
   const getCategorizedNodes = computed(() => {
@@ -183,10 +193,12 @@ export const usePipelineStore = defineStore('pipeline', () => {
   })
 
   return {
+    getCategorizedNodes,
+    getPipelineObject,
     init,
+    loadPipeline,
     registeredNodes,
     startPipeline,
-    getCategorizedNodes,
     vueFlow,
   }
 })

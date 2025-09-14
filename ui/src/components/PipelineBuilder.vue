@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { VueFlow, type FlowExportObject } from '@vue-flow/core'
+import { VueFlow } from '@vue-flow/core'
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
@@ -8,10 +7,6 @@ import CustomEdge from './CustomEdge.vue'
 
 const store = usePipelineStore()
 const vueFlow = store.vueFlow
-
-onMounted(async () => {
-  await store.init()
-})
 
 function onDragOver(event: DragEvent) {
   event.preventDefault()
@@ -36,25 +31,6 @@ function onDrop(event: DragEvent) {
     })
   }
 }
-
-function startPipeline() {
-  const graph = vueFlow.toObject()
-  store.startPipeline(graph)
-}
-
-function getPipelineObject() {
-  return vueFlow.toObject()
-}
-
-function loadPipeline(obj: FlowExportObject) {
-  return vueFlow.fromObject(obj)
-}
-
-defineExpose({
-  saveGraph: startPipeline,
-  getPipelineObject,
-  loadPipeline,
-})
 </script>
 
 <template>
