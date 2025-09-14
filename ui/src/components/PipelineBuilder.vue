@@ -1,34 +1,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import {
-  useVueFlow,
-  VueFlow,
-  type Edge,
-  type FlowExportObject,
-  type GraphNode,
-} from '@vue-flow/core'
+import { VueFlow, type FlowExportObject } from '@vue-flow/core'
 import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
-import { HandleColors, type NodeIO, type PipelineNode } from '@/models/Node'
+import { type PipelineNode } from '@/models/Node'
 import type { PipelineMessage } from '@/models/PipelineMessage'
 import CustomEdge from './CustomEdge.vue'
 
-const pipelineStore = usePipelineStore()
-const {
-  addNodes,
-  onConnect,
-  addEdges,
-  screenToFlowCoordinate,
-  onConnectStart,
-  onConnectEnd,
-  findNode,
-  nodes,
-  updateNodeData,
-  toObject,
-  fromObject,
-  edges,
-} = useVueFlow()
+const store = usePipelineStore()
+const vueFlow = store.vueFlow
 
 // these components are only shown as examples of how to use a custom node or edge
 // you can find many examples of how to create these custom components in the examples page of the docs
@@ -36,13 +17,13 @@ const {
 // these are our edges
 const messageCallback = (message: PipelineMessage) => {
   if (message.type == 'status') {
-    updateNodeData<PipelineNode>(message.nodeId, {
+    vueFlow.updateNodeData<PipelineNode>(message.nodeId, {
       status: message.data.status,
       progress: undefined,
     })
     switch (message.data.status) {
       case 'success':
-        edges.value.forEach((e) => {
+        vueFlow.edges.forEach((e) => {
           if (e.source == message.nodeId) {
             e.animated = false
           }
@@ -50,14 +31,14 @@ const messageCallback = (message: PipelineMessage) => {
         break
       case 'running':
         // set edge animations
-        edges.value.forEach((e) => {
+        vueFlow.edges.forEach((e) => {
           if (e.source == message.nodeId) {
             e.animated = true
           }
         })
         break
       case 'failed':
-        edges.value.forEach((e) => {
+        vueFlow.edges.forEach((e) => {
           if (e.source == message.nodeId) {
             e.animated = false
           }
@@ -65,18 +46,18 @@ const messageCallback = (message: PipelineMessage) => {
         break
     }
   } else if (message.type == 'progress') {
-    updateNodeData<PipelineNode>(message.nodeId, {
+    vueFlow.updateNodeData<PipelineNode>(message.nodeId, {
       progress: message.data.progress,
       status: message.data.status,
     })
   } else if (message.type == 'error') {
     console.warn(message.data.error)
-    updateNodeData<PipelineNode>(message.nodeId, {
+    vueFlow.updateNodeData<PipelineNode>(message.nodeId, {
       status: message.data.status,
       error: message.data.error,
       progress: undefined,
     })
-    edges.value.forEach((e) => {
+    vueFlow.edges.forEach((e) => {
       if (e.source == message.nodeId) {
         e.animated = false
       }
@@ -84,94 +65,7 @@ const messageCallback = (message: PipelineMessage) => {
   }
 }
 onMounted(async () => {
-  await pipelineStore.init(messageCallback)
-})
-
-onConnect((params) => {
-  const sourceNode = findNode<PipelineNode>(params.source)
-  const targetNode = findNode<PipelineNode>(params.target)
-
-  const targetHandleType = targetNode?.data.io?.[params.targetHandle ?? ''].valueType
-
-  const e: Edge = {
-    ...params,
-    id: crypto.randomUUID(),
-    animated: false,
-    type: 'custom',
-    style: {
-      stroke: targetHandleType ? HandleColors[targetHandleType] : undefined,
-    },
-  }
-  addEdges(e)
-
-  if (!sourceNode || !targetNode) {
-    return
-  }
-
-  if (
-    params.sourceHandle &&
-    params.targetHandle &&
-    sourceNode.data.io &&
-    targetNode.data.io &&
-    sourceNode.data.io[params.sourceHandle] &&
-    targetNode.data.io[params.targetHandle]
-  ) {
-    const sourceData = sourceNode.data.io[params.sourceHandle].value
-    if (sourceData != undefined) {
-      updateNodeData<PipelineNode>(params.target, {
-        io: {
-          ...targetNode.data.io,
-          [params.targetHandle]: {
-            ...targetNode.data.io[params.targetHandle],
-            value: sourceData,
-          },
-        },
-      })
-    }
-  }
-})
-
-onConnectStart((params) => {
-  // Find the source node
-  const sourceNode = findNode(params.nodeId!)
-  // Get the valueType of the source handle (adjust as needed for your node data structure)
-  const sourceHandle = sourceNode?.data?.io?.[params.handleId!]
-
-  nodes.value.forEach((node: GraphNode<PipelineNode>) => {
-    if (node.id == params.nodeId) {
-      return
-    }
-
-    const newIo: Record<string, NodeIO> = {}
-
-    for (const [ioId, io] of Object.entries(node.data.io!)) {
-      newIo[ioId] = {
-        ...io,
-        disabled: io.valueType != sourceHandle?.valueType || io.type == 'output',
-      }
-    }
-
-    updateNodeData(node.id, {
-      io: newIo,
-    })
-  })
-})
-
-onConnectEnd(() => {
-  nodes.value.forEach((node: GraphNode<PipelineNode>) => {
-    const newIo: Record<string, NodeIO> = {}
-
-    for (const [ioId, io] of Object.entries(node.data.io!)) {
-      newIo[ioId] = {
-        ...io,
-        disabled: false,
-      }
-    }
-
-    updateNodeData(node.id, {
-      io: newIo,
-    })
-  })
+  await store.init(messageCallback)
 })
 
 function onDragOver(event: DragEvent) {
@@ -181,12 +75,12 @@ function onDragOver(event: DragEvent) {
 
 function onDrop(event: DragEvent) {
   const type = event.dataTransfer?.getData('application/vueflow')
-  const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
+  const position = vueFlow.screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
 
-  const target = pipelineStore.registeredNodes.find((node) => node.type == type)
+  const target = store.registeredNodes.find((node) => node.type == type)
   if (target) {
     const id = crypto.randomUUID()
-    addNodes({
+    vueFlow.addNodes({
       id: id,
       position: position,
       type: 'custom',
@@ -199,16 +93,16 @@ function onDrop(event: DragEvent) {
 }
 
 function startPipeline() {
-  const graph = toObject()
-  pipelineStore.startPipeline(graph)
+  const graph = vueFlow.toObject()
+  store.startPipeline(graph)
 }
 
 function getPipelineObject() {
-  return toObject()
+  return vueFlow.toObject()
 }
 
 function loadPipeline(obj: FlowExportObject) {
-  return fromObject(obj)
+  return vueFlow.fromObject(obj)
 }
 
 defineExpose({
@@ -224,7 +118,7 @@ defineExpose({
       <div
         :key="category"
         class="mb-8"
-        v-for="[category, nodes] in pipelineStore.getCategorizedNodes.entries()"
+        v-for="[category, nodes] in store.getCategorizedNodes.entries()"
       >
         <p>{{ category }}</p>
         <div
