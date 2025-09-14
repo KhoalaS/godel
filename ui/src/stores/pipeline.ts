@@ -1,7 +1,5 @@
-import type { IMessageHandler } from '@/messages/IMessageHandler'
 import { PipelineMessageHandler } from '@/messages/PipelineMessageHandler'
 import { HandleColors, NodeIO, PipelineNode } from '@/models/Node'
-import { PipelineMessage } from '@/models/messages/PipelineMessage'
 import { useVueFlow, type Edge, type FlowExportObject, type GraphNode } from '@vue-flow/core'
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
@@ -11,7 +9,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
   const vueFlow = useVueFlow()
   const baseUrl = 'localhost:9095'
   const registeredNodes: Ref<PipelineNode[]> = ref([])
-  const msgHandler: IMessageHandler<PipelineMessage> = new PipelineMessageHandler(vueFlow)
+  const msgHandler = new PipelineMessageHandler(vueFlow)
 
   async function init() {
     try {
@@ -44,9 +42,8 @@ export const usePipelineStore = defineStore('pipeline', () => {
       socket.addEventListener('message', (event) => {
         try {
           const messageData = JSON.parse(event.data)
-          const message = PipelineMessage.parse(messageData)
 
-          msgHandler.onMessage(message)
+          msgHandler.onMessage(messageData)
         } catch (e: unknown) {
           console.warn(e)
         }

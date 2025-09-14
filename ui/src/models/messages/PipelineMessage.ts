@@ -1,15 +1,17 @@
+import { MessageLevel } from '@/messages/IMessage'
 import z from 'zod'
 
-export const PipelineMessage = z.object({
+export const PipelineMessageData = z.object({
   pipelineId: z.string(),
-  nodeId: z.string(),
-  nodeType: z.string().optional(),
-  type: z.enum(['error', 'progress', 'status']),
-  data: z.object({
-    error: z.string().optional(),
-    progress: z.float64().optional(),
-    status: z.enum(['pending', 'running', 'success', 'failed']),
-  }),
+  status: z.enum(['started', 'done', 'failed']),
+  error: z.string().optional(),
 })
 
+export const PipelineMessage = z.object({
+  type: z.literal('pipelineUpdate'),
+  data: PipelineMessageData,
+  level: MessageLevel,
+})
+
+export type PipelineMessageData = z.infer<typeof PipelineMessageData>
 export type PipelineMessage = z.infer<typeof PipelineMessage>

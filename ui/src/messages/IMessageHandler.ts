@@ -1,3 +1,5 @@
-export interface IMessageHandler<T> {
+import type { IMessage } from './IMessage'
+
+export interface IMessageHandler<T extends IMessage> {
   onMessage: (msg: T) => void
 }

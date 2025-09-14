@@ -356,7 +356,7 @@ func handlePipelineMessage(w http.ResponseWriter, r *http.Request) {
 
 		err = c.WriteJSON(msg)
 		if err != nil {
-			log.Err(err).Str("pipelineId", msg.PipelineId).Str("nodeId", msg.NodeId).Msg("WS write")
+			log.Err(err).Msg("WS write")
 			break
 		}
 	}

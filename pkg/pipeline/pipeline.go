@@ -26,65 +26,127 @@ func NewPipeline(g *Graph, comm chan PipelineMessage) *Pipeline {
 }
 
 type PipelineMessage struct {
-	PipelineId string      `json:"pipelineId"`
-	NodeId     string      `json:"nodeId"`
-	NodeType   string      `json:"nodeType,omitempty"`
-	Type       MessageType `json:"type"`
-	Data       MessageData `json:"data"`
+	Type  MessageType  `json:"type"`
+	Data  any          `json:"data"`
+	Level MessageLevel `json:"level"`
 }
+
+type MessageLevel string
+
+const (
+	ErrorMessageLevel = "error"
+	WarnMessageLevel  = "warn"
+	InfoMessageLevel  = "info"
+)
 
 func NewErrorMessage(pId string, nodeId string, err error) PipelineMessage {
 	return PipelineMessage{
-		PipelineId: pId,
-		NodeId:     nodeId,
-		Type:       ErrorMessage,
-		Data: MessageData{
-			Error:  err.Error(),
-			Status: StatusFailed,
+		Type:  NodeUpdateMessage,
+		Level: ErrorMessageLevel,
+		Data: NodeMessageData{
+			PipelineId: pId,
+			NodeId:     nodeId,
+			Error:      err.Error(),
+			Status:     StatusFailed,
 		},
 	}
 }
 
 func NewProgressMessage(pId string, nodeId string, progress float64) PipelineMessage {
 	return PipelineMessage{
-		PipelineId: pId,
-		NodeId:     nodeId,
-		Type:       ProgressMessage,
-		Data: MessageData{
-			Status:   StatusRunning,
-			Progress: progress,
+		Type:  NodeUpdateMessage,
+		Level: InfoMessageLevel,
+		Data: NodeMessageData{
+			PipelineId: pId,
+			NodeId:     nodeId,
+			Status:     StatusRunning,
+			Progress:   progress,
 		},
 	}
 }
 
 func NewStatusMessage(pId string, nodeId string, status NodeStatus) PipelineMessage {
 	return PipelineMessage{
-		PipelineId: pId,
-		NodeId:     nodeId,
-		Type:       StatusMessage,
-		Data: MessageData{
-			Status: status,
+		Type:  NodeUpdateMessage,
+		Level: InfoMessageLevel,
+		Data: NodeMessageData{
+			PipelineId: pId,
+			NodeId:     nodeId,
+			Status:     status,
 		},
 	}
 }
 
-type MessageData struct {
-	Error    string     `json:"error,omitempty"`
-	Progress float64    `json:"progress,omitempty"`
-	Status   NodeStatus `json:"status"`
+func NewPipelineDoneMessage(pId string) PipelineMessage {
+	return PipelineMessage{
+		Type:  PipelineUpdateMessage,
+		Level: InfoMessageLevel,
+		Data: PipelineMessageData{
+			PipelineId: pId,
+			Status:     PipelineStatusDone,
+		},
+	}
 }
+
+func NewPipelineStartMessage(pId string) PipelineMessage {
+	return PipelineMessage{
+		Type:  PipelineUpdateMessage,
+		Level: InfoMessageLevel,
+		Data: PipelineMessageData{
+			PipelineId: pId,
+			Status:     PipelineStatusStarted,
+		},
+	}
+}
+
+func NewPipelineFailedMessage(pId string, err error) PipelineMessage {
+	return PipelineMessage{
+		Type:  PipelineUpdateMessage,
+		Level: ErrorMessageLevel,
+		Data: PipelineMessageData{
+			PipelineId: pId,
+			Error:      err.Error(),
+			Status:     PipelineStatusFailed,
+		},
+	}
+}
+
+type NodeMessageData struct {
+	PipelineId string     `json:"pipelineId"`
+	NodeId     string     `json:"nodeId"`
+	Error      string     `json:"error,omitempty"`
+	Progress   float64    `json:"progress,omitempty"`
+	Status     NodeStatus `json:"status"`
+}
+
+type PipelineMessageData struct {
+	PipelineId string         `json:"pipelineId"`
+	Error      string         `json:"error,omitempty"`
+	Status     PipelineStatus `json:"status"`
+}
+
+type PipelineStatus string
+
+const (
+	PipelineStatusStarted PipelineStatus = "started"
+	PipelineStatusFailed  PipelineStatus = "failed"
+	PipelineStatusDone    PipelineStatus = "done"
+)
 
 type MessageType string
 
 const (
-	ErrorMessage    MessageType = "error"
-	ProgressMessage MessageType = "progress"
-	StatusMessage   MessageType = "status"
+	PipelineUpdateMessage MessageType = "pipelineUpdate"
+	NodeUpdateMessage     MessageType = "nodeUpdate"
 )
 
 func (p *Pipeline) Run(ctx context.Context) error {
+	BroadCastUpdate(NewPipelineStartMessage(p.Id))
+
 	if HasCycle(p.Graph) {
-		return errors.New("graph has a cycle")
+		err := errors.New("graph has a cycle")
+		BroadCastUpdate(NewPipelineFailedMessage(p.Id, err))
+		return err
 	}
 
 	done := map[string]bool{}
@@ -136,6 +198,8 @@ func (p *Pipeline) Run(ctx context.Context) error {
 			return ctx.Err()
 		}
 	}
+
+	BroadCastUpdate(NewPipelineDoneMessage(p.Id))
 
 	return nil
 }
