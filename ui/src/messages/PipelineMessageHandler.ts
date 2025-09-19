@@ -1,11 +1,11 @@
-import type { IMessageHandler } from './IMessageHandler'
+import type { MessageHandler } from './MessageHandler'
 import type { VueFlowStore } from '@vue-flow/core'
 import type { PipelineNode } from '@/models/Node'
 import { PipelineMessage } from '@/models/messages/PipelineMessage'
 import { NodeMessage } from '@/models/messages/NodeMessage'
 import z from 'zod'
 
-export class PipelineMessageHandler implements IMessageHandler<PipelineMessage | NodeMessage> {
+export class PipelineMessageHandler implements MessageHandler<PipelineMessage | NodeMessage> {
   private vueFlow
   onMessage = (message: PipelineMessage | NodeMessage) => {
     if (message.type == 'nodeUpdate') {

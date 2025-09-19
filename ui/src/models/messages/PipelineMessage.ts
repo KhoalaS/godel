@@ -1,4 +1,4 @@
-import { MessageLevel } from '@/messages/IMessage'
+import { MessageLevel } from '@/messages/Message'
 import z from 'zod'
 
 export const PipelineMessageData = z.object({
