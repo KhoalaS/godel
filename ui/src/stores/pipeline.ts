@@ -201,3 +201,5 @@ export const usePipelineStore = defineStore('pipeline', () => {
     vueFlow,
   }
 })
+
+export type PipelineStore = ReturnType<typeof usePipelineStore>

@@ -16,10 +16,9 @@ import { useNodeUpdates } from '@/composables/nodeUpdates'
 // TODO split different cases for input components in sub-components
 
 const props = defineProps<NodeProps<PipelineNode>>()
-const { onUpdate, onValueChange } = useNodeUpdates(props.data)
-
 const store = usePipelineStore()
 const vueFlow = store.vueFlow
+const { onUpdate, onValueChange } = useNodeUpdates(props, store)
 
 function onControlClick(ctrl: WindowControls) {
   if (ctrl == 'Close') {

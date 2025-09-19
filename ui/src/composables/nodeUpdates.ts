@@ -1,12 +1,11 @@
 import type { NodeIO, PipelineNode } from '@/models/Node'
 import { FunctionRegistry } from '@/registries/InputHook'
-import { usePipelineStore } from '@/stores/pipeline'
-import { useNodeConnections } from '@vue-flow/core'
+import type { PipelineStore } from '@/stores/pipeline'
+import { useNodeConnections, type NodeProps, type VueFlowStore } from '@vue-flow/core'
+import { nextTick } from 'vue'
 
-export function useNodeUpdates(nodeData: PipelineNode) {
-  const data: PipelineNode = nodeData
-  const store = usePipelineStore()
-  const vueFlow = store.vueFlow
+export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: PipelineStore) {
+  const vueFlow = pipelineStore.vueFlow
 
   const targetConnections = useNodeConnections({
     handleType: 'source',
@@ -71,7 +70,7 @@ export function useNodeUpdates(nodeData: PipelineNode) {
 
   function onUpdate(value: string | number | boolean, io: NodeIO) {
     console.log('CustomNode:onUpdate', io.id)
-    if (io.readOnly || data.io == null) {
+    if (io.readOnly || props.data.io == null) {
       return
     }
 
@@ -85,7 +84,7 @@ export function useNodeUpdates(nodeData: PipelineNode) {
         }
 
         const hookValues: Record<string, unknown> = {}
-        for (const _io of Object.values(data.io ?? {})) {
+        for (const _io of Object.values(props.data.io ?? {})) {
           if (_io.hookMapping?.[hookId] != undefined) {
             hookValues[_io.hookMapping[hookId]] = _io.id == io.id ? value : _io.value
           }
@@ -93,22 +92,22 @@ export function useNodeUpdates(nodeData: PipelineNode) {
 
         const newValue = func(hookValues)
 
-        if (data.io?.[hookId].value == newValue) {
+        if (props.data.io?.[hookId].value == newValue) {
           continue
         }
 
-        if (data.io) {
+        if (props.data.io) {
           hookUpdates[hookId] = {
-            ...data.io?.[hookId],
+            ...props.data.io?.[hookId],
             value: newValue,
           }
         }
       }
     }
 
-    vueFlow.updateNodeData<PipelineNode>(data.id!, {
+    vueFlow.updateNodeData<PipelineNode>(props.data.id!, {
       io: {
-        ...data.io,
+        ...props.data.io,
         [io.id]: { ...io, value: value },
         ...hookUpdates,
       },
@@ -151,7 +150,7 @@ export function useNodeUpdates(nodeData: PipelineNode) {
       }
 
       const hookValues: Record<string, unknown> = {}
-      for (const io of Object.values(data.io ?? {})) {
+      for (const io of Object.values(props.data.io ?? {})) {
         if (io.hookMapping?.[hookId] != undefined) {
           hookValues[io.hookMapping[hookId]] = io.value
         }
@@ -159,22 +158,22 @@ export function useNodeUpdates(nodeData: PipelineNode) {
 
       const newValue = func(hookValues)
 
-      if (data.io?.[hookId].value == newValue) {
+      if (props.data.io?.[hookId].value == newValue) {
         continue
       }
 
-      if (data.io) {
+      if (props.data.io) {
         hookUpdates[hookId] = {
-          ...data.io?.[hookId],
+          ...props.data.io?.[hookId],
           value: newValue,
         }
       }
     }
 
-    if (data.io) {
-      vueFlow.updateNodeData<PipelineNode>(data.id!, {
+    if (props.data.io) {
+      vueFlow.updateNodeData<PipelineNode>(props.data.id!, {
         io: {
-          ...data.io,
+          ...props.data.io,
           ...hookUpdates,
         },
       })
