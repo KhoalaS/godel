@@ -1,3 +1,4 @@
+import { useErrorService } from '@/composables/errorService'
 import { PipelineMessageHandler } from '@/messages/PipelineMessageHandler'
 import { HandleColors, NodeIO, PipelineNode } from '@/models/Node'
 import { useVueFlow, type Edge, type FlowExportObject, type GraphNode } from '@vue-flow/core'
@@ -10,6 +11,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
   const baseUrl = 'localhost:9095'
   const registeredNodes: Ref<PipelineNode[]> = ref([])
   const msgHandler = new PipelineMessageHandler(vueFlow)
+  const errorService = useErrorService()
 
   async function init() {
     try {
@@ -22,7 +24,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
       const data = await response.json()
       registeredNodes.value = z.parse(z.array(PipelineNode), data)
     } catch (e: unknown) {
-      console.warn('error initializing pipeline store', e)
+      errorService.handleError(e, 'error initializing pipeline store')
     }
   }
 
@@ -45,11 +47,11 @@ export const usePipelineStore = defineStore('pipeline', () => {
 
           msgHandler.onMessage(messageData)
         } catch (e: unknown) {
-          console.warn(e)
+          errorService.handleError(e)
         }
       })
     } catch (e: unknown) {
-      console.warn('could not open websocket connection', e)
+      errorService.handleError(e, 'could not open websocket connection')
     }
   }
 
@@ -65,7 +67,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
         return
       }
     } catch (e: unknown) {
-      console.log(e)
+      errorService.handleError(e)
     }
   }
 
