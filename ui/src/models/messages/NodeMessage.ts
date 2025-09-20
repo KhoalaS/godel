@@ -6,7 +6,7 @@ export const NodeMessageData = z.object({
   nodeId: z.string(),
   error: z.string().optional(),
   progress: z.float64().optional(),
-  status: z.enum(['pending', 'running', 'success', 'failed']),
+  status: z.literal(['pending', 'running', 'success', 'failed']),
 })
 
 export const NodeMessage = z.object({

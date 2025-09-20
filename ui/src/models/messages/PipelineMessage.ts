@@ -3,7 +3,7 @@ import z from 'zod'
 
 export const PipelineMessageData = z.object({
   pipelineId: z.string(),
-  status: z.enum(['started', 'done', 'failed']),
+  status: z.literal(['started', 'done', 'failed']),
   error: z.string().optional(),
 })
 
