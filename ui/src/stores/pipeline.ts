@@ -12,8 +12,14 @@ export const usePipelineStore = defineStore('pipeline', () => {
   const registeredNodes: Ref<PipelineNode[]> = ref([])
   const msgHandler = new PipelineMessageHandler(vueFlow)
   const errorService = useErrorService()
+  let initialized = false
 
   async function init() {
+    if (initialized) {
+      console.warn('tried re-initializing pipeline store')
+      return
+    }
+
     try {
       await initWs()
       const response = await fetch(`http://${baseUrl}/nodes`)
@@ -26,6 +32,8 @@ export const usePipelineStore = defineStore('pipeline', () => {
     } catch (e: unknown) {
       errorService.handleError(e, 'error initializing pipeline store')
     }
+
+    initialized = true
   }
 
   async function initWs() {

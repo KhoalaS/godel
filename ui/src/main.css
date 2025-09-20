@@ -4,6 +4,12 @@
 @import '@vue-flow/core/dist/theme-default.css';
 @import 'tailwindcss';
 
+body {
+  height: 100vh;
+}
+#app {
+  height: 100%;
+}
 input {
   padding-right: 0px;
 }

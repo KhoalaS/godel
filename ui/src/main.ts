@@ -8,6 +8,7 @@ import { initHooks } from './inputhooks'
 import type { ErrorService } from './error/ErrorService'
 import { DefaultErrorService } from './error/DefaultErrorService'
 import { ErrorServiceKey } from './InjectionKeys'
+import { router } from './router'
 
 const app = createApp(App)
 
@@ -23,5 +24,6 @@ app.provide(ErrorServiceKey, errorService)
 app.config.errorHandler = (err, vm, info) => console.error(err, vm, info)
 
 app.use(createPinia())
+app.use(router)
 
 app.mount('#app')

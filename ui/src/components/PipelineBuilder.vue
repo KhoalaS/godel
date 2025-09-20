@@ -34,7 +34,7 @@ function onDrop(event: DragEvent) {
 </script>
 
 <template>
-  <div class="p-[1px]" style="height: 800px; width: 1600px; display: flex">
+  <div class="p-[1px] flex flex-1">
     <div class="m-2 overflow-x-hidden overflow-y-auto pr-4">
       <div
         :key="category"
