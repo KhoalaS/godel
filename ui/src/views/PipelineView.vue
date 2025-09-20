@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { WButton, WindowBody, WindowComponent } from 'vue-98'
+import { TaskbarDivider, WButton, WindowBody, WindowComponent } from 'vue-98'
 import PipelineBuilder from '@/components/PipelineBuilder.vue'
 import { usePipelineStore } from '@/stores/pipeline'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const pickerOpts = {
   types: [
@@ -53,6 +56,12 @@ async function loadPipeline() {
 
   store.loadPipeline(graph)
 }
+
+function goToNodeBuilder() {
+  router.push({
+    name: 'nodeBuilder',
+  })
+}
 </script>
 
 <template>
@@ -68,6 +77,8 @@ async function loadPipeline() {
             <WButton @click="startPipeline">Start</WButton>
             <WButton @click="savePipeline">Save Pipeline</WButton>
             <WButton @click="loadPipeline">Load Pipeline</WButton>
+            <TaskbarDivider class="self-stretch"></TaskbarDivider>
+            <WButton @click="goToNodeBuilder">Node Builder</WButton>
           </div>
         </template>
         <PipelineBuilder ref="pipelineBuilder"></PipelineBuilder>
