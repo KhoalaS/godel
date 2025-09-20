@@ -16,6 +16,7 @@ export class PipelineMessageHandler implements MessageHandler<PipelineMessage | 
       this.pipelineStatusHandler(_msg)
     }
   }
+
   constructor(vueFlow: VueFlowStore) {
     this.vueFlow = vueFlow
   }
