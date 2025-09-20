@@ -4,6 +4,7 @@ import CustomNode from './CustomNode.vue'
 import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
 import CustomEdge from './CustomEdge.vue'
+import { WindowSection } from 'vue-98'
 
 const store = usePipelineStore()
 const vueFlow = store.vueFlow
@@ -34,8 +35,10 @@ function onDrop(event: DragEvent) {
 </script>
 
 <template>
-  <div class="p-[1px] flex flex-1">
-    <div class="m-2 overflow-x-hidden overflow-y-auto pr-4">
+  <div class="p-[1px] flex flex-1 min-h-0">
+    <WindowSection
+      class="flex-1 min-h-0 max-w-48 m-1 mb-0 ml-0 overflow-x-hidden overflow-y-auto p-2"
+    >
       <div
         :key="category"
         class="mb-8"
@@ -43,7 +46,7 @@ function onDrop(event: DragEvent) {
       >
         <p>{{ category }}</p>
         <div
-          class="node w-48 text-center p-3 mb-2 cursor-grab"
+          class="node text-center p-3 mb-2 cursor-grab"
           draggable="true"
           @dragstart="(e) => e.dataTransfer?.setData('application/vueflow', node.type)"
           :key="node.type"
@@ -52,15 +55,13 @@ function onDrop(event: DragEvent) {
           {{ node.name }}
         </div>
       </div>
-    </div>
+    </WindowSection>
     <div class="flex-1 bg-white">
       <VueFlow @drop="onDrop" @dragover="onDragOver">
         <Background :size="1.6"></Background>
-        <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
         <template #node-custom="nodeProps">
           <CustomNode v-bind="nodeProps" />
         </template>
-        <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
         <template #edge-custom="customEdgeProps">
           <CustomEdge v-bind="customEdgeProps" />
         </template>
