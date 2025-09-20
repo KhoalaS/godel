@@ -43,7 +43,7 @@ function onDrop(event: DragEvent) {
       >
         <p>{{ category }}</p>
         <div
-          class="node w-32 text-center p-3 mb-2 cursor-grab"
+          class="node w-48 text-center p-3 mb-2 cursor-grab"
           draggable="true"
           @dragstart="(e) => e.dataTransfer?.setData('application/vueflow', node.type)"
           :key="node.type"

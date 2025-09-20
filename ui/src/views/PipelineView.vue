@@ -78,7 +78,7 @@ function goToNodeBuilder() {
             <WButton @click="savePipeline">Save Pipeline</WButton>
             <WButton @click="loadPipeline">Load Pipeline</WButton>
             <TaskbarDivider class="self-stretch"></TaskbarDivider>
-            <WButton @click="goToNodeBuilder">Node Builder</WButton>
+            <WButton class="link-button" @click="goToNodeBuilder">Node Builder</WButton>
           </div>
         </template>
         <PipelineBuilder ref="pipelineBuilder"></PipelineBuilder>
@@ -87,4 +87,9 @@ function goToNodeBuilder() {
   </WindowComponent>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.link-button span) {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+}
+</style>
