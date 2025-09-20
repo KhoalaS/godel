@@ -1,0 +1,5 @@
+services:
+  server:
+    image: godel/server
+    ports:
+      - 9095:9095
