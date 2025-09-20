@@ -26,6 +26,7 @@
     "tailwindcss": "^4.1.12",
     "vue": "^3.5.18",
     "vue-98": "link:vue-98",
+    "vue-router": "4",
     "zod": "^4.0.15"
   },
   "devDependencies": {
