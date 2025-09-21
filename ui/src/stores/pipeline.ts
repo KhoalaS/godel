@@ -155,21 +155,24 @@ export const usePipelineStore = defineStore('pipeline', () => {
    */
   vueFlow.onConnectStart((params) => {
     // Find the source node
-    const sourceNode = vueFlow.findNode(params.nodeId!)
+    const sourceNode = vueFlow.findNode<PipelineNode>(params.nodeId!)
     // Get the valueType of the source handle (adjust as needed for your node data structure)
     const sourceHandle = sourceNode?.data?.io?.[params.handleId!]
 
     vueFlow.nodes.value.forEach((node: GraphNode<PipelineNode>) => {
-      if (node.id == params.nodeId) {
-        return
-      }
-
       const newIo: Record<string, NodeIO> = {}
+      const isCurrentNode = node.id == sourceNode?.id
 
       for (const [ioId, io] of Object.entries(node.data.io!)) {
+        const isSourceHandle = isCurrentNode && ioId == params.handleId
+        if (isSourceHandle) {
+          newIo[ioId] = io
+          continue
+        }
+
         newIo[ioId] = {
           ...io,
-          disabled: io.valueType != sourceHandle?.valueType || io.type == 'output',
+          disabled: io.valueType != sourceHandle?.valueType || io.type == 'output' || isCurrentNode,
         }
       }
 
