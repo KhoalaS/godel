@@ -48,7 +48,7 @@ func CreateDownloadNode() Node {
 	}
 }
 
-func DownloadNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
+func DownloadNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	client := http.Client{}
 
 	job := (node.Io["job"].Value).(*types.DownloadJob).Clone()
@@ -76,6 +76,6 @@ func DownloadNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId 
 		job.Filename = (node.Io["filename"].Value).(string)
 	}
 
-	err := Download(ctx, &client, &job, pipelineId, nodeId)
+	err := Download(ctx, &client, &job, pipeline, node.Id)
 	return err
 }

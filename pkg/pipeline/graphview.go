@@ -8,12 +8,13 @@ type GraphView struct {
 	Viewport Viewport    `json:"viewport"`
 }
 
-func (gv *GraphView) ToPipelineGraph(nodeRegistry map[string]Node) *Graph {
+func (gv *GraphView) ToPipelineGraph(nodeRegistry map[string]*Node) *Graph {
 	g := NewGraph()
 
 	for _, gn := range gv.Nodes {
 		node := gn.Data
 
+		// TODO return error of node not found
 		// set the node function
 		if n, ok := nodeRegistry[node.Type]; ok {
 			node.Run = n.Run

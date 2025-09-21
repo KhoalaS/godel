@@ -23,6 +23,6 @@ func CreateIntInputNode() Node {
 	}
 }
 
-func IntInputNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
+func IntInputNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	return nil
 }

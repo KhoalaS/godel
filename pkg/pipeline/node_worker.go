@@ -12,7 +12,7 @@ type NodeWorkerError struct {
 	NodeId string
 }
 
-func NodeWorker(ctx context.Context, wg *sync.WaitGroup, id int, pipeline *Pipeline, nodes chan *Node, doneChan chan<- string, errChan chan<- NodeWorkerError) {
+func NodeWorker(ctx context.Context, wg *sync.WaitGroup, id int, pipeline IPipeline, nodes chan *Node, doneChan chan<- string, errChan chan<- NodeWorkerError) {
 	log.Debug().Int("id", id).Msg("Node worker online")
 
 	defer wg.Done()
@@ -30,8 +30,8 @@ func NodeWorker(ctx context.Context, wg *sync.WaitGroup, id int, pipeline *Pipel
 
 			log.Debug().Int("id", id).Msg("Executing node using worker")
 
-			ApplyInputs(pipeline.Graph, node)
-			err := node.Run(ctx, *node, pipeline.Id, node.Id)
+			pipeline.GetGraph().ApplyInputs(node)
+			err := node.Run(ctx, *node, pipeline)
 			if err != nil {
 				log.Err(err).Send()
 				errChan <- NodeWorkerError{

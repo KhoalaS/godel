@@ -36,6 +36,6 @@ func CreateBasenameNode() Node {
 	}
 }
 
-func BasenameNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
+func BasenameNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	return nil
 }

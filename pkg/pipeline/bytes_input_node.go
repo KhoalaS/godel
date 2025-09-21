@@ -59,7 +59,7 @@ func CreateBytesInputNode() Node {
 	}
 }
 
-func BytesInputNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
+func BytesInputNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	b := 0
 	amount := 0
 

@@ -13,7 +13,12 @@ func TestDownloaderNodeFunc(t *testing.T) {
 	node := CreateDownloaderNode()
 	node.Io["url"].Value = "123"
 
-	err := DownloaderNodeFunc(ctx, node, "1", node.Id)
+	var p IPipeline = &Pipeline{
+		Id:   "1",
+		Comm: make(chan PipelineMessage, 12),
+	}
+
+	err := DownloaderNodeFunc(ctx, node, p)
 	if err != nil {
 		t.Fail()
 	}

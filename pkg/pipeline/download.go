@@ -26,7 +26,7 @@ import (
 
 var cdRegex = regexp.MustCompile(`filename="(.+?)"`)
 
-func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipelineId string, nodeId string) error {
+func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipeline IPipeline, nodeId string) error {
 	if job.IsParent {
 		log.Debug().Str("id", job.Id).Msg("Added bulk download")
 		job.Status.Store(types.DOWNLOADING)
@@ -180,7 +180,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 				lastBytesRead = bytesRead
 				lastTs = time.Now()
-				BroadCastUpdate(NewProgressMessage(pipelineId, nodeId, float64(bytesRead)/float64(contentLengthInt)))
+				BroadCastUpdate(pipeline, NewProgressMessage(pipeline.GetId(), nodeId, float64(bytesRead)/float64(contentLengthInt)))
 			}
 		}
 	}()
@@ -278,12 +278,9 @@ func updateParentJob(job *types.DownloadJob) {
 	}
 }
 
-func BroadCastUpdate(message PipelineMessage) {
-	clients := ClientRegistry.All()
-	for _, client := range clients {
-		log.Info().Msg("broadcasting to client")
-		client.Send <- message
-	}
+func BroadCastUpdate(pipeline IPipeline, message PipelineMessage) {
+	log.Info().Msg("broadcasting to client")
+	pipeline.SendMessage(message)
 }
 
 func FallbackFilename(_url *url.URL) string {
