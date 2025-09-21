@@ -14,6 +14,7 @@ import (
 
 type IWorkflowService interface {
 	GetNodes() []*pipeline.Node
+	GetNodeRegistry() map[string]*pipeline.Node
 	GetCommChannel() chan pipeline.PipelineMessage
 	StartPipeline(pipeline pipeline.Pipeline)
 	HandlePipelineMessage(message pipeline.PipelineMessage)
@@ -124,4 +125,8 @@ func (s *WorkflowService) RegisterMessageHandler(handler func(message pipeline.P
 
 func (s *WorkflowService) GetCommChannel() chan pipeline.PipelineMessage {
 	return s.comm
+}
+
+func (s *WorkflowService) GetNodeRegistry() map[string]*pipeline.Node {
+	return s.nodeRegistry
 }

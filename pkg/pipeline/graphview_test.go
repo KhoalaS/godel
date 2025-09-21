@@ -19,10 +19,14 @@ func TestGraphView(t *testing.T) {
 		t.Fail()
 	}
 
-	registry := map[string]Node{}
-	registry["int-input"] = CreateIntInputNode()
-	registry["download"] = CreateDownloadNode()
-	registry["downloader"] = CreateDownloaderNode()
+	registry := map[string]*Node{}
+	inputNode := CreateIntInputNode()
+	downloadNode := CreateDownloadNode()
+	downloaderNode := CreateDownloaderNode()
+
+	registry["int-input"] = &inputNode
+	registry["download"] = &downloadNode
+	registry["downloader"] = &downloaderNode
 
 	graph := gv.ToPipelineGraph(registry)
 

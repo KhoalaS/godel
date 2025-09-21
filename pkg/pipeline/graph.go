@@ -25,12 +25,12 @@ func NewGraph() *Graph {
 	}
 }
 
-func ApplyInputs(graph *Graph, node *Node) {
-	for _, e := range graph.Edges {
+func (g *Graph) ApplyInputs(node *Node) {
+	for _, e := range g.Edges {
 		if e.Target != node.Id {
 			continue
 		}
-		node.Io[e.TargetHandle].Value = graph.Nodes[e.Source].Io[e.SourceHandle].Value
+		node.Io[e.TargetHandle].Value = g.Nodes[e.Source].Io[e.SourceHandle].Value
 	}
 }
 

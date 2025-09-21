@@ -9,6 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type IPipeline interface {
+	SendMessage(message PipelineMessage)
+	GetId() string
+	GetGraph() *Graph
+}
+
 type Pipeline struct {
 	Id              string               `json:"id"`
 	FailOnNodeError bool                 `json:"failOnNodeError"`
@@ -77,6 +83,18 @@ func NewStatusMessage(pId string, nodeId string, status NodeStatus) PipelineMess
 	}
 }
 
+func (p *Pipeline) SendMessage(message PipelineMessage) {
+	p.Comm <- message
+}
+
+func (p *Pipeline) GetId() string {
+	return p.Id
+}
+
+func (p *Pipeline) GetGraph() *Graph {
+	return p.Graph
+}
+
 func NewPipelineDoneMessage(pId string) PipelineMessage {
 	return PipelineMessage{
 		Type:  PipelineUpdateMessage,
@@ -141,11 +159,11 @@ const (
 )
 
 func (p *Pipeline) Run(ctx context.Context) error {
-	BroadCastUpdate(NewPipelineStartMessage(p.Id))
+	p.SendMessage(NewPipelineStartMessage(p.Id))
 
 	if HasCycle(p.Graph) {
 		err := errors.New("graph has a cycle")
-		BroadCastUpdate(NewPipelineFailedMessage(p.Id, err))
+		BroadCastUpdate(p, NewPipelineFailedMessage(p.Id, err))
 		return err
 	}
 
@@ -174,7 +192,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 	}
 
 	for _, node := range findStartNodes(p.Graph) {
-		BroadCastUpdate(NewStatusMessage(p.Id, node.Id, StatusRunning))
+		p.SendMessage(NewStatusMessage(p.Id, node.Id, StatusRunning))
 		nodes <- node
 	}
 
@@ -183,23 +201,23 @@ func (p *Pipeline) Run(ctx context.Context) error {
 		case id := <-doneChan:
 			done[id] = true
 
-			BroadCastUpdate(NewStatusMessage(p.Id, id, StatusSuccess))
+			p.SendMessage(NewStatusMessage(p.Id, id, StatusSuccess))
 			for _, next := range p.Graph.Outgoing[id] {
 				if allDepsDone(next, done, p.Graph.Incoming) {
-					BroadCastUpdate(NewStatusMessage(p.Id, next.Id, StatusRunning))
+					p.SendMessage(NewStatusMessage(p.Id, next.Id, StatusRunning))
 					nodes <- next
 				}
 			}
 		case err := <-errChan:
 			log.Error().Err(err.Error).Send()
-			BroadCastUpdate(NewErrorMessage(p.Id, err.NodeId, err.Error))
+			p.SendMessage(NewErrorMessage(p.Id, err.NodeId, err.Error))
 			return err.Error
 		case <-ctx.Done():
 			return ctx.Err()
 		}
 	}
 
-	BroadCastUpdate(NewPipelineDoneMessage(p.Id))
+	p.SendMessage(NewPipelineDoneMessage(p.Id))
 
 	return nil
 }

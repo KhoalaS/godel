@@ -20,7 +20,12 @@ func TestDownload(t *testing.T) {
 		Url: "http://localhost:8080/files/test.txt",
 	}
 
-	err := Download(ctx, client, &job, "1", "1")
+	var p IPipeline = &Pipeline{
+		Id:   "1",
+		Comm: make(chan PipelineMessage, 12),
+	}
+
+	err := Download(ctx, client, &job, p, "1")
 
 	if err != nil {
 		t.Error(err)

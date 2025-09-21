@@ -71,7 +71,7 @@ func (api *WorkFlowApi) startPipeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g := gv.ToPipelineGraph(pipeline.NodeRegistry)
+	g := gv.ToPipelineGraph(api.workflowService.GetNodeRegistry())
 	p := pipeline.NewPipeline(g, api.workflowService.GetCommChannel())
 	api.workflowService.StartPipeline(*p)
 

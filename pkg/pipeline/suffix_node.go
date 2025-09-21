@@ -46,6 +46,6 @@ func CreateSuffixNode() Node {
 	}
 }
 
-func SuffixNodeFunc(ctx context.Context, node Node, pipelineId string, nodeId string) error {
+func SuffixNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	return nil
 }
