@@ -3,6 +3,6 @@ import { ErrorServiceKey } from '@/InjectionKeys'
 import { inject } from 'vue'
 
 export function useErrorService() {
-  const errorService = inject(ErrorServiceKey) ?? DefaultErrorService
+  const errorService = inject(ErrorServiceKey, DefaultErrorService)
   return errorService
 }
