@@ -96,7 +96,7 @@ func (api *WorkFlowApi) handlePipelineMessage(w http.ResponseWriter, r *http.Req
 	}
 
 	clientId := uuid.NewString()
-	client := &WebsocketClient{Id: clientId, Conn: c, Send: make(chan pipeline.PipelineMessage, 12)}
+	client := &WebsocketClient{Id: clientId, Conn: c}
 	api.clientRegistry.Store(clientId, client)
 }
 
