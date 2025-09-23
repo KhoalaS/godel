@@ -27,7 +27,6 @@ func CreateBasenameNode() Node {
 				Id:        "basename",
 				ValueType: ValueTypeString,
 				Label:     "Basename",
-				Required:  true,
 			},
 		},
 		Name:     "Basename",

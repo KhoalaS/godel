@@ -47,6 +47,7 @@ const (
 	ValueTypeBoolean     ValueType = "boolean"
 	ValueTypeDirectory   ValueType = "directory"
 	ValueTypeDownloadJob ValueType = "downloadjob"
+	ValueTypeUnknown     ValueType = "unknown"
 )
 
 type IOType string
