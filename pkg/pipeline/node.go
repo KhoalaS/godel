@@ -12,7 +12,6 @@ type Node struct {
 	Error    string             `json:"error,omitempty"`
 	Io       map[string]*NodeIO `json:"io,omitempty"`
 	Status   NodeStatus         `json:"status,omitempty"`
-	Progress float64            `json:"progress,omitempty"`
 
 	Run NodeFunc `json:"-"`
 }

@@ -22,7 +22,6 @@ export const PipelineNode = z.object({
   error: z.string().optional(),
   io: z.record(z.string(), NodeIO).optional(),
   status: z.literal(['pending', 'running', 'success', 'failed']).optional(),
-  progress: z.float64().optional(),
 })
 
 export type NodeIO = z.infer<typeof NodeIO>
