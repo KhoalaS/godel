@@ -5,33 +5,11 @@ import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
 import CustomEdge from './CustomEdge.vue'
 import { WindowSection } from 'vue-98'
+import { useNodeDragAndDrop } from '@/composables/nodeDragAndDrop'
 
 const store = usePipelineStore()
-const vueFlow = store.vueFlow
 
-function onDragOver(event: DragEvent) {
-  event.preventDefault()
-  event.dataTransfer!.dropEffect = 'move'
-}
-
-function onDrop(event: DragEvent) {
-  const type = event.dataTransfer?.getData('application/vueflow')
-  const position = vueFlow.screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
-
-  const target = store.registeredNodes.find((node) => node.type == type)
-  if (target) {
-    const id = crypto.randomUUID()
-    vueFlow.addNodes({
-      id: id,
-      position: position,
-      type: 'custom',
-      data: {
-        ...target,
-        id,
-      },
-    })
-  }
-}
+const { onDragOver, onDrop } = useNodeDragAndDrop(store)
 </script>
 
 <template>
