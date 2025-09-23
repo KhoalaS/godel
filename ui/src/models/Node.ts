@@ -2,13 +2,13 @@ import z from 'zod'
 
 export const NodeIO = z.object({
   id: z.string(),
-  valueType: z.enum(['string', 'number', 'boolean', 'directory', 'downloadjob']),
+  valueType: z.literal(['string', 'number', 'boolean', 'directory', 'downloadjob', 'unknown']),
   label: z.string().optional(),
   required: z.boolean().optional(),
   readOnly: z.boolean().optional(),
   value: z.union([z.string(), z.number(), z.boolean()]).optional(),
   options: z.array(z.string()).optional(),
-  type: z.enum(['input', 'output', 'passthrough', 'generated', 'connected_only', 'selection']),
+  type: z.literal(['input', 'output', 'passthrough', 'generated', 'connected_only', 'selection']),
   hooks: z.record(z.string(), z.string()).optional(),
   disabled: z.boolean().optional(),
   hookMapping: z.record(z.string(), z.string()).optional(),
@@ -34,4 +34,5 @@ export const HandleColors: Record<NodeIO['valueType'], string> = {
   number: 'blue',
   string: 'red',
   downloadjob: 'pink',
+  unknown: 'black',
 }

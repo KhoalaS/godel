@@ -83,6 +83,7 @@ func RunServer() {
 	workflowService.RegisterNode("rd-downloader", pipeline.CreateRealdebridNode)
 	workflowService.RegisterNode("suffix", pipeline.CreateSuffixNode)
 	workflowService.RegisterNode("http-request", pipeline.CreateHttpRequestNode)
+	workflowService.RegisterNode("display", pipeline.CreateDisplayNode)
 
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
 	if err != nil {
