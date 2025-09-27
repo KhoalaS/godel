@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     plugins: [vue(), vueDevTools(), tailwindcss()],
     server: {
       fs: {
-        allow: [`${env.VITE_SOURCE_DIR}godel`, `${env.VITE_SOURCE_DIR}vue-98`, './src'],
+        allow: [`${env.VITE_SOURCE_DIR}godel`, `${env.VITE_SOURCE_DIR}Vue98`, './src'],
       },
     },
     resolve: {
