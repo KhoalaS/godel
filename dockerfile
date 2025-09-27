@@ -1,12 +1,8 @@
 FROM alpine:latest AS builder
 
 RUN apk update && apk upgrade
-RUN apk add curl &&\
-    apk add tar &&\
-    apk add git &&\
-    apk add bash &&\
-    apk add npm &&\
-    npm install -g npm@latest &&\
+RUN apk add curl tar git bash npm
+RUN npm install -g npm@latest &&\
     npm install -g bun
 
 # Set Go version
