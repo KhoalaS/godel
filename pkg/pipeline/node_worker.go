@@ -39,6 +39,7 @@ func NodeWorker(ctx context.Context, wg *sync.WaitGroup, id int, pipeline IPipel
 					NodeId: node.Id,
 				}
 			} else {
+				log.Debug().Str("name", node.Name).Msg("done with node")
 				doneChan <- node.Id
 			}
 		}

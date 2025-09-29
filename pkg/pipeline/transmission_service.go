@@ -48,8 +48,12 @@ func (t *TransmissionTorrentService) AddTorrent(ctx context.Context, downloadDir
 	return id, nil
 }
 
-func (t *TransmissionTorrentService) PauseTorrent(ctx context.Context, id string)  {}
-func (t *TransmissionTorrentService) RemoveTorrent(ctx context.Context, id string) {}
+func (t *TransmissionTorrentService) PauseTorrent(ctx context.Context, id string) error {
+	return nil
+}
+func (t *TransmissionTorrentService) RemoveTorrent(ctx context.Context, id string) error {
+	return nil
+}
 
 type TransmissionServerConfig struct {
 	Username  string
