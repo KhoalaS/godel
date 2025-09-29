@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -51,7 +52,13 @@ func CreateDownloadNode() Node {
 func DownloadNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	client := http.Client{}
 
-	job := (node.Io["job"].Value).(*types.DownloadJob).Clone()
+	_job, ok := (node.Io["job"].Value).(*types.DownloadJob)
+
+	if !ok || _job == nil {
+		return errors.New("invalid download job input")
+	}
+
+	job := _job.Clone()
 
 	if node.Io["limit"] != nil && node.Io["limit"].Value != nil {
 		switch v := node.Io["limit"].Value.(type) {
