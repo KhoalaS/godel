@@ -2,7 +2,7 @@ import z from 'zod'
 
 export const NodeIO = z.object({
   id: z.string(),
-  valueType: z.literal(['string', 'number', 'boolean', 'directory', 'downloadjob', 'unknown']),
+  valueType: z.literal(['string', 'number', 'boolean', 'directory', 'downloadjob', 'unknown', 'torrentservice']),
   label: z.string().optional(),
   required: z.boolean().optional(),
   readOnly: z.boolean().optional(),
@@ -36,4 +36,5 @@ export const HandleColors: Record<NodeIO['valueType'], string> = {
   string: 'red',
   downloadjob: 'pink',
   unknown: 'black',
+  torrentservice: 'orange',
 }

@@ -84,6 +84,7 @@ func RunServer() {
 	workflowService.RegisterNode("suffix", pipeline.CreateSuffixNode)
 	workflowService.RegisterNode("http-request", pipeline.CreateHttpRequestNode)
 	workflowService.RegisterNode("display", pipeline.CreateDisplayNode)
+	workflowService.RegisterNode("transmission-service", pipeline.CreateTransmissionNode)
 
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
 	if err != nil {
