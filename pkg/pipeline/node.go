@@ -43,12 +43,13 @@ type NodeFunc func(ctx context.Context, node Node, pipeline IPipeline) error
 type ValueType string
 
 const (
-	ValueTypeString      ValueType = "string"
-	ValueTypeNumber      ValueType = "number"
-	ValueTypeBoolean     ValueType = "boolean"
-	ValueTypeDirectory   ValueType = "directory"
-	ValueTypeDownloadJob ValueType = "downloadjob"
+	ValueTypeString         ValueType = "string"
+	ValueTypeNumber         ValueType = "number"
+	ValueTypeBoolean        ValueType = "boolean"
+	ValueTypeDirectory      ValueType = "directory"
+	ValueTypeDownloadJob    ValueType = "downloadjob"
 	ValueTypeUnknown     ValueType = "unknown"
+	ValueTypeTorrentService ValueType = "torrentservice"
 )
 
 type IOType string
