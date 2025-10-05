@@ -8,7 +8,7 @@ import z from 'zod'
 
 export const usePipelineStore = defineStore('pipeline', () => {
   const vueFlow = useVueFlow()
-  const baseUrl = 'localhost:9095'
+  const baseUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL ?? 'localhost'}:9095`
   const registeredNodes: Ref<PipelineNode[]> = ref([])
   const msgHandler = new PipelineMessageHandler(vueFlow)
   const errorService = useErrorService()
