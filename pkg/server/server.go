@@ -86,6 +86,8 @@ func RunServer() {
 	workflowService.RegisterNode("display", pipeline.CreateDisplayNode)
 	workflowService.RegisterNode("transmission-service", pipeline.CreateTransmissionNode)
 	workflowService.RegisterNode("add-torrent", pipeline.CreateAddTorrentNode)
+	workflowService.RegisterNode("pixeldrain", pipeline.CreatePixeldrainNode)
+
 
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
 	if err != nil {
