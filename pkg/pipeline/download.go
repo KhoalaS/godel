@@ -26,24 +26,24 @@ import (
 
 var cdRegex = regexp.MustCompile(`filename="(.+?)"`)
 
-func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipeline IPipeline, nodeId string) error {
+func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipeline IPipeline, nodeId string) (IFile, error) {
 	if job.IsParent {
 		log.Debug().Str("id", job.Id).Msg("Added bulk download")
 		job.Status.Store(types.DOWNLOADING)
 		//BroadCastUpdate(job)
-		return nil
+		return nil, nil
 	}
 
 	parsedUrl, err := url.Parse(job.Url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Debug().Str("url", job.Url).Send()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for k, v := range job.Headers {
@@ -60,7 +60,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				job.BytesDownloaded = 0
 				log.Warn().Str("filename", job.Filename).Str("id", job.Id).Msg("File is missing on disk, restarting download")
 			} else {
-				return err
+				return nil, err
 			}
 		} else {
 			if job.BytesDownloaded != int(info.Size()) {
@@ -77,17 +77,17 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 	response, err := client.Do(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if currentState != types.PAUSED && response.StatusCode != http.StatusOK {
 		response.Body.Close()
-		return fmt.Errorf("unexpected status code %d", response.StatusCode)
+		return nil, fmt.Errorf("unexpected status code %d", response.StatusCode)
 	}
 
 	if currentState == types.PAUSED && response.StatusCode != http.StatusPartialContent {
 		response.Body.Close()
-		return fmt.Errorf("expected 206 Partial Content, got %d", response.StatusCode)
+		return nil, fmt.Errorf("expected 206 Partial Content, got %d", response.StatusCode)
 	}
 
 	log.Info().Str("id", job.Id).Msg("Request successful")
@@ -107,19 +107,19 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 	destDir := filepath.Dir(outPath)
 	err = os.MkdirAll(destDir, 0755)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if currentState == types.PAUSED {
 		outfile, err = os.OpenFile(outPath, os.O_APPEND|os.O_WRONLY, 0)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Opened file for appending")
 	} else {
 		outfile, err = os.Create(outPath)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Created new file")
 	}
@@ -136,7 +136,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 
 	contentLengthInt, err := strconv.Atoi(contentLength)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if currentState == types.PAUSED {
@@ -210,7 +210,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 		case <-ctx.Done():
 			log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("download canceled")
 			job.Status.Store(types.PAUSED)
-			return ctx.Err()
+			return nil, ctx.Err()
 		case <-job.CancelCh:
 			if job.DeleteOnCancel {
 				outfile.Close()
@@ -218,18 +218,18 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				os.Remove(job.Filename)
 			}
 			job.Status.Store(types.CANCELED)
-			return errors.New("download canceled")
+			return nil, errors.New("download canceled")
 		case <-job.PauseCh:
 			job.BytesDownloaded = bytesRead
 			job.Status.Store(types.PAUSED)
-			return errors.New("download paused")
+			return nil, errors.New("download paused")
 		default:
 			n, err := reader.Read(buf)
 			if n > 0 {
 				_, writeErr := outfile.Write(buf[:n])
 				if writeErr != nil {
 					job.Status.Store(types.ERROR)
-					return writeErr
+					return nil, writeErr
 				}
 				bytesRead += n
 				job.BytesDownloaded = bytesRead
@@ -239,10 +239,13 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				if errors.Is(err, io.EOF) {
 					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Done")
 					job.Status.Store(types.DONE)
-					return nil
+					return &FileWrapper{
+						file:              outfile,
+						destinationFolder: job.DestPath,
+					}, nil
 				} else {
 					job.Status.Store(types.ERROR)
-					return err
+					return nil, err
 				}
 			}
 		}

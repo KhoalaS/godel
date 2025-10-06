@@ -25,7 +25,7 @@ func TestDownload(t *testing.T) {
 		Comm: make(chan PipelineMessage, 12),
 	}
 
-	err := Download(ctx, client, &job, p, "1")
+	_, err := Download(ctx, client, &job, p, "1")
 
 	if err != nil {
 		t.Error(err)

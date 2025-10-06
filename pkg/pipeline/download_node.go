@@ -42,6 +42,13 @@ func CreateDownloadNode() Node {
 				Label:     "Filename",
 				Required:  true,
 			},
+			"file": {
+				Type:      IOTypeGenerated,
+				Id:        "file",
+				ValueType: ValueTypeFile,
+				Label:     "File",
+				Required:  true,
+			},
 		},
 		Name:     "Download",
 		Status:   StatusPending,
@@ -83,6 +90,7 @@ func DownloadNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error 
 		job.Filename = (node.Io["filename"].Value).(string)
 	}
 
-	err := Download(ctx, &client, &job, pipeline, node.Id)
+	file, err := Download(ctx, &client, &job, pipeline, node.Id)
+	node.Io["file"].Value = file
 	return err
 }

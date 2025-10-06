@@ -50,6 +50,7 @@ const (
 	ValueTypeDownloadJob    ValueType = "downloadjob"
 	ValueTypeUnknown        ValueType = "unknown"
 	ValueTypeTorrentService ValueType = "torrentservice"
+	ValueTypeFile           ValueType = "file"
 )
 
 type IOType string
