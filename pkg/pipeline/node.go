@@ -48,7 +48,7 @@ const (
 	ValueTypeBoolean        ValueType = "boolean"
 	ValueTypeDirectory      ValueType = "directory"
 	ValueTypeDownloadJob    ValueType = "downloadjob"
-	ValueTypeUnknown     ValueType = "unknown"
+	ValueTypeUnknown        ValueType = "unknown"
 	ValueTypeTorrentService ValueType = "torrentservice"
 )
 
