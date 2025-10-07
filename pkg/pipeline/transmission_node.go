@@ -13,7 +13,7 @@ func CreateTransmissionNode() Node {
 	return Node{
 		Type:     "transmission-service",
 		Name:     "Transmission Service",
-		Category: NodeCategoryUtility,
+		Category: NodeCategoryTorrent,
 		Io: map[string]*NodeIO{
 			"service": {
 				Id:        "service",

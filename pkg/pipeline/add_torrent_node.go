@@ -12,7 +12,7 @@ func CreateAddTorrentNode() Node {
 	return Node{
 		Type:     "add-torrent",
 		Name:     "Add Torrent",
-		Category: NodeCategoryUtility,
+		Category: NodeCategoryTorrent,
 		Io: map[string]*NodeIO{
 			"url": {
 				Id:        "url",

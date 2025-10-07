@@ -23,6 +23,7 @@ const (
 	NodeCategoryInput      NodeCategory = "input"
 	NodeCategoryDownloader NodeCategory = "downloader"
 	NodeCategoryUtility    NodeCategory = "utility"
+	NodeCategoryTorrent    NodeCategory = "torrent"
 )
 
 type NodeIO struct {
