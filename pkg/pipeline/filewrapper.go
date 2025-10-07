@@ -22,3 +22,12 @@ func (fw *FileWrapper) GetFilecontent() ([]byte, error) {
 func (fw *FileWrapper) GetDestinationFolder() string {
 	return fw.destinationFolder
 }
+
+func (fw *FileWrapper) Read(b []byte) (int, error) {
+	return fw.file.Read(b)
+}
+
+func (fw *FileWrapper) GetFileHandle() (*os.File, error) {
+	fw.file.Close()
+	return os.Open(fw.file.Name())
+}
