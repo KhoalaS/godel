@@ -1,11 +1,13 @@
 package runner
 
 import (
-	"fmt"
+	"encoding/binary"
 	"os"
 	"os/exec"
 	"path/filepath"
 
+	"github.com/KhoalaS/godel/pkg/custom_error"
+	"github.com/rs/zerolog/log"
 	"github.com/wasmerio/wasmer-go/wasmer"
 )
 
@@ -13,18 +15,20 @@ type WasmRunner struct {
 }
 
 func (wr *WasmRunner) Run(input string) (any, error) {
-	outputWasmFile, err := wr.GenerateWasm(input, "./")
+	outputWasmFile, err := wr.GenerateWasm(input, "")
 	if err != nil {
-		return nil, err
+		return nil, custom_error.FromError(err, WASM_GENERATION_ERROR_CODE)
 	}
 
 	return wr.ExecuteWasm(outputWasmFile)
 }
 
 func (wr *WasmRunner) ExecuteWasm(wasmFilePath string) (any, error) {
+	defer os.Remove(wasmFilePath)
+
 	wasmBytes, err := os.ReadFile(wasmFilePath)
 	if err != nil {
-		return nil, err
+		return nil, custom_error.FromError(err, FILE_READ_ERROR_CODE)
 	}
 
 	engine := wasmer.NewEngine()
@@ -32,25 +36,42 @@ func (wr *WasmRunner) ExecuteWasm(wasmFilePath string) (any, error) {
 
 	module, _ := wasmer.NewModule(store, wasmBytes)
 
-	// Instantiates the module
 	importObject := wasmer.NewImportObject()
 	instance, _ := wasmer.NewInstance(module, importObject)
 
-	// Gets the `sum` exported function from the WebAssembly instance.
-	hello, err := instance.Exports.GetFunction("hello")
+	memory, _ := instance.Exports.GetMemory("$")
+	mainFn, _ := instance.Exports.GetFunction("main")
+
+	results, err := mainFn(0.0, 0, 0.0, 0)
 	if err != nil {
-		return nil, err
+		log.Err(err).Msg("Failed to call main")
+		return nil, custom_error.FromError(err, WASM_EXECUTION_ERROR_CODE)
 	}
 
-	// Calls that exported function with Go standard values. The WebAssembly
-	// types are inferred and values are casted automatically.
-	result, err := hello()
-	if err != nil {
-		return nil, err
+	res := results.([]any)
+	if len(res) != 2 {
+		log.Fatal().Int("count", len(res)).Msg("Unexpected return value count")
 	}
 
-	fmt.Println(result)
-	return result, nil
+	offset := int32(res[0].(float64))
+	tag := res[1].(int32)
+
+	if tag == 1 {
+		return offset, nil
+	}
+
+	log.Debug().Int32("offfset", offset).Int32("tag", tag).Msg("Raw return values")
+
+	data := memory.Data()
+
+	length := int32(binary.LittleEndian.Uint32(data[offset : offset+4]))
+
+	strStart := offset + 4
+	strBytes := data[strStart : strStart+length]
+
+	log.Debug().Str("result", string(strBytes)).Send()
+
+	return string(strBytes), nil
 }
 
 func (wr *WasmRunner) GenerateWasm(input string, outputDir string) (string, error) {
@@ -64,20 +85,23 @@ func (wr *WasmRunner) GenerateWasm(input string, outputDir string) (string, erro
 
 	jsFile, err := os.CreateTemp(_outPutDir, "input-*.js")
 	if err != nil {
-		return "", err
+		return "", custom_error.FromError(err, FILE_CREATE_ERROR_CODE)
 	}
 
 	_, err = jsFile.WriteString(input)
 	if err != nil {
-		return "", err
+		return "", custom_error.FromError(err, FILE_WRITE_ERROR_CODE)
 	}
+
+	jsFile.Close()
+	defer os.Remove(jsFile.Name())
 
 	outputWasmFile := filepath.Join(_outPutDir, "out.wasm")
 
-	porfCommand := exec.Command("porf", "wasm", jsFile.Name(), outputWasmFile)
+	porfCommand := exec.Command("porf", "wasm", "--module", jsFile.Name(), outputWasmFile)
 	err = porfCommand.Run()
 	if err != nil {
-		return "", err
+		return "", custom_error.FromError(err, PORF_ERROR_CODE)
 	}
 
 	return outputWasmFile, nil
