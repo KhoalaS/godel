@@ -26,12 +26,12 @@ func (wr *PorfforRunner) ExecuteJsInPorf(jsInput string, outputDir string) (any,
 
 	jsFile, err := os.CreateTemp(_outPutDir, "input-*.js")
 	if err != nil {
-		return "", custom_error.FromError(err, FILE_CREATE_ERROR_CODE)
+		return "", custom_error.FromError(err, FILE_CREATE_ERROR_CODE, "runner")
 	}
 
 	_, err = jsFile.WriteString(jsInput)
 	if err != nil {
-		return "", custom_error.FromError(err, FILE_WRITE_ERROR_CODE)
+		return "", custom_error.FromError(err, FILE_WRITE_ERROR_CODE, "runner")
 	}
 	jsFile.Close()
 	defer os.Remove(jsFile.Name())
@@ -40,7 +40,7 @@ func (wr *PorfforRunner) ExecuteJsInPorf(jsInput string, outputDir string) (any,
 
 	output, err := porfCommand.Output()
 	if err != nil {
-		return nil, custom_error.FromError(err, PORF_ERROR_CODE)
+		return nil, custom_error.FromError(err, PORF_ERROR_CODE, "runner")
 	}
 
 	re := regexp.MustCompile(`\x1b\[[0-9;]*m`)

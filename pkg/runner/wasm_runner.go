@@ -17,7 +17,7 @@ type WasmRunner struct {
 func (wr *WasmRunner) Run(input string) (any, error) {
 	outputWasmFile, err := wr.GenerateWasm(input, "")
 	if err != nil {
-		return nil, custom_error.FromError(err, WASM_GENERATION_ERROR_CODE)
+		return nil, custom_error.FromError(err, WASM_GENERATION_ERROR_CODE, "runner")
 	}
 
 	return wr.ExecuteWasm(outputWasmFile)
@@ -28,7 +28,7 @@ func (wr *WasmRunner) ExecuteWasm(wasmFilePath string) (any, error) {
 
 	wasmBytes, err := os.ReadFile(wasmFilePath)
 	if err != nil {
-		return nil, custom_error.FromError(err, FILE_READ_ERROR_CODE)
+		return nil, custom_error.FromError(err, FILE_READ_ERROR_CODE, "runner")
 	}
 
 	engine := wasmer.NewEngine()
@@ -45,7 +45,7 @@ func (wr *WasmRunner) ExecuteWasm(wasmFilePath string) (any, error) {
 	results, err := mainFn(0.0, 0, 0.0, 0)
 	if err != nil {
 		log.Err(err).Msg("Failed to call main")
-		return nil, custom_error.FromError(err, WASM_EXECUTION_ERROR_CODE)
+		return nil, custom_error.FromError(err, WASM_EXECUTION_ERROR_CODE, "runner")
 	}
 
 	res := results.([]any)
@@ -85,12 +85,12 @@ func (wr *WasmRunner) GenerateWasm(input string, outputDir string) (string, erro
 
 	jsFile, err := os.CreateTemp(_outPutDir, "input-*.js")
 	if err != nil {
-		return "", custom_error.FromError(err, FILE_CREATE_ERROR_CODE)
+		return "", custom_error.FromError(err, FILE_CREATE_ERROR_CODE, "runner")
 	}
 
 	_, err = jsFile.WriteString(input)
 	if err != nil {
-		return "", custom_error.FromError(err, FILE_WRITE_ERROR_CODE)
+		return "", custom_error.FromError(err, FILE_WRITE_ERROR_CODE, "runner")
 	}
 
 	jsFile.Close()
@@ -101,7 +101,7 @@ func (wr *WasmRunner) GenerateWasm(input string, outputDir string) (string, erro
 	porfCommand := exec.Command("porf", "wasm", "--module", jsFile.Name(), outputWasmFile)
 	err = porfCommand.Run()
 	if err != nil {
-		return "", custom_error.FromError(err, PORF_ERROR_CODE)
+		return "", custom_error.FromError(err, PORF_ERROR_CODE, "runner")
 	}
 
 	return outputWasmFile, nil
