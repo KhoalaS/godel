@@ -18,7 +18,7 @@ func CreateDisplayNode() Node {
 				ValueType: ValueTypeUnknown,
 				Label:     "Input",
 				Hooks: map[string]string{
-					"display": "getValue",
+					"display": "display",
 				},
 				HookMapping: map[string]string{
 					"display": "input",

@@ -2,7 +2,6 @@ package custom_error
 
 import "fmt"
 
-// MyError is a custom error type
 type CustomError struct {
 	Code    int
 	Message string
