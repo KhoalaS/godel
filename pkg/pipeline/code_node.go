@@ -24,7 +24,7 @@ func CreateCodeNode() Node {
 			"input": {
 				Type:      IOTypeInput,
 				Id:        "input",
-				ValueType: ValueTypeString,
+				ValueType: ValueTypeCode,
 				Label:     "JS Code",
 			},
 			"output": {

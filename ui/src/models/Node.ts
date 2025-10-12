@@ -11,6 +11,7 @@ export const NodeIO = z.object({
     'unknown',
     'torrentservice',
     'file',
+    'code',
   ]),
   label: z.string().optional(),
   required: z.boolean().optional(),
@@ -47,4 +48,5 @@ export const HandleColors: Record<NodeIO['valueType'], string> = {
   unknown: 'black',
   torrentservice: 'orange',
   file: 'yellow',
+  code: '#34eb8f',
 }

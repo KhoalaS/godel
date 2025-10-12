@@ -52,6 +52,7 @@ const (
 	ValueTypeUnknown        ValueType = "unknown"
 	ValueTypeTorrentService ValueType = "torrentservice"
 	ValueTypeFile           ValueType = "file"
+	ValueTypeCode           ValueType = "code"
 )
 
 type IOType string
