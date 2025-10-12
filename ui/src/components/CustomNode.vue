@@ -12,6 +12,7 @@ import {
 } from 'vue-98'
 import { usePipelineStore } from '@/stores/pipeline'
 import { useNodeUpdates } from '@/composables/nodeUpdates'
+import CodeArea from './CodeArea.vue'
 
 // TODO split different cases for input components in sub-components
 
@@ -106,6 +107,16 @@ const _title = computed(() => {
                   })
                 "
               ></WAutocomplete>
+            </div>
+            <div v-else-if="input.valueType == 'code'">
+              <CodeArea
+                :value="String(input.value ?? 'function abc() {\n\n}\n')"
+                @update="(v) => onUpdate(v, input)"
+                @value-change="onValueChange(input)"
+                :type="input.valueType"
+                :id="props.data.id + input.id"
+              >
+              </CodeArea>
             </div>
             <div v-else-if="input.valueType == 'directory' && input.type === 'output'">
               <div class="flex gap-1">
