@@ -67,6 +67,11 @@ export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: Pi
     }
   }
 
+  /**
+   * Call this inside the node component whenever it's model value is updated.
+   *
+   * @param io The NodeIO object of the node.
+   */
   function onUpdate(value: string | number | boolean, io: NodeIO) {
     console.log('CustomNode:onUpdate', io.id)
     if (io.readOnly || props.data.io == null) {
@@ -123,6 +128,12 @@ export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: Pi
     updateTargetNodes(inputs)
   }
 
+  /**
+   * Call this inside the node component whenever it's value is updated with
+   * the VueFlow API.
+   *
+   * @param io The NodeIO object of the node.
+   */
   function onValueChange(io: NodeIO) {
     console.log('CustomNode:onValueChange', io.id)
 
