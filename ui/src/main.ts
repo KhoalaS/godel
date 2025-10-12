@@ -4,11 +4,16 @@ import App from './App.vue'
 
 import 'vue-98/dist/main.css'
 import './main.css'
-import { initHooks } from './inputhooks'
 import type { ErrorService } from './error/ErrorService'
 import { DefaultErrorService } from './error/DefaultErrorService'
-import { ErrorServiceKey } from './InjectionKeys'
+import { ErrorServiceKey, HookFunctionServiceKey } from './InjectionKeys'
 import { router } from './router'
+import type { HookFunctionService } from './inputhooks/HookFunctionService'
+import { HookFunctionServiceImpl } from './inputhooks/HookFunctionServiceImpl'
+import { BaseNameHook } from './inputhooks/Basename'
+import { DisplayHook } from './inputhooks/Display'
+import { SuffixHook } from './inputhooks/Suffix'
+import { ToBytesHook } from './inputhooks/ToBytes'
 
 const app = createApp(App)
 
@@ -16,10 +21,15 @@ app.config.errorHandler = (err, instance, info) => {
   console.error(err, instance, info)
 }
 
-initHooks()
-
 const errorService: ErrorService = DefaultErrorService
+const hookFunctionService: HookFunctionService = new HookFunctionServiceImpl()
+hookFunctionService.register('basename', BaseNameHook)
+hookFunctionService.register('display', DisplayHook)
+hookFunctionService.register('suffix', SuffixHook)
+hookFunctionService.register('toBytes', ToBytesHook)
+
 app.provide(ErrorServiceKey, errorService)
+app.provide(HookFunctionServiceKey, hookFunctionService)
 
 app.config.errorHandler = (err, vm, info) => console.error(err, vm, info)
 

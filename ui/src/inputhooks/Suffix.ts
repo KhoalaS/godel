@@ -1,4 +1,3 @@
-import { FunctionRegistry } from '@/registries/InputHook'
 import z from 'zod'
 
 const SuffixFuncArg = z.object({
@@ -6,10 +5,8 @@ const SuffixFuncArg = z.object({
   suffix: z.string().optional().default(''),
 })
 
-export default function register() {
-  FunctionRegistry.set('suffix', (arg) => {
-    const suffixArg = z.parse(SuffixFuncArg, arg)
+export function SuffixHook(arg: unknown): string {
+  const suffixArg = z.parse(SuffixFuncArg, arg)
 
-    return suffixArg.input + suffixArg.suffix
-  })
+  return suffixArg.input + suffixArg.suffix
 }

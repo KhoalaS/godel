@@ -1,5 +1,4 @@
 import z from 'zod'
-import { FunctionRegistry } from '@/registries/InputHook'
 
 const ByteUnitEnum = z.enum(['B', 'KB', 'MB', 'GB'])
 type ByteUnitEnum = z.infer<typeof ByteUnitEnum>
@@ -16,10 +15,8 @@ const ToBytesFuncArg = z.object({
   unit: ByteUnitEnum,
 })
 
-export default function register() {
-  FunctionRegistry.set('toBytes', (arg) => {
-    const { amount, unit } = z.parse(ToBytesFuncArg, arg)
+export function ToBytesHook(arg: unknown): number {
+  const { amount, unit } = z.parse(ToBytesFuncArg, arg)
 
-    return ByteUnits[unit] * amount
-  })
+  return ByteUnits[unit] * amount
 }

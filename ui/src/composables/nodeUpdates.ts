@@ -1,10 +1,11 @@
 import type { NodeIO, PipelineNode } from '@/models/Node'
-import { FunctionRegistry } from '@/registries/InputHook'
 import type { PipelineStore } from '@/stores/pipeline'
 import { useNodeConnections, type NodeProps } from '@vue-flow/core'
+import { useHookFunctionService } from './hookFunctionService'
 
 export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: PipelineStore) {
   const vueFlow = pipelineStore.vueFlow
+  const hookFunctionService = useHookFunctionService()
 
   const targetConnections = useNodeConnections({
     handleType: 'source',
@@ -82,7 +83,7 @@ export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: Pi
 
     if (io.hooks) {
       for (const [hookId, functionId] of Object.entries(io.hooks)) {
-        const func = FunctionRegistry.get(functionId)
+        const func = hookFunctionService.getFunction(functionId)
         if (func == undefined) {
           continue
         }
@@ -154,7 +155,7 @@ export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: Pi
     const hookUpdates: Record<string, NodeIO> = {}
 
     for (const [hookId, functionId] of Object.entries(io.hooks ?? {})) {
-      const func = FunctionRegistry.get(functionId)
+      const func = hookFunctionService.getFunction(functionId)
       if (func == undefined) {
         continue
       }
