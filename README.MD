@@ -58,5 +58,5 @@ There is also a dockerfile in this project to build the server and UI.
 docker build -t godel/server .
 
 # start container
-docker-compose up
+docker-compose up -d
 ```
