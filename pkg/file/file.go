@@ -1,9 +1,9 @@
-package pipeline
+package file
 
 import "os"
 
 type IFile interface {
-	GetDestinationFolder() string
+	GetDestinationFolder() (string, error)
 	GetAbsolutePath() (string, error)
 	GetFilecontent() ([]byte, error)
 	Read(b []byte) (int, error)

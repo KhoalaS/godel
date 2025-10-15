@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
+	"github.com/KhoalaS/godel/pkg/file"
 	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/mholt/archives"
 )
@@ -43,7 +44,7 @@ func CreateUnrarNode() Node {
 
 func UnrarNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	unrarExists, _ := utils.ExecutableExists("unrar")
-	file, ok := node.Io["file"].Value.(IFile)
+	file, ok := node.Io["file"].Value.(file.IFile)
 	if !ok {
 		return errors.New("missing file input")
 	}
@@ -53,7 +54,10 @@ func UnrarNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 		return err
 	}
 
-	destFolder := file.GetDestinationFolder()
+	destFolder, err := file.GetDestinationFolder()
+	if err != nil {
+		return err
+	}
 
 	if !unrarExists {
 		fileHandle, err := file.GetFileHandle()
@@ -116,7 +120,7 @@ func UnrarNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 		unrarCommand.Args = append(unrarCommand.Args, fmt.Sprintf("-p%s", password))
 	}
 
-	unrarCommand.Args = append(unrarCommand.Args, absolutePath, file.GetDestinationFolder())
+	unrarCommand.Args = append(unrarCommand.Args, absolutePath, destFolder)
 	err = unrarCommand.Start()
 	if err != nil {
 		return err

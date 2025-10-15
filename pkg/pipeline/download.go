@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KhoalaS/godel/pkg/file"
 	"github.com/KhoalaS/godel/pkg/registries"
 	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/KhoalaS/godel/pkg/utils"
@@ -26,7 +27,7 @@ import (
 
 var cdRegex = regexp.MustCompile(`filename="(.+?)"`)
 
-func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipeline IPipeline, nodeId string) (IFile, error) {
+func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, pipeline IPipeline, nodeId string) (file.IFile, error) {
 	if job.IsParent {
 		log.Debug().Str("id", job.Id).Msg("Added bulk download")
 		job.Status.Store(types.DOWNLOADING)
@@ -239,10 +240,7 @@ func Download(ctx context.Context, client *http.Client, job *types.DownloadJob, 
 				if errors.Is(err, io.EOF) {
 					log.Info().Str("filename", job.Filename).Str("id", job.Id).Msg("Done")
 					job.Status.Store(types.DONE)
-					return &FileWrapper{
-						file:              outfile,
-						destinationFolder: job.DestPath,
-					}, nil
+					return file.NewFileWrapper(outfile), nil
 				} else {
 					job.Status.Store(types.ERROR)
 					return nil, err
