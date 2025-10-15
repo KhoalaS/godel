@@ -46,8 +46,11 @@ RUN go build -o build/server cmd/server/server.go
 FROM alpine:latest
 
 WORKDIR /app
-
 COPY --from=builder /docker/app/godel/build/server ./
-COPY .env /app
+COPY .env ./
+
+RUN addgroup --system godel && adduser --system --ingroup godel godel
+RUN chown -R godel:godel /app
+USER godel
 
 ENTRYPOINT [ "/app/server" ]
