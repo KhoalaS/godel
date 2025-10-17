@@ -46,8 +46,6 @@ RUN apt update && apt install -y curl tar ca-certificates --no-install-recommend
 COPY --from=wasmer /tmp/wasmer/lib/libwasmer.so /usr/lib/
 
 WORKDIR /app
-RUN rm -rf /tmp/wasmer
-
 COPY --from=builder /docker/app/godel/build/server ./
 COPY .env ./
 
