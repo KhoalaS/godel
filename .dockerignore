@@ -2,3 +2,5 @@ ui/node_modules
 testfiles
 build
 media
+dockerfile
+docker-compose.yaml

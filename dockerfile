@@ -37,22 +37,32 @@ RUN npm install &&\
     npm run build &&\
     bun link
 
+COPY ui/package.json ui/bun.lock /docker/app/godel/ui/
+
+WORKDIR /docker/app/godel/ui 
+RUN bun install
 COPY ./ /docker/app/godel
+RUN bun run build
+
 WORKDIR /docker/app/godel
-
-RUN cd ui && bun install && bun run build
-
-RUN curl https://get.wasmer.io -sSfL | sh
+RUN apt -y install build-essential
 RUN go mod download
 RUN go build -o build/server cmd/server/server.go
 
-FROM ubuntu:24.04
+FROM ubuntu:24.04 AS runtime 
+RUN apt update
+RUN apt install -y curl tar passwd
+
+WORKDIR /tmp/wasmer
+RUN curl -sSfL https://github.com/wasmerio/wasmer/releases/download/v6.1.0/wasmer-linux-amd64.tar.gz -o wasmer.tar.gz
+RUN tar xvf wasmer.tar.gz && cp lib/libwasmer.so /usr/lib
 
 WORKDIR /app
+RUN rm -rf /tmp/wasmer
 COPY --from=builder /docker/app/godel/build/server ./
 COPY .env ./
 
-RUN addgroup --system godel && adduser --system --ingroup godel godel
+RUN useradd -r -U godel
 RUN chown -R godel:godel /app
 USER godel
 
