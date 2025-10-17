@@ -1,7 +1,9 @@
-FROM alpine:latest AS builder
+FROM ubuntu:24.04 AS builder
+RUN apt update
+RUN apt install -y curl tar git bash unzip
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash
+RUN apt install -y nodejs
 
-RUN apk update && apk upgrade
-RUN apk add curl tar git bash npm
 RUN npm install -g npm@latest &&\
     npm install -g bun
 
@@ -28,7 +30,6 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH=/root/.bun/bin:$PATH
 
 WORKDIR /docker/app
-RUN git clone https://github.com/KhoalaS/godel.git
 RUN git clone https://github.com/KhoalaS/Vue98.git
 
 WORKDIR /docker/app/Vue98
@@ -36,14 +37,16 @@ RUN npm install &&\
     npm run build &&\
     bun link
 
+COPY ./ /docker/app/godel
 WORKDIR /docker/app/godel
-RUN git fetch &&\
-    git pull origin
 
 RUN cd ui && bun install && bun run build
+
+RUN curl https://get.wasmer.io -sSfL | sh
+RUN go mod download
 RUN go build -o build/server cmd/server/server.go
 
-FROM alpine:latest
+FROM ubuntu:24.04
 
 WORKDIR /app
 COPY --from=builder /docker/app/godel/build/server ./
