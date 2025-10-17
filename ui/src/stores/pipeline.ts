@@ -8,7 +8,6 @@ import z from 'zod'
 
 export const usePipelineStore = defineStore('pipeline', () => {
   const vueFlow = useVueFlow()
-  const baseUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL ?? 'localhost'}:9095`
   const registeredNodes: Ref<PipelineNode[]> = ref([])
   const msgHandler = new PipelineMessageHandler(vueFlow)
   const errorService = useErrorService()
@@ -22,7 +21,11 @@ export const usePipelineStore = defineStore('pipeline', () => {
 
     try {
       await initWs()
-      const response = await fetch(`http://${baseUrl}/nodes`)
+      const response = await fetch('/nodes', {
+        headers: {
+          accept: 'application/json',
+        },
+      })
       if (response.status != 200) {
         return
       }
@@ -38,7 +41,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
 
   async function initWs() {
     try {
-      const socket = new WebSocket(`ws://${baseUrl}/updates/pipeline`)
+      const socket = new WebSocket(`ws://${window.location.host}/updates/pipeline`)
       // Connection opened
       socket.addEventListener('open', () => {
         console.log('Connection opened')
@@ -67,7 +70,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
     const graph: FlowExportObject = vueFlow.toObject()
 
     try {
-      const response = await fetch(`http://${baseUrl}/pipeline/start`, {
+      const response = await fetch('/pipeline/start', {
         method: 'POST',
         body: JSON.stringify(graph),
       })

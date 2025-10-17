@@ -13,6 +13,20 @@ export default defineConfig(({ mode }) => {
     envDir: './',
     plugins: [vue(), vueDevTools(), tailwindcss()],
     server: {
+      proxy: {
+        '/nodes': {
+          changeOrigin: true,
+          target: 'http://localhost:9095',
+        },
+        '/pipeline/start': {
+          changeOrigin: true,
+          target: 'http://localhost:9095',
+        },
+        '/updates/pipeline': {
+          changeOrigin: true,
+          target: 'ws://localhost:9095',
+        },
+      },
       fs: {
         allow: [`${env.VITE_SOURCE_DIR}godel`, `${env.VITE_SOURCE_DIR}Vue98`, './src'],
       },
