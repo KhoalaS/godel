@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="U extends object">
 import type { Column, Row, TypedColumn } from './Table'
 
-interface TableProps<T> {
+interface TableProps<T extends object> {
   rows: Row<T>[]
   columns: (Column | TypedColumn<T>)[]
 }
