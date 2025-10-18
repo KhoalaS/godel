@@ -25,6 +25,7 @@ type AudioOptions struct {
 type VideoCodec = string
 
 const (
+	VideoCodecCopy  VideoCodec = "copy"
 	VideoCodecH264  VideoCodec = "libx264"
 	VideoCodecH265  VideoCodec = "libx265"
 	VideoCodecAV1   VideoCodec = "libaom-av1"
@@ -35,6 +36,7 @@ const (
 type AudioCodec = string
 
 const (
+	AudioCodecCopy AudioCodec = "copy"
 	AudioCodecAAC  AudioCodec = "aac"
 	AudioCodecMP3  AudioCodec = "libmp3lame"
 	AudioCodecOPUS AudioCodec = "libopus"
