@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func CreateHttpRequestNode() Node {
+func NewHttpRequestNode() Node {
 	return Node{
 		Type:     "http-request",
 		Run:      HttpRequestNodeFunc,

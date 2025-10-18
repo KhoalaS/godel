@@ -9,7 +9,7 @@ import (
 	"github.com/KhoalaS/godel/pkg/types"
 )
 
-func CreateDownloadNode() Node {
+func NewDownloadNode() Node {
 	return Node{
 		Type: "download",
 		Run:  DownloadNodeFunc,

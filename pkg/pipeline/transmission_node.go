@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func CreateTransmissionNode() Node {
+func NewTransmissionNode() Node {
 	return Node{
 		Type:     "transmission-service",
 		Name:     "Transmission Service",

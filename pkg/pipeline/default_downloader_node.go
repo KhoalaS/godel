@@ -6,7 +6,7 @@ import (
 	"github.com/KhoalaS/godel/pkg/types"
 )
 
-func CreateDownloaderNode() Node {
+func NewDownloaderNode() Node {
 	return Node{
 		Type: "downloader",
 		Run:  DownloaderNodeFunc,

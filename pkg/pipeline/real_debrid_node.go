@@ -6,7 +6,7 @@ import (
 	"github.com/KhoalaS/godel/pkg/types"
 )
 
-func CreateRealdebridNode() Node {
+func NewRealdebridNode() Node {
 	return Node{
 		Type: "rd-downloader",
 		Run:  RealdebridNodeFunc,

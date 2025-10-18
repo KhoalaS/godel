@@ -15,7 +15,7 @@ import (
 	"github.com/mholt/archives"
 )
 
-func CreateUnrarNode() Node {
+func NewUnrarNode() Node {
 	return Node{
 		Type:     "unrar",
 		Run:      UnrarNodeFunc,

@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func CreateAddTorrentNode() Node {
+func NewAddTorrentNode() Node {
 	return Node{
 		Type:     "add-torrent",
 		Name:     "Add Torrent",

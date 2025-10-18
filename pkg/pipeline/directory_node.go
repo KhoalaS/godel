@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func CreateDirectoryInputNode() Node {
+func NewDirectoryInputNode() Node {
 	return Node{
 		Type:     "directory-input",
 		Run:      DirectoryInputNodeFunc,

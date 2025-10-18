@@ -12,7 +12,7 @@ const (
 	GB   = 1 << 30 // 1,073,741,824 bytes
 )
 
-func CreateBytesInputNode() Node {
+func NewBytesInputNode() Node {
 	return Node{
 		Type:     "bytes-input",
 		Run:      BytesInputNodeFunc,

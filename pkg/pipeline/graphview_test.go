@@ -20,9 +20,9 @@ func TestGraphView(t *testing.T) {
 	}
 
 	registry := map[string]*Node{}
-	inputNode := CreateIntInputNode()
-	downloadNode := CreateDownloadNode()
-	downloaderNode := CreateDownloaderNode()
+	inputNode := NewIntInputNode()
+	downloadNode := NewDownloadNode()
+	downloaderNode := NewDownloaderNode()
 
 	registry["int-input"] = &inputNode
 	registry["download"] = &downloadNode

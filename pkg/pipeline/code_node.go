@@ -13,7 +13,7 @@ import (
 
 var jsInputRegex = regexp.MustCompile(`(?s)function\s([a-zA-Z]+?)\s*\([a-zA-Z,\s\t]*?\)\s*\{.*?\}`)
 
-func CreateCodeNode() Node {
+func NewCodeNode() Node {
 	return Node{
 		Type:     "code",
 		Run:      CodeNodeFunc,

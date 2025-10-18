@@ -10,7 +10,7 @@ import (
 func TestDownloaderNodeFunc(t *testing.T) {
 	ctx := context.Background()
 
-	node := CreateDownloaderNode()
+	node := NewDownloaderNode()
 	node.Io["url"].Value = "123"
 
 	var p IPipeline = &Pipeline{

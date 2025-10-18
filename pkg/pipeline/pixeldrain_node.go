@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func CreatePixeldrainNode() Node {
+func NewPixeldrainNode() Node {
 	return Node{
 		Type: "pixeldrain",
 		Run:  PixeldrainNodeFunc,

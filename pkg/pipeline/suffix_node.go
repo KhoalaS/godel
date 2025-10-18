@@ -2,7 +2,7 @@ package pipeline
 
 import "context"
 
-func CreateSuffixNode() Node {
+func NewSuffixNode() Node {
 	return Node{
 		Type:     "suffix",
 		Name:     "Suffix",

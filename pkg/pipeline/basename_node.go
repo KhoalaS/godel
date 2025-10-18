@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func CreateBasenameNode() Node {
+func NewBasenameNode() Node {
 	return Node{
 		Type: "basename",
 		Run:  BasenameNodeFunc,

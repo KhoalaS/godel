@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func CreateDisplayNode() Node {
+func NewDisplayNode() Node {
 	return Node{
 		Type:     "display",
 		Run:      DisplayNodeFunc,

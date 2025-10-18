@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func CreateIntInputNode() Node {
+func NewIntInputNode() Node {
 	return Node{
 		Type:     "int-input",
 		Run:      IntInputNodeFunc,
