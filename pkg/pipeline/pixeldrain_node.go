@@ -10,6 +10,7 @@ import (
 
 	"github.com/KhoalaS/godel/pkg/auth"
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -49,9 +50,9 @@ func isFile(pixeldrainUrl string) bool {
 
 func PixeldrainNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 
-	inputUrl, ok := (node.Io["url"].Value).(string)
-	if !ok {
-		return errors.New("input url is not a string")
+	inputUrl, ok := utils.FromAny[string](node.Io["url"].Value).Value()
+	if !ok || inputUrl == "" {
+		return NewInvalidNodeIOError(&node, "url")
 	}
 
 	parsedUrl, err := url.Parse(inputUrl)

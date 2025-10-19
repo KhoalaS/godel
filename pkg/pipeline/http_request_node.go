@@ -2,8 +2,9 @@ package pipeline
 
 import (
 	"context"
-	"errors"
 	"net/http"
+
+	"github.com/KhoalaS/godel/pkg/utils"
 )
 
 func NewHttpRequestNode() Node {
@@ -40,15 +41,15 @@ func NewHttpRequestNode() Node {
 
 func HttpRequestNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	client := http.DefaultClient
-	method := node.Io["method"].Value.(string)
+	method, ok := utils.FromAny[string](node.Io["method"].Value).Value()
 
-	if method == "" {
+	if !ok {
 		method = http.MethodGet
 	}
 
-	url := node.Io["url"].Value.(string)
-	if url == "" {
-		return errors.New("url was empty")
+	url, ok := utils.FromAny[string](node.Io["url"].Value).Value()
+	if !ok || url == "" {
+		return NewInvalidNodeIOError(&node, "url")
 	}
 
 	req, err := http.NewRequest(method, url, nil)

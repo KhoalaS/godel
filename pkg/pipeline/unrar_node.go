@@ -44,9 +44,9 @@ func NewUnrarNode() Node {
 
 func UnrarNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	unrarExists, _ := utils.ExecutableExists("unrar")
-	file, ok := node.Io["file"].Value.(file.IFile)
+	file, ok := utils.FromAny[file.IFile](node.Io["file"].Value).Value()
 	if !ok {
-		return errors.New("missing file input")
+		return NewInvalidNodeIOError(&node, "file")
 	}
 
 	absolutePath, err := file.GetAbsolutePath()

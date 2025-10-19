@@ -8,6 +8,7 @@ import (
 
 	"github.com/KhoalaS/godel/pkg/custom_error"
 	"github.com/KhoalaS/godel/pkg/runner"
+	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -41,9 +42,9 @@ func CodeNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 
 	var r runner.PorfforRunner
 
-	input, ok := node.Io["input"].Value.(string)
+	input, ok := utils.FromAny[string](node.Io["input"].Value).Value()
 	if !ok {
-		return custom_error.FromError(errors.New("could not cast input to string in"), 1, "CodeNodeFunc")
+		return NewInvalidNodeIOError(&node, "input")
 	}
 
 	m := jsInputRegex.FindStringSubmatch(input)

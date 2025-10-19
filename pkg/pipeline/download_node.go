@@ -2,11 +2,10 @@ package pipeline
 
 import (
 	"context"
-	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/KhoalaS/godel/pkg/utils"
 )
 
 func NewDownloadNode() Node {
@@ -59,35 +58,27 @@ func NewDownloadNode() Node {
 func DownloadNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	client := http.Client{}
 
-	_job, ok := (node.Io["job"].Value).(*types.DownloadJob)
+	_job, ok := utils.FromAny[*types.DownloadJob](node.Io["job"].Value).Value()
 
 	if !ok || _job == nil {
-		return errors.New("invalid download job input")
+		return NewInvalidNodeIOError(&node, "job")
 	}
 
 	job := _job.Clone()
 
-	if node.Io["limit"] != nil && node.Io["limit"].Value != nil {
-		switch v := node.Io["limit"].Value.(type) {
-		case int:
-			job.Limit = v
-		case float64:
-			job.Limit = int(v)
-		case float32:
-			job.Limit = int(v)
-		case string:
-			if i, err := strconv.Atoi(v); err == nil {
-				job.Limit = i
-			}
-		}
+	limit, ok := utils.FromAny[int](node.Io["limit"].Value).Value()
+	if ok {
+		job.Limit = int(limit)
 	}
 
-	if job.DestPath == "" {
-		job.DestPath = (node.Io["output_dir"].Value).(string)
+	destPath, ok := utils.FromAny[string](node.Io["output_dir"].Value).Value()
+	if ok && destPath != "" {
+		job.DestPath = destPath
 	}
 
-	if job.Filename == "" {
-		job.Filename = (node.Io["filename"].Value).(string)
+	filename, ok := utils.FromAny[string](node.Io["filename"].Value).Value()
+	if ok && filename != "" {
+		job.Filename = filename
 	}
 
 	file, err := Download(ctx, &client, &job, pipeline, node.Id)

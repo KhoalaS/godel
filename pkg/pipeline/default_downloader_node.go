@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/KhoalaS/godel/pkg/types"
+	"github.com/KhoalaS/godel/pkg/utils"
 )
 
 func NewDownloaderNode() Node {
@@ -35,7 +36,12 @@ func NewDownloaderNode() Node {
 func DownloaderNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	job := types.NewDownloadJob()
 
-	job.Url = (node.Io["url"].Value).(string)
+	jobUrl, ok := utils.FromAny[string](node.Io["url"].Value).Value()
+	if !ok || jobUrl == "" {
+		return NewInvalidNodeIOError(&node, "url")
+	}
+
+	job.Url = jobUrl
 	node.Io["job"].Value = job
 
 	return nil

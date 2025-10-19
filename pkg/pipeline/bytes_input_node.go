@@ -2,7 +2,8 @@ package pipeline
 
 import (
 	"context"
-	"strconv"
+
+	"github.com/KhoalaS/godel/pkg/utils"
 )
 
 const (
@@ -60,35 +61,31 @@ func NewBytesInputNode() Node {
 }
 
 func BytesInputNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
-	b := 0
-	amount := 0
-
-	if node.Io["amount"] != nil && node.Io["amount"].Value != nil {
-		switch v := node.Io["amount"].Value.(type) {
-		case int:
-			amount = v
-		case float64:
-			amount = int(v)
-		case float32:
-			amount = int(v)
-		case string:
-			if i, err := strconv.Atoi(v); err == nil {
-				amount = i
-			}
-		}
+	amount, ok := utils.FromAny[float64](node.Io["amount"].Value).Value()
+	if !ok {
+		return NewInvalidNodeIOError(&node, "amount")
 	}
-	switch (node.Io["unit"].Value).(string) {
+
+	bytesValue := 0
+	unit, ok := utils.FromAny[string](node.Io["unit"].Value).Value()
+	if !ok {
+		return NewInvalidNodeIOError(&node, "unit")
+	}
+
+	switch unit {
 	case "B":
-		b = amount
+		bytesValue = int(amount)
 	case "KB":
-		b = amount * KB
+		bytesValue = int(amount) * KB
 	case "MB":
-		b = amount * MB
+		bytesValue = int(amount) * MB
 	case "GB":
-		b = amount * GB
+		bytesValue = int(amount) * GB
+	default:
+		return NewInvalidNodeIOError(&node, "unit")
 	}
 
-	node.Io["bytes"].Value = b
+	node.Io["bytes"].Value = bytesValue
 
 	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/KhoalaS/godel/pkg/services"
-	"github.com/pkg/errors"
+	"github.com/KhoalaS/godel/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -44,20 +44,20 @@ func NewAddTorrentNode() Node {
 
 func AddTorrentNodeFunc(ctx context.Context, node Node, pipeline IPipeline) error {
 	log.Info().Any("nodeIo", node.Io["service"].Value).Send()
-	service, ok := node.Io["service"].Value.(services.ITorrentService)
+	service, ok := utils.FromAny[services.ITorrentService](node.Io["service"].Value).Value()
 
 	if !ok || service == nil {
-		return errors.New("no torrent service provided")
+		return NewInvalidNodeIOError(&node, "service")
 	}
 
-	dir, ok := node.Io["directory"].Value.(string)
+	dir, ok := utils.FromAny[string](node.Io["directory"].Value).Value()
 	if !ok || dir == "" {
-		return errors.New("no directory provided for torrent")
+		return NewInvalidNodeIOError(&node, "directory")
 	}
 
-	link, ok := node.Io["url"].Value.(string)
+	link, ok := utils.FromAny[string](node.Io["url"].Value).Value()
 	if !ok || link == "" {
-		return errors.New("no link provided for torrent")
+		return NewInvalidNodeIOError(&node, "link")
 	}
 
 	_, err := service.AddTorrent(ctx, dir, link)
