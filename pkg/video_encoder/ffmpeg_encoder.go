@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/KhoalaS/godel/pkg/file"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type FfmpegEncoder struct {
@@ -36,24 +38,34 @@ func (e *FfmpegEncoder) Encode(options EncoderOptions) error {
 
 	videoCodec := options.VideoOptions.Codec
 	if videoCodec == "" {
-		videoCodec = "copy"
+		videoCodec = VideoCodecCopy
 	}
 	ffmpegCommand.Args = append(ffmpegCommand.Args, "-c:v", videoCodec)
 
 	audioCodec := options.AudioOptions.Codec
 	if audioCodec == "" {
-		audioCodec = "copy"
+		audioCodec = VideoCodecCopy
 	}
 	ffmpegCommand.Args = append(ffmpegCommand.Args, "-c:a", audioCodec)
+
+	container := options.Container
+	if container == "" {
+		container = strings.TrimLeft(filepath.Ext(path), ".")
+		if container == "" {
+			container = MediaContainerMP4
+		}
+	}
 
 	filename := options.Filename
 	if filename == "" {
 		filename = uuid.NewString()
 	}
 
-	filename = fmt.Sprintf("%s.%s", filename, options.Container)
+	filename = fmt.Sprintf("%s.%s", filename, container)
 	outputFile := filepath.Join(options.OutputFilepath, filename)
 	ffmpegCommand.Args = append(ffmpegCommand.Args, outputFile)
+
+	log.Info().Str("COMMAND", strings.Join(ffmpegCommand.Args, " ")).Send()
 
 	err = ffmpegCommand.Run()
 
