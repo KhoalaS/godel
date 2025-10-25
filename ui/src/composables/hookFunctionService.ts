@@ -1,11 +1,8 @@
 import { HookFunctionServiceKey } from '@/InjectionKeys'
-import { inject } from 'vue'
+import { mustInject } from '@/utils/mustInject'
 
 export function useHookFunctionService() {
-  const hookFunctionService = inject(HookFunctionServiceKey)
-  if (hookFunctionService === undefined) {
-    throw new Error('HookFunctionService was not provided')
-  }
+  const hookFunctionService = mustInject(HookFunctionServiceKey)
 
   return hookFunctionService
 }

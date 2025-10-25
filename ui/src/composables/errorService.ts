@@ -1,8 +1,8 @@
 import { DefaultErrorService } from '@/error/DefaultErrorService'
 import { ErrorServiceKey } from '@/InjectionKeys'
-import { inject } from 'vue'
+import { mustInject } from '@/utils/mustInject'
 
 export function useErrorService() {
-  const errorService = inject(ErrorServiceKey, DefaultErrorService)
+  const errorService = mustInject(ErrorServiceKey, DefaultErrorService)
   return errorService
 }
