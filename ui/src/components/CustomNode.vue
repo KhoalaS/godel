@@ -11,7 +11,7 @@ import {
   type WindowControls,
 } from 'vue-98'
 import { usePipelineStore } from '@/stores/pipeline'
-import { useNodeUpdates } from '@/composables/nodeUpdates'
+import { useNodeUpdates } from '@/composables/useNodeUpdates'
 import CodeArea from './CodeArea.vue'
 
 // TODO split different cases for input components in sub-components

@@ -1,4 +1,3 @@
-import { useErrorService } from '@/composables/errorService'
 import { PipelineMessageHandler } from '@/messages/PipelineMessageHandler'
 import { HandleColors, NodeIO, PipelineNode } from '@/models/Node'
 import { useVueFlow, type Edge, type FlowExportObject, type GraphNode } from '@vue-flow/core'
@@ -10,7 +9,6 @@ export const usePipelineStore = defineStore('pipeline', () => {
   const vueFlow = useVueFlow()
   const registeredNodes: Ref<PipelineNode[]> = ref([])
   const msgHandler = new PipelineMessageHandler(vueFlow)
-  const errorService = useErrorService()
   let initialized = false
 
   async function init() {
@@ -19,66 +17,54 @@ export const usePipelineStore = defineStore('pipeline', () => {
       return
     }
 
-    try {
-      await initWs()
-      const response = await fetch('/nodes', {
-        headers: {
-          accept: 'application/json',
-        },
-      })
-      if (response.status != 200) {
-        return
-      }
-
-      const data = await response.json()
-      registeredNodes.value = z.parse(z.array(PipelineNode), data)
-    } catch (e: unknown) {
-      errorService.handleError(e, 'error initializing pipeline store')
+    await initWs()
+    const response = await fetch('/nodes', {
+      headers: {
+        accept: 'application/json',
+      },
+    })
+    if (response.status != 200) {
+      throw new Error(await response.text())
     }
+
+    const data = await response.json()
+    registeredNodes.value = z.parse(z.array(PipelineNode), data)
 
     initialized = true
   }
 
   async function initWs() {
-    try {
+    return new Promise((resolve, reject) => {
       const socket = new WebSocket(`ws://${window.location.host}/updates/pipeline`)
       // Connection opened
       socket.addEventListener('open', () => {
         console.log('Connection opened')
+        resolve(socket)
       })
 
-      socket.addEventListener('error', (event) => {
-        console.warn('WebSocket error', event)
+      socket.addEventListener('error', () => {
+        console.warn('event')
+        reject(new Error('WebSocket connection failed'))
       })
 
       // Listen for messages
       socket.addEventListener('message', (event) => {
-        try {
-          const messageData = JSON.parse(event.data)
+        const messageData = JSON.parse(event.data)
 
-          msgHandler.onMessage(messageData)
-        } catch (e: unknown) {
-          errorService.handleError(e)
-        }
+        msgHandler.onMessage(messageData)
       })
-    } catch (e: unknown) {
-      errorService.handleError(e, 'could not open websocket connection')
-    }
+    })
   }
 
   async function startPipeline() {
     const graph: FlowExportObject = vueFlow.toObject()
 
-    try {
-      const response = await fetch('/pipeline/start', {
-        method: 'POST',
-        body: JSON.stringify(graph),
-      })
-      if (response.status != 200) {
-        return
-      }
-    } catch (e: unknown) {
-      errorService.handleError(e)
+    const response = await fetch('/pipeline/start', {
+      method: 'POST',
+      body: JSON.stringify(graph),
+    })
+    if (response.status != 200) {
+      return
     }
   }
 

@@ -6,7 +6,7 @@ import 'vue-98/dist/main.css'
 import './main.css'
 import type { ErrorService } from './error/ErrorService'
 import { DefaultErrorService } from './error/DefaultErrorService'
-import { ErrorServiceKey, HookFunctionServiceKey } from './InjectionKeys'
+import { ErrorServiceKey, HookFunctionServiceKey, NotificationServiceKey } from './InjectionKeys'
 import { router } from './router'
 import type { HookFunctionService } from './inputhooks/HookFunctionService'
 import { HookFunctionServiceImpl } from './inputhooks/HookFunctionServiceImpl'
@@ -14,6 +14,7 @@ import { BaseNameHook } from './inputhooks/Basename'
 import { DisplayHook } from './inputhooks/Display'
 import { SuffixHook } from './inputhooks/Suffix'
 import { ToBytesHook } from './inputhooks/ToBytes'
+import { NotificationServiceImpl } from './services/NotificationServiceImpl'
 
 const app = createApp(App)
 
@@ -28,10 +29,20 @@ hookFunctionService.register('display', DisplayHook)
 hookFunctionService.register('suffix', SuffixHook)
 hookFunctionService.register('toBytes', ToBytesHook)
 
-app.provide(ErrorServiceKey, errorService)
-app.provide(HookFunctionServiceKey, hookFunctionService)
+const notificationService = new NotificationServiceImpl()
 
-app.config.errorHandler = (err, vm, info) => console.error(err, vm, info)
+app.provide(HookFunctionServiceKey, hookFunctionService)
+app.provide(NotificationServiceKey, notificationService)
+
+app.config.errorHandler = (err, vm, info) => {
+  console.error(err, vm, info)
+  notificationService.showNotification({
+    message: (err as Error).message,
+    title: 'Error',
+    level: 'error',
+    durationInSeconds: 15,
+  })
+}
 
 app.use(createPinia())
 app.use(router)

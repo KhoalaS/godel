@@ -4,8 +4,8 @@ import { usePipelineStore } from './stores/pipeline'
 import { onMounted } from 'vue'
 
 const store = usePipelineStore()
-onMounted(() => {
-  store.init()
+onMounted(async () => {
+  await store.init()
 })
 </script>
 

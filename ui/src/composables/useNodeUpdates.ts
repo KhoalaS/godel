@@ -1,7 +1,7 @@
 import type { NodeIO, PipelineNode } from '@/models/Node'
 import type { PipelineStore } from '@/stores/pipeline'
 import { useNodeConnections, type NodeProps } from '@vue-flow/core'
-import { useHookFunctionService } from './hookFunctionService'
+import { useHookFunctionService } from './useHookFunctionService'
 
 export function useNodeUpdates(props: NodeProps<PipelineNode>, pipelineStore: PipelineStore) {
   const vueFlow = pipelineStore.vueFlow

@@ -5,7 +5,7 @@ import { usePipelineStore } from '@/stores/pipeline'
 import { Background } from '@vue-flow/background'
 import CustomEdge from './CustomEdge.vue'
 import { WindowSection } from 'vue-98'
-import { useNodeDragAndDrop } from '@/composables/nodeDragAndDrop'
+import { useNodeDragAndDrop } from '@/composables/useNodeDragAndDrop'
 
 const store = usePipelineStore()
 
