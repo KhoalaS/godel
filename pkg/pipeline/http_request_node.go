@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/KhoalaS/godel/pkg/utils"
@@ -62,6 +63,12 @@ func HttpRequestNodeFunc(ctx context.Context, node Node, pipeline IPipeline) err
 		return err
 	}
 
-	node.Io["response"].Value = res.StatusCode
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	node.Io["response"].Value = bodyBytes
 	return nil
 }
