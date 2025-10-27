@@ -104,6 +104,7 @@ func (s *WorkflowService) RegisterNode(id string, nodeConstructor func() pipelin
 		return
 	}
 	s.nodeRegistry[id] = &node
+	log.Debug().Str("id", id).Msg("Registered node")
 }
 
 func (s *WorkflowService) StartPipeline(pipeline pipeline.Pipeline) {

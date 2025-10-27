@@ -90,6 +90,7 @@ func RunServer() {
 	workflowService.RegisterNode("unrar", pipeline.NewUnrarNode)
 	workflowService.RegisterNode("code", pipeline.NewCodeNode)
 	workflowService.RegisterNode("video-encoder", pipeline.NewVideoEncoderNode)
+	workflowService.RegisterNode("git", pipeline.NewGitNode)
 
 
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
