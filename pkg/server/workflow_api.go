@@ -8,7 +8,6 @@ import (
 	"github.com/KhoalaS/godel/pkg/core"
 	"github.com/KhoalaS/godel/pkg/pipeline"
 	"github.com/KhoalaS/godel/pkg/registries"
-	"github.com/KhoalaS/godel/pkg/types"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
@@ -75,7 +74,7 @@ func (api *WorkFlowApi) startPipeline(w http.ResponseWriter, r *http.Request) {
 	p := pipeline.NewPipeline(g, api.workflowService.GetCommChannel())
 	api.workflowService.StartPipeline(*p)
 
-	responseData := types.StartPipelineResponse{
+	responseData := StartPipelineResponse{
 		PipelineId: p.Id,
 	}
 
