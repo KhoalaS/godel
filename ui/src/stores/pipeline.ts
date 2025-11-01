@@ -35,7 +35,7 @@ export const usePipelineStore = defineStore('pipeline', () => {
 
   async function initWs() {
     return new Promise((resolve, reject) => {
-      const socket = new WebSocket(`ws://${window.location.host}/updates/pipeline`)
+      const socket = new WebSocket('/updates/pipeline')
       // Connection opened
       socket.addEventListener('open', () => {
         console.log('Connection opened')
