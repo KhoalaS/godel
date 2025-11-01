@@ -1,7 +1,9 @@
 import { h, createVNode, render } from 'vue'
 import { type NotificationConfig, type NotificationService } from './NotificationService'
 import ToastComponent from '@/components/notification/ToastComponent.vue'
+import { Service } from '@n8n/di'
 
+@Service()
 export class NotificationServiceImpl implements NotificationService {
   readonly durationInSeconds: number
 

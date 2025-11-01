@@ -1,6 +1,8 @@
+import { Service } from '@n8n/di'
 import type { HookFunction } from './HookFunction'
 import type { HookFunctionService } from './HookFunctionService'
 
+@Service()
 export class HookFunctionServiceImpl implements HookFunctionService {
   private registry = new Map<string, HookFunction>()
 

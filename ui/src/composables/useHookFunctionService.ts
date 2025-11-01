@@ -1,7 +1,8 @@
-import { HookFunctionServiceKey } from '@/InjectionKeys'
-import { mustInject } from '@/utils/mustInject'
+import type { HookFunctionService } from '@/inputhooks/HookFunctionService'
+import { HookFunctionServiceImpl } from '@/inputhooks/HookFunctionServiceImpl'
+import { Container } from '@n8n/di'
 
-export function useHookFunctionService() {
-  const hookFunctionService = mustInject(HookFunctionServiceKey)
+export function useHookFunctionService(): HookFunctionService {
+  const hookFunctionService = Container.get(HookFunctionServiceImpl)
   return hookFunctionService
 }

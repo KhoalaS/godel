@@ -15,6 +15,7 @@ import { DisplayHook } from './inputhooks/Display'
 import { SuffixHook } from './inputhooks/Suffix'
 import { ToBytesHook } from './inputhooks/ToBytes'
 import { NotificationServiceImpl } from './services/NotificationServiceImpl'
+import { Container } from '@n8n/di'
 
 const app = createApp(App)
 
@@ -23,16 +24,13 @@ app.config.errorHandler = (err, instance, info) => {
 }
 
 const errorService: ErrorService = DefaultErrorService
-const hookFunctionService: HookFunctionService = new HookFunctionServiceImpl()
+const hookFunctionService: HookFunctionService = Container.get(HookFunctionServiceImpl)
 hookFunctionService.register('basename', BaseNameHook)
 hookFunctionService.register('display', DisplayHook)
 hookFunctionService.register('suffix', SuffixHook)
 hookFunctionService.register('toBytes', ToBytesHook)
 
-const notificationService = new NotificationServiceImpl()
-
-app.provide(HookFunctionServiceKey, hookFunctionService)
-app.provide(NotificationServiceKey, notificationService)
+const notificationService = Container.get(NotificationServiceImpl)
 
 app.config.errorHandler = (err, vm, info) => {
   console.error(err, vm, info)
