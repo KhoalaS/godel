@@ -92,7 +92,6 @@ func RunServer() {
 	workflowService.RegisterNode("video-encoder", pipeline.NewVideoEncoderNode)
 	workflowService.RegisterNode("git", pipeline.NewGitNode)
 
-
 	assetsFS, err := fs.Sub(godel.EmbeddedFiles, "ui/dist/assets")
 	if err != nil {
 		log.Fatal().Err(err).Send()
@@ -111,9 +110,18 @@ func RunServer() {
 	}
 
 	go func() {
-		log.Info().Msg("Starting http server at http://localhost:9095/")
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Err(err).Msg("Listen error")
+		_, useSSL := os.LookupEnv("SSL")
+
+		if useSSL {
+			log.Info().Msg("Starting http server at https://localhost:9095/")
+			if err := server.ListenAndServeTLS("/app/cert.pem", "/app/key.pem"); err != nil && err != http.ErrServerClosed {
+				log.Fatal().Err(err).Msg("Listen error")
+			}
+		} else {
+			log.Info().Msg("Starting http server at http://localhost:9095/")
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatal().Err(err).Msg("Listen error")
+			}
 		}
 	}()
 
