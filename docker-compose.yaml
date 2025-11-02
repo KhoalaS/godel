@@ -1,5 +1,14 @@
 services:
-  server:
-    image: godel/server
+  godel:
+    image: godel
+    container_name: godel-1
+    user: "1000:1000"
+    environment:
+      - SSL=1
+    volumes:
+      - ./path/to/cert.pem/:/app/cert.pem:ro
+      - ./path/to/key.pem/:/app/key.pem:ro
+      - /srv/downloads:/downloads
+      - /srv/media:/media
     ports:
-      - 127.0.0.1:9095:9095
+      - "9095:9095"
