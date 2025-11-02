@@ -53,7 +53,4 @@ WORKDIR /app
 COPY --from=builder /docker/app/godel/build/server ./
 COPY .env ./
 
-RUN useradd -r -U godel && chown -R godel:godel /app
-USER godel
-
 ENTRYPOINT [ "/app/server" ]
