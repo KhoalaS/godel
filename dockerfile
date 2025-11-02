@@ -23,14 +23,18 @@ RUN git clone https://github.com/KhoalaS/Vue98.git
 WORKDIR /docker/app/Vue98
 RUN npm install && npm run build && bun link
 
+COPY go.mod go.sum /docker/app/godel/
+WORKDIR /docker/app/godel
+RUN go mod download
+
 COPY ui/package.json ui/bun.lock /docker/app/godel/ui/
 WORKDIR /docker/app/godel/ui
 RUN bun install
+
 COPY ./ /docker/app/godel
 RUN bun run build
 
 WORKDIR /docker/app/godel
-RUN go mod download
 ENV GOEXPERIMENT=greenteagc
 RUN go build -ldflags="-s -w" -o build/server cmd/server/server.go
 
