@@ -4,9 +4,6 @@ import App from './App.vue'
 
 import 'vue-98/dist/main.css'
 import './main.css'
-import type { ErrorService } from './error/ErrorService'
-import { DefaultErrorService } from './error/DefaultErrorService'
-import { ErrorServiceKey, HookFunctionServiceKey, NotificationServiceKey } from './InjectionKeys'
 import { router } from './router'
 import type { HookFunctionService } from './inputhooks/HookFunctionService'
 import { HookFunctionServiceImpl } from './inputhooks/HookFunctionServiceImpl'
@@ -23,7 +20,6 @@ app.config.errorHandler = (err, instance, info) => {
   console.error(err, instance, info)
 }
 
-const errorService: ErrorService = DefaultErrorService
 const hookFunctionService: HookFunctionService = Container.get(HookFunctionServiceImpl)
 hookFunctionService.register('basename', BaseNameHook)
 hookFunctionService.register('display', DisplayHook)
