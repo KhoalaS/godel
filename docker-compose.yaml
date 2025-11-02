@@ -11,4 +11,4 @@ services:
       - /srv/downloads:/downloads
       - /srv/media:/media
     ports:
-      - "9095:9095"
+      - "127.0.0.1:9095:9095"
